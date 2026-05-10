@@ -3,98 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Mobile su Misura</title>
+    <title>Configuratore Mobile con Anteprima</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 450px; width: 100%; }
-        h2 { color: #333; margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9em; color: #555; }
-        input[type="number"], select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .checkbox-group { margin-top: 20px; background: #e9ecef; padding: 10px; border-radius: 6px; }
-        .checkbox-group label { display: inline; cursor: pointer; }
-        .result-box { margin-top: 25px; padding: 15px; background: #28a745; color: white; border-radius: 8px; text-align: center; }
-        #prezzo { font-size: 28px; font-weight: bold; }
-        .info-pos { font-size: 0.8em; color: #666; font-style: italic; margin-top: 5px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1200px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 320px; }
+        .preview-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 350px; display: flex; flex-direction: column; align-items: center; }
+        h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .result-box { margin-top: 20px; padding: 15px; background: #28a745; color: white; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; }
+        svg { background-color: #fff; border: 1px solid #eee; max-width: 100%; height: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8em; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Preventivatore Mobile</h2>
-    
-    <!-- MISURE -->
-    <label>Larghezza (mm)</label>
-    <input type="number" id="L" value="1000" oninput="calcola()">
-    
-    <label>Altezza (mm)</label>
-    <input type="number" id="A" value="2000" oninput="calcola()">
-    
-    <label>Profondità (mm)</label>
-    <input type="number" id="P" value="600" oninput="calcola()">
-
-    <!-- MATERIALE -->
-    <label>Materiale e Finitura</label>
-    <select id="mat" onchange="calcola()">
-        <option value="45">Laminato Bianco Standard (45€/mq)</option>
-        <option value="65">Effetto Legno Premium (65€/mq)</option>
-        <option value="110">Laccato Opaco (110€/mq)</option>
-        <option value="140">Laccato Lucido (140€/mq)</option>
-    </select>
-
-    <!-- OPZIONI EXTRA -->
-    <div class="checkbox-group">
-        <input type="checkbox" id="hasDivisorio" onchange="toggleDivisorio()"> 
-        <label for="hasDivisorio">Aggiungi divisorio verticale</label>
-        
-        <div id="opzioniDivisorio" style="display:none; margin-top: 15px; border-top: 1px solid #ccc; pt-10px;">
-            <label>Posizione divisorio (distanza da sinistra in mm)</label>
-            <input type="number" id="posDivisorio" value="500" oninput="calcola()">
-            <p class="info-pos">La posizione non varia il prezzo, ma definisce la struttura.</p>
+<div class="container">
+    <!-- INPUT DATI -->
+    <div class="card">
+        <h2>Parametri</h2>
+        <div class="grid">
+            <div><label>Larghezza (mm)</label><input type="number" id="L" value="1000" oninput="calcola()"></div>
+            <div><label>Altezza (mm)</label><input type="number" id="A" value="2000" oninput="calcola()"></div>
+            <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="calcola()"></div>
+            <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="calcola()"></div>
+            <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="calcola()"></div>
+            <div><label>Mat. €/mq</label><input type="number" id="prezzoMq" value="50" oninput="calcola()"></div>
         </div>
+
+        <div style="margin-top:15px; padding:10px; background:#e9ecef; border-radius:8px;">
+            <label><input type="checkbox" id="hasDiv" onchange="calcola()"> Divisorio Centrale</label>
+            <div id="vaniInputs" style="display:none; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                <div><label>Ripiani SX</label><input type="number" id="nSX" value="2" oninput="calcola()"></div>
+                <div><label>Ripiani DX</label><input type="number" id="nDX" value="2" oninput="calcola()"></div>
+            </div>
+        </div>
+        <div class="result-box" id="totale">€ 0.00</div>
     </div>
 
-    <!-- RISULTATO -->
-    <div class="result-box">
-        <span>Prezzo Stimato (IVA incl.)</span>
-        <div id="prezzo">€ 0.00</div>
+    <!-- ANTEPRIMA VISIVA -->
+    <div class="preview-card">
+        <h3>Anteprima Frontale</h3>
+        <svg id="disegno" width="400" height="500" viewBox="0 0 400 500"></svg>
+        
+        <h3>Distinta Tagli</h3>
+        <table id="tabellaTagli">
+            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>A</th><th>B</th></tr></thead>
+            <tbody id="corpoTabella"></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    function toggleDivisorio() {
-        const check = document.getElementById('hasDivisorio');
-        const divOpzioni = document.getElementById('opzioniDivisorio');
-        divOpzioni.style.display = check.checked ? 'block' : 'none';
-        calcola();
-    }
-
     function calcola() {
-        // Recupero valori e conversione in metri
-        let l = parseFloat(document.getElementById('L').value) / 1000;
-        let a = parseFloat(document.getElementById('A').value) / 1000;
-        let p = parseFloat(document.getElementById('P').value) / 1000;
-        let prezzoMq = parseFloat(document.getElementById('mat').value);
+        const L = parseFloat(document.getElementById('L').value) || 0;
+        const A = parseFloat(document.getElementById('A').value) || 0;
+        const P = parseFloat(document.getElementById('P').value) || 0;
+        const Z = parseFloat(document.getElementById('Z').value) || 0;
+        const SP = parseFloat(document.getElementById('SP').value) || 0;
+        const pMq = parseFloat(document.getElementById('prezzoMq').value) || 0;
+        const hasDiv = document.getElementById('hasDiv').checked;
+        document.getElementById('vaniInputs').style.display = hasDiv ? 'grid' : 'none';
 
-        if (isNaN(l) || isNaN(a) || isNaN(p)) return;
+        // Disegno SVG (proporzionato)
+        const scala = 450 / Math.max(L, A);
+        const w = L * scala;
+        const h = A * scala;
+        const sp = SP * scala;
+        const z = Z * scala;
+        
+        let svgHtml = `<rect x="10" y="10" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="2"/>`; // Ingombro
+        svgHtml += `<rect x="10" y="${10+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333" />`; // Zoccolo
+        
+        // Struttura esterna
+        svgHtml += `<rect x="${10+sp}" y="10" width="${w-sp*2}" height="${sp}" fill="#bbb" />`; // Top
+        svgHtml += `<rect x="${10+sp}" y="${10+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" />`; // Base
 
-        // 1. Calcolo superficie Scocca (2 fianchi + base + top + schiena)
-        let superficie = (a * p * 2) + (l * p * 2) + (l * a);
-
-        // 2. Aggiunta eventuale Divisorio Verticale (Altezza x Profondità)
-        if (document.getElementById('hasDivisorio').checked) {
-            superficie += (a * p);
+        if (hasDiv) {
+            svgHtml += `<rect x="${10 + w/2 - sp/2}" y="${10+sp}" width="${sp}" height="${h-z-sp*2}" fill="#bbb" />`;
+            const nSX = parseInt(document.getElementById('nSX').value) || 0;
+            for(let i=1; i<=nSX; i++) {
+                let yR = 10 + (h-z)/(nSX+1) * i;
+                svgHtml += `<line x1="${10+sp}" y1="${yR}" x2="${10+w/2-sp/2}" y2="${yR}" stroke="#666" stroke-dasharray="4"/>`;
+            }
+            const nDX = parseInt(document.getElementById('nDX').value) || 0;
+            for(let i=1; i<=nDX; i++) {
+                let yR = 10 + (h-z)/(nDX+1) * i;
+                svgHtml += `<line x1="${10+w/2+sp/2}" y1="${yR}" x2="${10+w-sp}" y2="${yR}" stroke="#666" stroke-dasharray="4"/>`;
+            }
         }
 
-        // 3. Calcolo Totale con Sfrido del 10%
-        let totale = (superficie * prezzoMq) * 1.10;
+        document.getElementById('disegno').innerHTML = svgHtml;
 
-        // Visualizzazione
-        document.getElementById('prezzo').innerText = "€ " + totale.toFixed(2);
+        // Logica Prezzo e Tagli (Semplificata per brevità)
+        let sup = (L*A*2 + L*P*2 + A*P*2) / 1000000;
+        document.getElementById('totale').innerText = "€ " + (sup * pMq * 1.2).toFixed(2);
+        
+        // Tabella Tagli
+        let rows = `<tr><td>Fianchi</td><td>2</td><td>${A-Z}</td><td>${P}</td></tr>`;
+        rows += `<tr><td>Base/Top</td><td>2</td><td>${L-SP*2}</td><td>${P}</td></tr>`;
+        document.getElementById('corpoTabella').innerHTML = rows;
     }
-
-    // Calcolo iniziale al caricamento
     window.onload = calcola;
 </script>
-
 </body>
+</html>
+
 </html>
