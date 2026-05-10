@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Tecnico Avanzato con Anteprima</title>
+    <title>Configuratore Mobili Professionale - Full</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -59,7 +59,7 @@
         <h3>Anteprima Frontale</h3>
         <svg id="disegno" viewBox="0 0 500 550"></svg>
         
-        <h3>Distinta Tagli e Componenti</h3>
+        <h3>Distinta Tagli e Schienali</h3>
         <table id="tabellaTagli">
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
             <tbody id="corpoTabella"></tbody>
@@ -99,30 +99,39 @@
         const hFianco = A - Z;
         const lVano = (L - (SP * 2) - (nDiv * SP)) / (nDiv + 1);
 
+        // Definizione Pezzi
         let pezzi = [
-            { n: "Fianchi Esterni", q: 2, a: hFianco, b: P },
-            { n: "Base + Top", q: 2, a: L - (SP*2), b: P },
-            { n: "Zoccoli", q: 2, a: L, b: Z },
-            { n: "Schienali", q: nDiv + 1, a: hFianco, b: lVano + SP }
+            { n: "Fianchi Esterni", q: 2, a: hFianco, b: P, sp: SP },
+            { n: "Base + Top", q: 2, a: L - (SP*2), b: P, sp: SP },
+            { n: "Zoccoli", q: 2, a: L, b: Z, sp: SP }
         ];
-        if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: hFianco - (SP*2), b: P - 20 });
+
+        // Schienale frazionato (calcolato con sormonto tecnico sui divisori)
+        let larghezzaSchienale = lVano + SP; // Copre metà divisore a sx e metà a dx (o fianco)
+        pezzi.push({ n: "Schienali Vano", q: nDiv + 1, a: hFianco, b: larghezzaSchienale, sp: 4 });
+
+        if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: hFianco - (SP*2), b: P - 20, sp: SP });
 
         let mqTot = 0, mlBordo = 0, htmlT = "", numAste = 0;
 
-        // Disegno SVG Setup
+        // Disegno SVG
         const sc = 450 / Math.max(L, A);
         const w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
-        let svg = `<rect x="25" y="25" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="1.5"/>`; // Scocca
-        svg += `<rect x="25" y="${25+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>`; // Zoccolo
+        
+        // 1. Disegno dello Schienale (Sfondo)
+        let svg = `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>`;
+        // 2. Scocca esterna
+        svg += `<rect x="25" y="25" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="1.5"/>`;
+        // 3. Zoccolo
+        svg += `<rect x="25" y="${25+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>`;
 
         pezzi.forEach(p => {
-            let bordoPezzo = ((p.a + p.b) * 2 / 1000) * p.q;
+            let bordoPezzo = (p.sp > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0; // Lo schienale da 4mm non si borda
             mlBordo += bordoPezzo;
             mqTot += (p.a * p.b * p.q) / 1000000;
             htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bordoPezzo.toFixed(2)}</td></tr>`;
         });
 
-        // Ripiani, Aste e Disegno Dettagli
         for(let i=0; i <= nDiv; i++) {
             let qtaR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
             let xStart = 25 + sp + (i * ( (lVano*sc) + sp ));
@@ -140,29 +149,25 @@
             }
             if(document.getElementById(`asta_${i}`)?.checked) {
                 numAste++;
-                let yAsta = 25 + sp + 40; // A 40mm dal top
+                let yAsta = 25 + sp + 40;
                 svg += `<rect x="${xStart + 5}" y="${yAsta}" width="${lVano*sc - 10}" height="4" rx="2" fill="#95a5a6"/>`;
             }
-            // Disegno Divisori
             if(i < nDiv) {
                 let xDiv = 25 + sp + (lVano*sc)*(i+1) + (sp*i);
                 svg += `<rect x="${xDiv}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#bbb"/>`;
             }
         }
 
-        let cernierePerAnta = Math.max(2, Math.ceil(hFianco / 700));
-        let totCerniere = cernierePerAnta * (nDiv + 1);
-
+        let totCerniere = Math.max(2, Math.ceil(hFianco / 700)) * (nDiv + 1);
         let costoPannelli = mqTot * prezzoMq * 1.25;
         let costoBordatura = mlBordo * 1.50;
         let costoCerniere = totCerniere * 4.50;
-        let costoAste = numAste * 12.00;
-        let totale = (costoPannelli + costoBordatura + costoCerniere + costoAste + 80) * 1.22;
+        let totale = (costoPannelli + costoBordatura + costoCerniere + (numAste*12) + 80) * 1.22;
 
         document.getElementById('disegno').innerHTML = svg;
         document.getElementById('corpoTabella').innerHTML = htmlT;
         document.getElementById('totale').innerText = "€ " + totale.toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `Bordo: ${mlBordo.toFixed(2)}m | Cerniere: ${totCerniere}pz | Aste: ${numAste}`;
+        document.getElementById('dettaglioCosti').innerHTML = `Schienali calcolati per ogni vano | Bordo tot: ${mlBordo.toFixed(2)}m`;
     }
     window.onload = run;
 </script>
