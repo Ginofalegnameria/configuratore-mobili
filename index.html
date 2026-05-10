@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria Professionale - Con Quote</title>
+    <title>Configuratore Falegnameria - Professionale</title>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; width: 100%; justify-content: center; }
@@ -32,11 +32,11 @@
         
         <h3>Struttura (mm)</h3>
         <div class="grid">
-            <div><label>Larghezza</label><input type="number" id="L" value="1000" oninput="aggiornaDati()"></div>
-            <div><label>Altezza</label><input type="number" id="A" value="2000" oninput="aggiornaDati()"></div>
-            <div><label>Profondità</label><input type="number" id="P" value="600" oninput="aggiornaDati()"></div>
-            <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="aggiornaDati()"></div>
-            <div><label>Sp. Scocca</label><input type="number" id="SP" value="19" oninput="aggiornaDati()"></div>
+            <div><label>Larghezza</label><input type="number" id="L" value="1000" oninput="run()"></div>
+            <div><label>Altezza</label><input type="number" id="A" value="2000" oninput="run()"></div>
+            <div><label>Profondità</label><input type="number" id="P" value="600" oninput="run()"></div>
+            <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="run()"></div>
+            <div><label>Sp. Scocca</label><input type="number" id="SP" value="19" oninput="run()"></div>
             <div><label>Sp. Schienale</label>
                 <select id="SPS" onchange="aggiornaDati()">
                     <option value="4">4 mm</option>
@@ -80,6 +80,8 @@
 </div>
 
 <script>
+    function run() { aggiornaDati(); }
+
     function initVani() {
         const n = parseInt(document.getElementById('numDiv').value) || 0;
         const cont = document.getElementById('contVani');
@@ -105,25 +107,32 @@
         const lVano = (L - (SP * 2) - (nD * SP)) / (nD + 1);
         let mqS=0, mqSch=0, mlB=0, nA=0, hT="", nCerniere=0;
         const sc=380/Math.max(L,A), w=L*sc, h=A*sc, sp=SP*sc, z=Z*sc;
-        const offsetX = 60, offsetY = 60; // Spazio per le quote
+        const offsetX = 60, offsetY = 60;
 
+        // Disegno SVG
         let svg = `<rect x="${offsetX}" y="${offsetY}" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`;
         svg += `<rect x="${offsetX}" y="${offsetY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${offsetX+w-sp}" y="${offsetY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`;
-        svg += `<rect x="${offsetX+sp}" y="${offsetX+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`;
-        svg += `<rect x="${offsetX+sp}" y="${offsetX+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${offsetX+sp}" y="${offsetY}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
+        svg += `<rect x="${offsetX+sp}" y="${offsetY+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`;
+        svg += `<rect x="${offsetX+sp}" y="${offsetY+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${offsetX+sp}" y="${offsetY}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
 
-        // QUOTE ESTERNE
-        svg += `<text x="${offsetX + w/2}" y="${offsetY - 10}" font-size="14" font-weight="bold" text-anchor="middle" fill="#333">L: ${L} mm</text>`;
-        svg += `<text x="${offsetX - 10}" y="${offsetY + h/2}" font-size="14" font-weight="bold" text-anchor="middle" fill="#333" transform="rotate(-90, ${offsetX - 10}, ${offsetY + h/2})">A: ${A} mm</text>`;
+        // Quote
+        svg += `<text x="${offsetX + w/2}" y="${offsetY - 15}" font-size="14" font-weight="bold" text-anchor="middle" fill="#333">L: ${L} mm</text>`;
+        svg += `<text x="${offsetX - 20}" y="${offsetY + h/2}" font-size="14" font-weight="bold" text-anchor="middle" fill="#333" transform="rotate(-90, ${offsetX - 20}, ${offsetY + h/2})">A: ${A} mm</text>`;
 
-        let pezzi = [{n:"Fianchi", q:2, a:A, b:P, s:SP}, {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:SPS}];
+        // Distinta Tagli
+        let pezzi = [
+            {n:"Fianchi", q:2, a:A, b:P, s:SP}, 
+            {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, 
+            {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, 
+            {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:SPS}
+        ];
         if(nD>0) pezzi.push({n:"Divisori", q:nD, a:A-Z-(SP*2), b:P-20, s:SP});
 
         for(let i=0; i<=nD; i++) {
             let q = parseInt(document.getElementById(`q_${i}`)?.value)||0, it = parseFloat(document.getElementById(`int_${i}`)?.value)||320, xV = offsetX+sp+(i*(lVano*sc+sp));
             if(q>0) {
                 pezzi.push({n:`Ripiani Vano ${i+1}`, q:q, a:lVano, b:P-20, s:SP});
-                for(let j=1; j<=q; j++) { let yR = offsetX+h-z-sp-(it*j*sc); if(yR>offsetY+sp+50) svg += `<rect x="${xV}" y="${yR}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
+                for(let j=1; j<=q; j++) { let yR = offsetY+h-z-sp-(it*j*sc); if(yR>offsetY+sp) svg += `<rect x="${xV}" y="${yR}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
             }
             if(document.getElementById(`a_${i}`)?.checked) { nA++; svg += `<rect x="${xV}" y="${offsetY+sp+40*sc}" width="${lVano*sc}" height="6" rx="3" fill="#95a5a6"/>`; }
             if(i<nD) svg += `<rect x="${xV+lVano*sc}" y="${offsetY+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
