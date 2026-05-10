@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preventivatore Professionale Falegnameria V3</title>
+    <title>Preventivatore Professionale Falegnameria</title>
+    <!-- Libreria PDF aggiornata -->
     <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
@@ -23,7 +24,8 @@
         table.distinta { width: 100%; border-collapse: collapse; font-size: 0.75em; }
         table.distinta th, table.distinta td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         table.distinta th { background: #007bff; color: white; }
-        .btn-export { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-export { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; }
+        .btn-export:disabled { background: #95a5a6; }
     </style>
 </head>
 <body>
@@ -31,7 +33,7 @@
 <div class="container">
     <div class="card">
         <h2>Dati Cliente</h2>
-        <input type="text" id="nomeCliente" placeholder="Nome Cliente" oninput="aggiornaTitolo()" style="margin-bottom:15px; border:2px solid #007bff;">
+        <input type="text" id="nomeCliente" placeholder="Inserisci Nome Cliente" oninput="aggiornaTitolo()" style="margin-bottom:15px; border:2px solid #007bff;">
         
         <h2>Parametri Struttura</h2>
         <div class="grid">
@@ -40,7 +42,7 @@
             <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
             <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="run()"></div>
             <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
-            <div><label>Costo Operaio (€/h)</label><input type="number" id="TariffaH" value="80" oninput="run()"></div>
+            <div><label>Tariffa Operaio (€/h)</label><input type="number" id="TariffaH" value="80" oninput="run()"></div>
         </div>
 
         <div class="grid">
@@ -51,7 +53,7 @@
                     <option value="120">Laccato (120€)</option>
                 </select>
             </div>
-            <div><label>Bordo</label>
+            <div><label>Spessore Bordo</label>
                 <select id="spBordo" onchange="run()">
                     <option value="1.20">0.4mm (1.20€)</option>
                     <option value="1.80" selected>1mm (1.80€)</option>
@@ -60,12 +62,12 @@
             </div>
         </div>
 
-        <h3>Configurazione Vani</h3>
+        <h3>Vani e Allestimento</h3>
         <label>Numero Divisori Verticali</label>
         <input type="number" id="numDiv" value="0" min="0" oninput="run()">
         <div id="contRipiani" style="margin-top:10px;"></div>
 
-        <button class="btn-export" onclick="esportaPDF()">📥 SCARICA PREVENTIVO PDF</button>
+        <button id="btnPdf" class="btn-export" onclick="esportaPDF()">📥 SCARICA PREVENTIVO PDF</button>
     </div>
 
     <div class="preview-card" id="area-stampa">
@@ -75,7 +77,9 @@
             <p>Data: <span id="dataCorrente"></span></p>
         </div>
 
-        <svg id="disegno" viewBox="0 0 500 550"></svg>
+        <div id="disegnoContainer">
+            <svg id="disegno" viewBox="0 0 500 550"></svg>
+        </div>
 
         <div class="result-box" style="background:#f8f9fa!important; border:1px solid #ccc; color:black!important;">
             <div id="totale" style="color:#27ae60!important;">€ 0.00</div>
@@ -159,10 +163,10 @@
         document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
         document.getElementById('reportCosti').innerHTML = `
             <tr><td>Materiale</td><td>${mqStr.toFixed(2)} mq</td><td class="valore">€ ${c_mat.toFixed(2)}</td></tr>
-            <tr><td>Bordatura Totale</td><td>${mlB.toFixed(2)} m</td><td class="valore">€ ${c_bor.toFixed(2)}</td></tr>
-            <tr><td>Lavorazione (${ore.toFixed(1)} h)</td><td>Tariffa ${Tariffa}€</td><td class="valore">€ ${c_man.toFixed(2)}</td></tr>
-            <tr><td>Ferramenta (Cerniere + Aste)</td><td>${nCern} + ${numAste} pz</td><td class="valore">€ ${c_fer.toFixed(2)}</td></tr>
-            <tr><td>Trasporto e IVA</td><td>70€ + 22%</td><td class="valore">€ ${(imp*0.22 + 70).toFixed(2)}</td></tr>
+            <tr><td>Bordatura</td><td>${mlB.toFixed(2)} m</td><td class="valore">€ ${c_bor.toFixed(2)}</td></tr>
+            <tr><td>Lavorazione (${ore.toFixed(1)} h)</td><td>${Tariffa}€/h</td><td class="valore">€ ${c_man.toFixed(2)}</td></tr>
+            <tr><td>Ferramenta</td><td>Varie</td><td class="valore">€ ${c_fer.toFixed(2)}</td></tr>
+            <tr><td>Trasporto e IVA</td><td>-</td><td class="valore">€ ${(imp*0.22 + 70).toFixed(2)}</td></tr>
         `;
         document.getElementById('disegno').innerHTML = svg + `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
         document.getElementById('corpoTabella').innerHTML = htmlT;
@@ -170,10 +174,32 @@
     }
 
     function esportaPDF() {
+        const btn = document.getElementById('btnPdf');
         const elemento = document.getElementById('area-stampa');
         const nome = document.getElementById('nomeCliente').value || "Cliente";
-        html2pdf().set({ margin: 10, filename: `Preventivo_${nome}.pdf`, image: { type:'jpeg', quality:0.98 }, html2canvas: { scale:2 }, jsPDF: { unit:'mm', format:'a4', orientation:'portrait' } }).from(elemento).save();
+        
+        btn.innerText = "⏳ GENERAZIONE IN CORSO...";
+        btn.disabled = true;
+
+        const opt = {
+            margin:       10,
+            filename:     `Preventivo_${nome}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(elemento).save().then(() => {
+            btn.innerText = "📥 SCARICA PREVENTIVO PDF";
+            btn.disabled = false;
+        }).catch(err => {
+            console.error("Errore PDF:", err);
+            alert("Errore durante la creazione del PDF. Riprova.");
+            btn.innerText = "📥 SCARICA PREVENTIVO PDF";
+            btn.disabled = false;
+        });
     }
+
     window.onload = run;
 </script>
 </body>
