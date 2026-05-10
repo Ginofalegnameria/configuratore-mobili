@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progettatore Mobili Professionale</title>
+    <title>Configuratore Professionale - MobileSuMisura Style</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -11,13 +11,15 @@
         .preview-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 400px; }
         h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #007bff; }
+        label { font-size: 0.85em; font-weight: bold; color: #444; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-top: 4px; }
+        .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #28a745; }
         .result-box { margin-top: 20px; padding: 15px; background: #28a745; color: white; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; }
         svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-height: 400px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #007bff; color: white; }
+        .info-txt { font-size: 0.75em; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -34,15 +36,30 @@
             <div><label>Spessore Schienale (mm)</label><input type="number" id="SPS" value="4" oninput="run()"></div>
         </div>
 
-        <h3>Divisori e Ripiani</h3>
+        <label>Materiale Principale</label>
+        <select id="mat" onchange="calcola()" style="margin-bottom: 15px;">
+            <optgroup label="Economici">
+                <option value="35">Truciolare Melaminico Bianco (35€/mq)</option>
+                <option value="42">Truciolare Melaminico Colore/Legno (42€/mq)</option>
+            </optgroup>
+            <optgroup label="Standard">
+                <option value="55" selected>Laminato Bianco (55€/mq)</option>
+                <option value="70">Laminato Effetto Legno (70€/mq)</option>
+            </optgroup>
+            <optgroup label="Premium">
+                <option value="120">Laccato Opaco (120€/mq)</option>
+                <option value="150">Laccato Lucido (150€/mq)</option>
+            </optgroup>
+        </select>
+
+        <h3>Configurazione Vani</h3>
         <label>Numero Divisori Verticali</label>
         <input type="number" id="numDiv" value="1" min="0" max="4" oninput="run()">
         
-        <div id="contRipiani" style="margin-top:15px;">
-            <!-- Generato dinamicamente -->
-        </div>
+        <div id="contRipiani" style="margin-top:15px;"></div>
 
         <div class="result-box" id="totale">€ 0.00</div>
+        <p class="info-txt">* Prezzo calcolato con sfrido 20% e schienali frazionati.</p>
     </div>
 
     <div class="preview-card">
@@ -52,7 +69,7 @@
         <h3>Distinta Tagli (Misure Finite)</h3>
         <table id="tabellaTagli">
             <thead>
-                <tr><th>Pezzo</th><th>Q.tà</th><th>A (mm)</th><th>B (mm)</th><th>Sp.</th></tr>
+                <tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Sp.</th></tr>
             </thead>
             <tbody id="corpoTabella"></tbody>
         </table>
@@ -74,7 +91,7 @@
                 <strong>Vano ${i+1}</strong>
                 <div class="grid">
                     <div><label>N° Ripiani</label><input type="number" id="rip_qta_${i}" value="1" min="0" oninput="calcola()"></div>
-                    <div><label>H Ripiano (mm)</label><input type="number" id="rip_h_${i}" value="400" oninput="calcola()"></div>
+                    <div><label>H Ripiani (mm)</label><input type="number" id="rip_h_${i}" value="400" oninput="calcola()"></div>
                 </div>
             </div>`;
         }
@@ -92,8 +109,8 @@
         const SP = parseFloat(document.getElementById('SP').value) || 0;
         const SPS = parseFloat(document.getElementById('SPS').value) || 0;
         const nDiv = parseInt(document.getElementById('numDiv').value) || 0;
+        const prezzoMq = parseFloat(document.getElementById('mat').value);
 
-        // Logica Misure
         const hFianco = A - Z;
         const lInternaTot = L - (SP * 2) - (nDiv * SP);
         const lVano = lInternaTot / (nDiv + 1);
@@ -102,21 +119,19 @@
         let pezzi = [
             { n: "Fianchi Esterni", q: 2, a: hFianco, b: P, s: SP },
             { n: "Base + Cappello", q: 2, a: L - (SP*2), b: P, s: SP },
-            { n: "Zoccolo (F+R)", q: 2, a: L, b: Z, s: SP },
-            { n: "Schienale (Appoggio)", q: 1, a: hFianco, b: L, s: SPS }
+            { n: "Zoccolo (Fronte/Retro)", q: 2, a: L, b: Z, s: SP }
         ];
+
+        // Schienali divisi per vano (con sormonto sui divisori/fianchi)
+        pezzi.push({ n: `Schienali Vano`, q: nDiv + 1, a: hFianco, b: lVano + SP, s: SPS });
 
         if(nDiv > 0) pezzi.push({ n: "Divisori Verticali", q: nDiv, a: hFianco - (SP*2), b: pInterna, s: SP });
 
-        // Calcolo Ripiani per ogni vano
         for(let i=0; i <= nDiv; i++) {
             let qta = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
-            if(qta > 0) {
-                pezzi.push({ n: `Ripiani Vano ${i+1}`, q: qta, a: lVano, b: pInterna, s: SP });
-            }
+            if(qta > 0) pezzi.push({ n: `Ripiani Vano ${i+1}`, q: qta, a: lVano, b: pInterna, s: SP });
         }
 
-        // Rendering Tabella e Prezzo
         let htmlT = "";
         let mq = 0;
         pezzi.forEach(p => {
@@ -124,7 +139,7 @@
             mq += (p.a * p.b * p.q) / 1000000;
         });
         document.getElementById('corpoTabella').innerHTML = htmlT;
-        document.getElementById('totale').innerText = "€ " + (mq * 55 * 1.2).toFixed(2);
+        document.getElementById('totale').innerText = "€ " + (mq * prezzoMq * 1.2).toFixed(2);
 
         // Disegno SVG
         const sc = 460 / Math.max(L, A);
@@ -132,24 +147,21 @@
         let svg = `<rect x="20" y="20" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="1"/>`;
         svg += `<rect x="20" y="${20+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>`;
         
-        // Disegno Divisori e Ripiani
         for(let i=0; i < nDiv; i++) {
             let xDiv = 20 + sp + (lVano*sc)*(i+1) + (sp*i);
             svg += `<rect x="${xDiv}" y="${20+sp}" width="${sp}" height="${h-z-sp*2}" fill="#bbb"/>`;
         }
-        // Disegno Ripiani (tratteggio indicativo)
         for(let i=0; i <= nDiv; i++) {
             let qta = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
             let hR = parseFloat(document.getElementById(`rip_h_${i}`)?.value) || 0;
             for(let j=0; j<qta; j++) {
-                let yR = 20 + h - z - (hR*sc*(j+1));
+                let yR = 20 + h - z - sp - (hR*sc*(j+1));
                 let xStart = 20 + sp + (i * (lVano*sc + sp));
                 svg += `<line x1="${xStart}" y1="${yR}" x2="${xStart + lVano*sc}" y2="${yR}" stroke="red" stroke-dasharray="2"/>`;
             }
         }
         document.getElementById('disegno').innerHTML = svg;
     }
-
     window.onload = run;
 </script>
 </body>
