@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Tecnico - Anteprima Asta</title>
+    <title>Configuratore Professionale - Gestione Bordi</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -16,6 +16,7 @@
         .result-box { margin-top: 20px; padding: 20px; background: #2c3e50; color: white; border-radius: 8px; width: 100%; }
         #totale { font-size: 32px; font-weight: bold; color: #2ecc71; text-align:center; }
         .dettaglio-prezzo { font-size: 0.85em; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; border-top: 1px solid #555; padding-top: 10px; margin-top:10px; }
+        .valore { text-align: right; font-weight: bold; }
         svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 420px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75em; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -32,20 +33,31 @@
             <div><label>Altezza (mm)</label><input type="number" id="A" value="2000" oninput="run()"></div>
             <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
             <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="run()"></div>
-            <div><label>Spessore Scocca</label><input type="number" id="SP" value="19" oninput="run()"></div>
-            <div><label>Sp. Schienale</label><select id="SPS" onchange="run()"><option value="4">4 mm</option><option value="8">8 mm</option><option value="10">10 mm</option></select></div>
+            <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
+            <div><label>Costo Operaio (€/h)</label><input type="number" id="TariffaH" value="80" oninput="run()"></div>
         </div>
 
-        <label>Materiale</label>
-        <select id="mat" onchange="run()" style="margin-bottom: 15px;">
-            <option value="25">Truciolare Melaminico (25€/mq)</option>
-            <option value="55" selected>Laminato Standard (55€/mq)</option>
-            <option value="120">Laccato Opaco (120€/mq)</option>
-        </select>
+        <div class="grid" style="margin-top: 10px;">
+            <div>
+                <label>Materiale</label>
+                <select id="mat" onchange="run()">
+                    <option value="25">Truciolare (25€/mq)</option>
+                    <option value="55" selected>Laminato (55€/mq)</option>
+                </select>
+            </div>
+            <div>
+                <label>Spessore Bordo</label>
+                <select id="spBordo" onchange="run()">
+                    <option value="1.20">0.4 mm (1.20€/m)</option>
+                    <option value="1.80" selected>1.0 mm (1.80€/m)</option>
+                    <option value="2.50">2.0 mm (2.50€/m)</option>
+                </select>
+            </div>
+        </div>
 
         <h3>Vani e Allestimento</h3>
-        <label>Numero Divisori Verticali</label>
-        <input type="number" id="numDiv" value="1" min="0" oninput="run()">
+        <label>N° Divisori Verticali</label>
+        <input type="number" id="numDiv" value="0" min="0" oninput="run()">
         <div id="contRipiani" style="margin-top:10px;"></div>
 
         <div class="result-box">
@@ -59,7 +71,7 @@
         <svg id="disegno" viewBox="0 0 500 550"></svg>
         <h3>Distinta Tagli</h3>
         <table id="tabellaTagli">
-            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Sp</th><th>Bordo (m)</th></tr></thead>
+            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
             <tbody id="corpoTabella"></tbody>
         </table>
     </div>
@@ -73,90 +85,71 @@
         const cont = document.getElementById('contRipiani');
         let html = "";
         for(let i=0; i <= n; i++) {
-            html += `<div class="row-item">
-                <strong>Vano ${i+1}</strong>
-                <div class="grid">
-                    <div><label>N° Ripiani</label><input type="number" id="rip_qta_${i}" value="0" min="0" oninput="calcola()"></div>
-                    <div><label>Interasse (mm)</label><input type="number" id="rip_int_${i}" value="320" min="32" oninput="calcola()"></div>
-                </div>
-                <div style="padding-top:10px"><input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Asta Appendiabiti</label></div>
-            </div>`;
+            html += `<div class="row-item"><strong>Vano ${i+1}</strong><div class="grid">
+                <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="0" min="0" oninput="calcola()"></div>
+                <div><label>Interasse (mm)</label><input type="number" id="rip_int_${i}" value="320" min="32" oninput="calcola()"></div>
+            </div></div>`;
         }
         if(cont.dataset.num != n) { cont.innerHTML = html; cont.dataset.num = n; }
     }
 
     function calcola() {
         const L = parseFloat(document.getElementById('L').value), A = parseFloat(document.getElementById('A').value), P = parseFloat(document.getElementById('P').value);
-        const Z = parseFloat(document.getElementById('Z').value), SP = parseFloat(document.getElementById('SP').value), SPS = parseFloat(document.getElementById('SPS').value);
-        const nDiv = parseInt(document.getElementById('numDiv').value), pMq = parseFloat(document.getElementById('mat').value);
+        const Z = parseFloat(document.getElementById('Z').value), SP = parseFloat(document.getElementById('SP').value), Tariffa = parseFloat(document.getElementById('TariffaH').value);
+        const nDiv = parseInt(document.getElementById('numDiv').value), pMq = parseFloat(document.getElementById('mat').value), pBordo = parseFloat(document.getElementById('spBordo').value);
 
-        const lInternaVanoTot = L - (SP * 2) - (nDiv * SP);
-        const lVano = lInternaVanoTot / (nDiv + 1);
+        const hFianco = A, lInterna = L - (SP * 2);
+        const lVano = (lInterna - (nDiv * SP)) / (nDiv + 1);
 
         let pezzi = [
-            { n: "Fianchi Esterni", q: 2, a: A, b: P, s: SP },
+            { n: "Fianchi a terra", q: 2, a: A, b: P, s: SP },
             { n: "Base + Top", q: 2, a: L - (SP*2), b: P, s: SP },
             { n: "Zoccoli", q: 2, a: L - (SP*2), b: Z, s: SP },
-            { n: "Schienali", q: nDiv + 1, a: A - 5, b: lVano + SP, s: SPS }
+            { n: "Schienali", q: nDiv + 1, a: A - 5, b: lVano + SP, s: 4 }
         ];
         if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: A - Z - (SP*2), b: P - 20, s: SP });
 
-        let mqStr = 0, mqSch = 0, mlB = 0, htmlT = "", numA = 0;
-
+        let mqStr = 0, mlB = 0, htmlT = "";
         const sc = 450 / Math.max(L, A), w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
+        
         let svg = `<rect x="25" y="25" width="${w}" height="${h}" fill="#f9f9f9" stroke="#ccc"/>`; 
-        svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; 
-        svg += `<rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; 
-        svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`; 
-        svg += `<rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; 
-        svg += `<rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; 
 
         pezzi.forEach(p => {
             let bP = (p.s > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
-            mlB += bP; 
-            if(p.s > 4) mqStr += (p.a*p.b*p.q)/1000000; else mqSch += (p.a*p.b*p.q)/1000000;
-            htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${p.s}</td><td>${bP.toFixed(2)}</td></tr>`;
+            mlB += bP; if(p.s > 4) mqStr += (p.a*p.b*p.q)/1000000;
+            htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bP.toFixed(2)}</td></tr>`;
         });
 
         for(let i=0; i <= nDiv; i++) {
             let qR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
-            let interasse = parseFloat(document.getElementById(`rip_int_${i}`)?.value) || 320;
+            let inter = parseFloat(document.getElementById(`rip_int_${i}`)?.value) || 320;
             let xV = 25 + sp + (i * ( (lVano*sc) + sp ));
-            
-            // Disegno Ripiani
             if(qR > 0) {
                 let bR = ((lVano + P - 20) * 2 / 1000) * qR; mlB += bR; mqStr += (lVano*(P-20)*qR)/1000000;
-                htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${SP}</td><td>${bR.toFixed(2)}</td></tr>`;
                 for(let j=1; j<=qR; j++) {
-                    let yRip = 25 + h - z - sp - (interasse * j * sc);
-                    if(yRip > 25 + sp + 60) { // Disegna se non sovrapposto al top o all'asta
-                        svg += `<rect x="${xV}" y="${yRip}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`;
-                    }
+                    let yRip = 25 + h - z - sp - (inter * j * sc);
+                    if(yRip > 25 + sp) svg += `<rect x="${xV}" y="${yRip}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`;
                 }
-            }
-            // Disegno ASTA (Sopra i ripiani)
-            if(document.getElementById(`asta_${i}`)?.checked) {
-                numA++;
-                let yAsta = 25 + sp + (40 * sc); // Posizionata a 40mm reali dal top
-                // Supporti laterali
-                svg += `<rect x="${xV}" y="${yAsta-5}" width="3" height="15" fill="#7f8c8d"/>`;
-                svg += `<rect x="${xV + lVano*sc - 3}" y="${yAsta-5}" width="3" height="15" fill="#7f8c8d"/>`;
-                // Tubo asta
-                svg += `<rect x="${xV}" y="${yAsta}" width="${lVano*sc}" height="6" rx="3" fill="url(#tuboGradiente)"/>`;
-                // Gradiente per effetto metallo
-                svg = `<defs><linearGradient id="tuboGradiente" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#bdc3c7"/><stop offset="50%" style="stop-color:#ecf0f1"/><stop offset="100%" style="stop-color:#95a5a6"/></linearGradient></defs>` + svg;
             }
             if(i < nDiv) svg += `<rect x="${xV + lVano*sc}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
 
-        let nCern = Math.max(2, Math.ceil((A-Z)/700)) * (nDiv+1);
-        let c_mat = (mqStr * pMq * 1.25) + (mqSch * 15), c_bor = mlB * 1.8, c_fer = (nCern * 4.5) + (numA * 12), c_man = 150 + (mqStr * 15), c_tra = 80;
-        let imp = c_mat + c_bor + c_fer + c_man + c_tra;
+        // --- COSTI ---
+        let ore = 2 + (mqStr * 1.2) + (mlB * 0.08); 
+        let c_mat = mqStr * pMq * 1.25;
+        let c_bor = mlB * pBordo; // Costo bordo variabile
+        let c_man = ore * Tariffa;
+        let imp = c_mat + c_bor + c_man + (nDiv + 1) * 20 + 70; // + ferramenta + trasporto
 
-        document.getElementById('disegno').innerHTML = svg;
-        document.getElementById('corpoTabella').innerHTML = htmlT;
+        document.getElementById('disegno').innerHTML = svg + `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
         document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `<span>Materiali:</span><b>€ ${c_mat.toFixed(2)}</b><span>Bordatura:</span><b>€ ${c_bor.toFixed(2)}</b><span>Ferramenta:</span><b>€ ${c_fer.toFixed(2)}</b><span>Manodopera:</span><b>€ ${c_man.toFixed(2)}</b><span>Trasporto:</span><b>€ ${c_tra.toFixed(2)}</b><span>IVA:</span><b>€ ${(imp*0.22).toFixed(2)}</b>`;
+        document.getElementById('dettaglioCosti').innerHTML = `
+            <span>Bordatura (${mlB.toFixed(1)} m):</span><b class="valore">€ ${c_bor.toFixed(2)}</b>
+            <span>Tempo stimato:</span><b class="valore">${ore.toFixed(1)} h</b>
+            <span>Costo Operaio:</span><b class="valore">€ ${c_man.toFixed(2)}</b>
+            <span>IVA (22%):</span><b class="valore">€ ${(imp * 0.22).toFixed(2)}</b>
+        `;
+        document.getElementById('corpoTabella').innerHTML = htmlT;
     }
     window.onload = run;
 </script>
