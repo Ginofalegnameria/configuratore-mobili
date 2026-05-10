@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Mobili Professionale - Full</title>
+    <title>Configuratore Tecnico - MobileSuMisura Style</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -12,10 +12,10 @@
         h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #007bff; }
-        .result-box { margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; text-align: center; width: 100%; box-sizing: border-box; }
+        .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #28a745; }
+        .result-box { margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; text-align: center; width: 100%; }
         #totale { font-size: 32px; font-weight: bold; color: #2ecc71; }
-        .info-prezzo { font-size: 0.85em; text-align: left; margin-top: 10px; color: #ecf0f1; border-top: 1px solid #555; padding-top: 8px; }
+        .dettaglio-prezzo { font-size: 0.9em; text-align: left; margin-top: 10px; color: #ecf0f1; border-top: 1px solid #555; padding-top: 8px; line-height: 1.6; }
         svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 400px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -35,7 +35,7 @@
             <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
         </div>
 
-        <label>Materiale</label>
+        <label>Materiale Scocca</label>
         <select id="mat" onchange="run()" style="margin-bottom: 15px;">
             <option value="25">Truciolare Melaminico Bianco (25€/mq)</option>
             <option value="35">Truciolare Melaminico Legno (35€/mq)</option>
@@ -51,7 +51,7 @@
         <div class="result-box">
             <span>Totale Stimato (IVA incl.)</span>
             <div id="totale">€ 0.00</div>
-            <div id="dettaglioCosti" class="info-prezzo"></div>
+            <div id="dettaglioCosti" class="dettaglio-prezzo"></div>
         </div>
     </div>
 
@@ -59,7 +59,7 @@
         <h3>Anteprima Frontale</h3>
         <svg id="disegno" viewBox="0 0 500 550"></svg>
         
-        <h3>Distinta Tagli e Schienali</h3>
+        <h3>Distinta Tagli e Componenti</h3>
         <table id="tabellaTagli">
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
             <tbody id="corpoTabella"></tbody>
@@ -99,34 +99,28 @@
         const hFianco = A - Z;
         const lVano = (L - (SP * 2) - (nDiv * SP)) / (nDiv + 1);
 
-        // Definizione Pezzi
         let pezzi = [
             { n: "Fianchi Esterni", q: 2, a: hFianco, b: P, sp: SP },
             { n: "Base + Top", q: 2, a: L - (SP*2), b: P, sp: SP },
-            { n: "Zoccoli", q: 2, a: L, b: Z, sp: SP }
+            { n: "Zoccoli (F+R)", q: 2, a: L, b: Z, sp: SP }
         ];
 
-        // Schienale frazionato (calcolato con sormonto tecnico sui divisori)
-        let larghezzaSchienale = lVano + SP; // Copre metà divisore a sx e metà a dx (o fianco)
-        pezzi.push({ n: "Schienali Vano", q: nDiv + 1, a: hFianco, b: larghezzaSchienale, sp: 4 });
+        // Schienale frazionato da 4mm (non si borda)
+        pezzi.push({ n: "Schienale Vano", q: nDiv + 1, a: hFianco, b: lVano + SP, sp: 4 });
 
         if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: hFianco - (SP*2), b: P - 20, sp: SP });
 
         let mqTot = 0, mlBordo = 0, htmlT = "", numAste = 0;
 
-        // Disegno SVG
+        // Disegno SVG Setup
         const sc = 450 / Math.max(L, A);
         const w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
-        
-        // 1. Disegno dello Schienale (Sfondo)
-        let svg = `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>`;
-        // 2. Scocca esterna
+        let svg = `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ddd"/>`; // Sfondo schienale
         svg += `<rect x="25" y="25" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="1.5"/>`;
-        // 3. Zoccolo
         svg += `<rect x="25" y="${25+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>`;
 
         pezzi.forEach(p => {
-            let bordoPezzo = (p.sp > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0; // Lo schienale da 4mm non si borda
+            let bordoPezzo = (p.sp > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
             mlBordo += bordoPezzo;
             mqTot += (p.a * p.b * p.q) / 1000000;
             htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bordoPezzo.toFixed(2)}</td></tr>`;
@@ -135,13 +129,11 @@
         for(let i=0; i <= nDiv; i++) {
             let qtaR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
             let xStart = 25 + sp + (i * ( (lVano*sc) + sp ));
-            
             if(qtaR > 0) {
                 let bR = ((lVano + P - 20) * 2 / 1000) * qtaR;
                 mlBordo += bR;
                 mqTot += (lVano * (P - 20) * qtaR) / 1000000;
                 htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qtaR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${bR.toFixed(2)}</td></tr>`;
-                
                 for(let j=1; j<=qtaR; j++) {
                     let yR = 25 + sp + ( (h-z-sp*2) / (qtaR+1) ) * j;
                     svg += `<line x1="${xStart}" y1="${yR}" x2="${xStart + lVano*sc}" y2="${yR}" stroke="#3498db" stroke-dasharray="4"/>`;
@@ -149,8 +141,7 @@
             }
             if(document.getElementById(`asta_${i}`)?.checked) {
                 numAste++;
-                let yAsta = 25 + sp + 40;
-                svg += `<rect x="${xStart + 5}" y="${yAsta}" width="${lVano*sc - 10}" height="4" rx="2" fill="#95a5a6"/>`;
+                svg += `<rect x="${xStart+5}" y="${25+sp+40}" width="${lVano*sc-10}" height="4" rx="2" fill="#95a5a6"/>`;
             }
             if(i < nDiv) {
                 let xDiv = 25 + sp + (lVano*sc)*(i+1) + (sp*i);
@@ -158,16 +149,28 @@
             }
         }
 
-        let totCerniere = Math.max(2, Math.ceil(hFianco / 700)) * (nDiv + 1);
-        let costoPannelli = mqTot * prezzoMq * 1.25;
-        let costoBordatura = mlBordo * 1.50;
+        // Calcoli Finali
+        let cernierePerAnta = Math.max(2, Math.ceil(hFianco / 700));
+        let totCerniere = cernierePerAnta * (nDiv + 1);
+        
+        let costoPannelli = mqTot * prezzoMq * 1.25; // 25% sfrido
+        let costoBordo = mlBordo * 1.50;
         let costoCerniere = totCerniere * 4.50;
-        let totale = (costoPannelli + costoBordatura + costoCerniere + (numAste*12) + 80) * 1.22;
+        let costoAste = numAste * 12.00;
+        let totale = (costoPannelli + costoBordo + costoCerniere + costoAste + 80) * 1.22;
 
         document.getElementById('disegno').innerHTML = svg;
         document.getElementById('corpoTabella').innerHTML = htmlT;
         document.getElementById('totale').innerText = "€ " + totale.toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `Schienali calcolati per ogni vano | Bordo tot: ${mlBordo.toFixed(2)}m`;
+        
+        // REINSERITI DETTAGLI VISIVI
+        document.getElementById('dettaglioCosti').innerHTML = `
+            <strong>Dettaglio componenti:</strong><br>
+            • Bordatura: ${mlBordo.toFixed(2)} m (1.50€/m)<br>
+            • Cerniere: ${totCerniere} pz (4.50€ cad.)<br>
+            • Kit Aste: ${numAste} pz (12.00€ cad.)<br>
+            • Schienali: ${nDiv + 1} pz inclusi
+        `;
     }
     window.onload = run;
 </script>
