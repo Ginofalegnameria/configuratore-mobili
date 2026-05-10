@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria - Preventivo Analitico</title>
+    <title>Configuratore Falegnameria - Modelli Ante</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .wrapper { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         .section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h3 { margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 8px; color: #007bff; font-size: 1.1em; }
-        .header-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; align-items: end; }
+        .header-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 20px; align-items: end; }
         .main-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 4px; color: #555; }
@@ -20,64 +20,60 @@
         #svgContainer svg { background: white; border: 1px solid #ddd; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 0.9em; }
-        th { background: #007bff; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        th { background: #007bff; color: white; text-transform: uppercase; }
         .result-box { width: 100%; background: #2c3e50; color: white; padding: 25px; border-radius: 12px; }
         #totale-big { font-size: 42px; font-weight: bold; color: #2ecc71; text-align: center; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 15px; }
         .valore-analitico { text-align: right; font-weight: bold; color: #fff; }
-        .btn-stampa { position: fixed; bottom: 20px; right: 20px; padding: 15px 40px; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; }
-        @media print { .btn-stampa, .section:not(.output-area):not(#area-preventivo) { display: none !important; } body { background: white; padding: 0; } .section { box-shadow: none; border: none; width: 100%; } }
+        .btn-stampa { position: fixed; bottom: 20px; right: 20px; padding: 15px 40px; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 1000; }
+        @media print { .btn-stampa, .section:not(.output-area):not(#area-preventivo), .main-grid { display: none !important; } body { background: white; padding: 0; } }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <!-- INFO GENERALI -->
+    <!-- 1. HEADER -->
     <div class="section header-grid">
-        <div><label>NOME CLIENTE</label><input type="text" id="nomeCliente" placeholder="Mario Rossi" oninput="aggiornaDati()"></div>
-        <div><label>MATERIALE</label>
+        <div><label>NOME CLIENTE</label><input type="text" id="nomeCliente" placeholder="Progetto Laccato" oninput="aggiornaDati()"></div>
+        <div><label>MATERIALE SCOCCA</label>
             <select id="mat" onchange="aggiornaDati()">
                 <option value="25">Truciolare Melaminico (25€)</option>
                 <option value="55" selected>Laminato Standard (55€)</option>
-                <option value="120">Laccato Opaco (120€)</option>
             </select>
         </div>
-        <div><label>STILE ANTA</label>
-            <select id="stileAnta" onchange="aggiornaDati()">
-                <option value="20">Liscia Bordata (+20€)</option>
-                <option value="45">Fresata (+45€)</option>
-                <option value="65">Gola Integrata (+65€)</option>
+        <div><label>MODELLO ANTA (MDF LACCATO)</label>
+            <select id="modelloAnta" onchange="aggiornaDati()" style="border: 2px solid #007bff;">
+                <option value="199">Profilo SLAB (199€/mq)</option>
+                <option value="249">Apertura a GOLA (249€/mq)</option>
             </select>
         </div>
     </div>
 
-    <!-- CONFIGURAZIONE -->
+    <!-- 2. CONFIGURAZIONE -->
     <div class="main-grid">
         <div class="section">
-            <h3>PARAMETRI STRUTTURA</h3>
+            <h3>STRUTTURA</h3>
             <div class="input-grid">
-                <div><label>Larghezza (L)</label><input type="number" id="L" value="1000" oninput="run()"></div>
-                <div><label>Altezza (A)</label><input type="number" id="A" value="2000" oninput="run()"></div>
-                <div><label>Profondità (P)</label><input type="number" id="P" value="600" oninput="run()"></div>
+                <div><label>Largh. L</label><input type="number" id="L" value="1000" oninput="run()"></div>
+                <div><label>Alt. A</label><input type="number" id="A" value="2000" oninput="run()"></div>
+                <div><label>Prof. P</label><input type="number" id="P" value="600" oninput="run()"></div>
                 <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="run()"></div>
-                <div><label>Spessore SP</label><input type="number" id="SP" value="19" oninput="run()"></div>
-                <div><label>Schienale</label><select id="SPS" onchange="run()"><option value="4">4 mm</option><option value="8">8 mm</option></select></div>
-                <div><label>Apertura</label><select id="tipoAp" onchange="aggiornaDati()"><option value="pomello">Pomello</option><option value="premiapri">Premiapri</option><option value="gola">Gola</option></select></div>
-                <div><label>Operaio €/h</label><input type="number" id="Tariffa" value="80" oninput="aggiornaDati()"></div>
+                <div><label>Sp. Scocca</label><input type="number" id="SP" value="19" oninput="run()"></div>
+                <div><label>Tariffa h</label><input type="number" id="Tariffa" value="80" oninput="aggiornaDati()"></div>
             </div>
         </div>
         <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #007bff; margin-bottom:15px;">
-                <h3 style="border:none; margin:0;">VANI INTERNI</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>VANI INTERNI</h3>
                 <div style="display:flex; align-items:center; gap:10px;"><label>DIVISORI:</label><input type="number" id="numDiv" value="0" min="0" oninput="initVani()" style="width:60px;"></div>
             </div>
             <div id="contVani"></div>
         </div>
     </div>
 
-    <!-- PREVENTIVO -->
+    <!-- 3. PREVENTIVO -->
     <div class="section output-area" id="area-preventivo">
         <div style="text-align:center; width:100%;">
-            <h1 style="margin:0">PREVENTIVO FALEGNAMERIA PER: <span id="labelCli">Da definire</span></h1>
+            <h1 style="margin:0">PREVENTIVO ANALITICO: <span id="labelCli">Da definire</span></h1>
             <p>Data: <span id="data"></span></p>
         </div>
         <div id="svgContainer"></div>
@@ -87,9 +83,8 @@
                 <table id="tabellaTagli"><thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Sp</th></tr></thead><tbody></tbody></table>
             </div>
             <div class="result-box">
-                <div style="text-align:center; font-size:14px; color:#bdc3c7;">TOTALE IMPONIBILE (IVA ESCLUSA)</div>
+                <div style="text-align:center; font-size:14px; color:#bdc3c7;">TOTALE IMPONIBILE</div>
                 <div id="totale-big">€ 0.00</div>
-                <h3>DETTAGLIO ANALITICO DEI COSTI</h3>
                 <table id="costiAnalitici" style="background:transparent; width:100%; color:white; border:none;">
                     <tbody id="corpoCosti"></tbody>
                 </table>
@@ -98,7 +93,7 @@
     </div>
 </div>
 
-<button class="btn-stampa" onclick="window.print()">🖨️ GENERA PDF</button>
+<button class="btn-stampa" onclick="window.print()">🖨️ STAMPA PDF</button>
 
 <script>
     function run() { aggiornaDati(); }
@@ -111,7 +106,7 @@
                 <div><label>Ripiani</label><input type="number" id="q_${i}" value="0" oninput="aggiornaDati()"></div>
                 <div><label>Cassetti</label><input type="number" id="cass_${i}" value="0" oninput="aggiornaDati()"></div>
             </div><div class="grid" style="margin-top:10px;">
-                <div><label><input type="checkbox" id="anta_${i}" onchange="aggiornaDati()"> Anta</label><select id="verso_${i}" onchange="aggiornaDati()" style="font-size:11px;"><option value="dx">DX</option><option value="sx">SX</option></select></div>
+                <div><label><input type="checkbox" id="anta_${i}" onchange="aggiornaDati()"> Anta</label><select id="verso_${i}" onchange="aggiornaDati()" style="font-size:11px;"><option value="dx">Apertura DX</option><option value="sx">Apertura SX</option></select></div>
                 <div><label><input type="checkbox" id="asta_${i}" onchange="aggiornaDati()"> Asta</label></div>
             </div></div>`;
         }
@@ -119,47 +114,57 @@
     }
 
     function aggiornaDati() {
-        const L=parseFloat(document.getElementById('L').value)||0, A=parseFloat(document.getElementById('A').value)||0, P=parseFloat(document.getElementById('P').value)||0, Z=parseFloat(document.getElementById('Z').value)||0, SP=parseFloat(document.getElementById('SP').value)||0, SPS=parseFloat(document.getElementById('SPS').value)||4, TH=parseFloat(document.getElementById('Tariffa').value)||80, nD=parseInt(document.getElementById('numDiv').value)||0, pM=parseFloat(document.getElementById('mat').value), tipoAp=document.getElementById('tipoAp').value, sAnta=parseFloat(document.getElementById('stileAnta').value);
+        const L=parseFloat(document.getElementById('L').value)||0, A=parseFloat(document.getElementById('A').value)||0, P=parseFloat(document.getElementById('P').value)||0, Z=parseFloat(document.getElementById('Z').value)||0, SP=parseFloat(document.getElementById('SP').value)||0, TH=parseFloat(document.getElementById('Tariffa').value)||80, nD=parseInt(document.getElementById('numDiv').value)||0, pM=parseFloat(document.getElementById('mat').value), pMA=parseFloat(document.getElementById('modelloAnta').value);
         document.getElementById('labelCli').innerText = document.getElementById('nomeCliente').value || "Da definire";
         document.getElementById('data').innerText = new Date().toLocaleDateString('it-IT');
+        
         const lVano = (L - (SP * 2) - (nD * SP)) / (nD + 1);
         const sc=Math.min(500/L, 500/A), w=L*sc, h=A*sc, sp=SP*sc, z=Z*sc, offX=60, offY=60;
-        let golaH = (tipoAp === "gola") ? 30 : 0;
+        let golaH = (pMA === 249) ? 30 : 0; // Se Gola, sottrai 30mm
+
         let svg = `<svg viewBox="0 0 650 650" width="550" height="550"><rect x="${offX}" y="${offY}" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`;
-        let mqStr=0, mqSch=0, mlB=0, nAste=0, nCern=0, nGuide=0, nFr=0, hT="";
-        let pezzi = [{n:"Fianchi", q:2, a:A, b:P, s:SP}, {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:SPS}];
+        let mqStr=0, mqSch=0, mqAnte=0, mlB=0, nAste=0, nCern=0, nGuide=0, hT="";
+        let pezzi = [{n:"Fianchi", q:2, a:A, b:P, s:SP}, {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:4}];
         if(nD>0) pezzi.push({n:"Divisori", q:nD, a:A-Z-(SP*2), b:P-20, s:SP});
 
         for(let i=0; i<=nD; i++) {
             let xV = offX+sp+(i*(lVano*sc+sp)), qR = parseInt(document.getElementById(`q_${i}`)?.value)||0, qC = parseInt(document.getElementById(`cass_${i}`)?.value)||0;
             if(qR>0) { pezzi.push({n:`Ripiani V${i+1}`, q:qR, a:lVano, b:P-20, s:SP}); for(let j=1; j<=qR; j++) svg += `<rect x="${xV}" y="${offY+h-z-sp-(320*j*sc)}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
-            if(qC>0) { nGuide+=qC; nFr+=qC; pezzi.push({n:`Frontale Cass. V${i+1}`, q:qC, a:198-golaH, b:lVano-4, s:SP}); for(let k=0; k<qC; k++) { let yC = offY+h-z-sp-((k+1)*200*sc); svg += `<rect x="${xV+2}" y="${yC+2+golaH*sc}" width="${lVano*sc-4}" height="${(200-golaH)*sc-4}" fill="#eee" stroke="#7f8c8d"/>`; if(tipoAp==="pomello") svg += `<circle cx="${xV+(lVano*sc/2)}" cy="${yC+100*sc}" r="3" fill="#333"/>`; if(tipoAp==="gola") svg += `<rect x="${xV+2}" y="${yC+2}" width="${lVano*sc-4}" height="${golaH*sc}" fill="#333"/>`; } }
-            if(document.getElementById(`anta_${i}`)?.checked) { nCern+=Math.max(2, Math.ceil(A/700)); nFr+=1; pezzi.push({n:`Anta V${i+1}`, q:1, a:A-Z-4-golaH, b:lVano-4, s:SP}); svg += `<rect x="${xV+2}" y="${offY+2+golaH*sc}" width="${lVano*sc-4}" height="${(A-Z-SP-golaH)*sc-4}" fill="#dfe6e9" stroke="#2d3436" fill-opacity="0.7"/>`; if(tipoAp==="gola") svg += `<rect x="${xV+2}" y="${offY+2}" width="${lVano*sc-4}" height="${golaH*sc}" fill="#333"/>`; else if(tipoAp==="pomello") { let v=document.getElementById(`verso_${i}`).value; svg += `<circle cx="${(v==="dx")?xV+lVano*sc-15:xV+15}" cy="${offY+h/2}" r="5" fill="#333"/>`; } }
+            if(qC>0) { 
+                nGuide+=qC; mqAnte += ((198-golaH) * (lVano-4) * qC) / 1000000;
+                pezzi.push({n:`Frontale Cass. V${i+1}`, q:qC, a:198-golaH, b:lVano-4, s:SP}); 
+                for(let k=0; k<qC; k++) { let yC = offY+h-z-sp-((k+1)*200*sc); svg += `<rect x="${xV+2}" y="${yC+2+golaH*sc}" width="${lVano*sc-4}" height="${(200-golaH)*sc-4}" fill="#ffffff" stroke="#333"/>`; if(golaH>0) svg += `<rect x="${xV+2}" y="${yC+2}" width="${lVano*sc-4}" height="${golaH*sc}" fill="#444"/>`; } 
+            }
+            if(document.getElementById(`anta_${i}`)?.checked) { 
+                nCern+=Math.max(2, Math.ceil(A/700)); mqAnte += ((A-Z-4-golaH) * (lVano-4)) / 1000000;
+                pezzi.push({n:`Anta Laccata V${i+1}`, q:1, a:A-Z-4-golaH, b:lVano-4, s:SP}); 
+                svg += `<rect x="${xV+2}" y="${offY+2+golaH*sc}" width="${lVano*sc-4}" height="${(A-Z-SP-golaH)*sc-4}" fill="#ffffff" stroke="#2d3436" fill-opacity="0.9"/>`; if(golaH>0) svg += `<rect x="${xV+2}" y="${offY+2}" width="${lVano*sc-4}" height="${golaH*sc}" fill="#444"/>`; else { let v=document.getElementById(`verso_${i}`).value; svg += `<circle cx="${(v==="dx")?xV+lVano*sc-15:xV+15}" cy="${offY+h/2}" r="5" fill="#333"/>`; } 
+            }
             if(document.getElementById(`asta_${i}`)?.checked) { nAste++; svg += `<rect x="${xV}" y="${offY+sp+40*sc}" width="${lVano*sc}" height="6" fill="#95a5a6"/>`; }
             if(i<nD) svg += `<rect x="${xV+lVano*sc}" y="${offY+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
-        svg += `<rect x="${offX}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${offX+w-sp}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${offX+sp}" y="${offY+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${offX+sp}" y="${offY+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${offX+sp}" y="${offY}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><text x="${offX+w/2}" y="${offY-15}" font-size="16" font-weight="bold" text-anchor="middle">${L}mm</text><text x="${offX-35}" y="${offY+h/2}" font-size="16" font-weight="bold" text-anchor="middle" transform="rotate(-90,${offX-35},${offY+h/2})">${A}mm</text></svg>`;
+        svg += `<rect x="${offX}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${offX+w-sp}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${offX+sp}" y="${offY+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${offX+sp}" y="${offY+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${offX+sp}" y="${offY}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><text x="${offX+w/2}" y="${offY-15}" font-size="16" font-weight="bold" text-anchor="middle">L: ${L}mm</text><text x="${offX-35}" y="${offY+h/2}" font-size="16" font-weight="bold" text-anchor="middle" transform="rotate(-90,${offX-35},${offY+h/2})">A: ${A}mm</text></svg>`;
 
-        pezzi.forEach(p => { let bP = (p.s>4)?((p.a+p.b)*2/1000)*p.q:0; mlB+=bP; if(p.s>4) mqStr+=(p.a*p.b*p.q)/1000000; else mqSch+=(p.a*p.b*p.q)/1000000; hT+=`<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${p.s}</td></tr>`; });
+        pezzi.forEach(p => { 
+            let bP = (p.s>4 && !p.n.includes("Anta") && !p.n.includes("Frontale")) ? ((p.a+p.b)*2/1000)*p.q : 0; 
+            mlB+=bP; if(p.s>4 && !p.n.includes("Anta") && !p.n.includes("Frontale")) mqStr+=(p.a*p.b*p.q)/1000000; else if(p.s<=4) mqSch+=(p.a*p.b*p.q)/1000000; hT+=`<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${p.s}</td></tr>`; 
+        });
 
-        let cAp=(tipoAp==="premiapri")?15:(tipoAp==="gola")?25:5, ore=1.5+(mqStr*1.2)+(nCern*0.2)+(nGuide*0.5);
-        let vMatStr=mqStr*pM*1.25, vMatSch=mqSch*15, vBord=mlB*1.80, vCern=nCern*4.5, vGuide=nGuide*25, vAnte=nFr*sAnta, vAp=nFr*cAp, vAste=nAste*12, vLav=ore*TH, vTras=70;
-        let imponibile=vMatStr+vMatSch+vBord+vCern+vGuide+vAnte+vAp+vAste+vLav+vTras, iva=imponibile*0.22;
+        let ore = 1.5 + (mqStr*1.2) + (nCern*0.2) + (nGuide*0.5), vMatStr=mqStr*pM*1.25, vMatSch=mqSch*15, vAnteLacc=mqAnte*pMA, vBord=mlB*1.8, vCern=nCern*4.5, vGuide=nGuide*25, vAste=nAste*12, vLav=ore*TH, vTras=70;
+        let imp = vMatStr + vMatSch + vAnteLacc + vBord + vCern + vGuide + vAste + vLav + vTras;
 
         document.getElementById('svgContainer').innerHTML = svg;
         document.getElementById('tabellaTagli').querySelector('tbody').innerHTML = hT;
-        document.getElementById('totale-big').innerText = "€ " + imponibile.toFixed(2);
+        document.getElementById('totale-big').innerText = "€ " + imp.toFixed(2);
         document.getElementById('corpoCosti').innerHTML = `
-            <tr><td>Materiale Scocca (${mqStr.toFixed(1)} mq)</td><td class="valore-analitico">€ ${vMatStr.toFixed(2)}</td></tr>
-            <tr><td>Materiale Schienali (${mqSch.toFixed(1)} mq)</td><td class="valore-analitico">€ ${vMatSch.toFixed(2)}</td></tr>
-            <tr><td>Bordatura (${mlB.toFixed(1)} m)</td><td class="valore-analitico">€ ${vBord.toFixed(2)}</td></tr>
-            <tr><td>Ferramenta (Cerniere + Guide + Aste)</td><td class="valore-analitico">€ ${(vCern+vGuide+vAste).toFixed(2)}</td></tr>
-            <tr><td>Lavorazione Ante e Aperture</td><td class="valore-analitico">€ ${(vAnte+vAp).toFixed(2)}</td></tr>
-            <tr><td>Manodopera Operaio (${ore.toFixed(1)} h)</td><td class="valore-analitico">€ ${vLav.toFixed(2)}</td></tr>
+            <tr><td>Materiale Scocca</td><td class="valore-analitico">€ ${vMatStr.toFixed(2)}</td></tr>
+            <tr style="color:#2ecc71"><td>Ante/Frontali (${(pMA===199?'Slab':'Gola')})</td><td class="valore-analitico">€ ${vAnteLacc.toFixed(2)}</td></tr>
+            <tr><td>Bordatura Scocca</td><td class="valore-analitico">€ ${vBord.toFixed(2)}</td></tr>
+            <tr><td>Ferramenta Totale</td><td class="valore-analitico">€ ${(vCern+vGuide+vAste).toFixed(2)}</td></tr>
+            <tr><td>Manodopera (${ore.toFixed(1)} h)</td><td class="valore-analitico">€ ${vLav.toFixed(2)}</td></tr>
             <tr><td>Trasporto e Logistica</td><td class="valore-analitico">€ ${vTras.toFixed(2)}</td></tr>
-            <tr style="border-top:2px solid #555"><td>IVA 22%</td><td class="valore-analitico">€ ${iva.toFixed(2)}</td></tr>
-            <tr><td><strong>TOTALE IVATO</strong></td><td class="valore-analitico"><strong>€ ${(imponibile+iva).toFixed(2)}</strong></td></tr>
-        `;
+            <tr style="border-top:1px solid #555"><td>IVA 22%</td><td class="valore-analitico">€ ${(imp*0.22).toFixed(2)}</td></tr>
+            <tr><td><strong>TOTALE IVATO</strong></td><td class="valore-analitico"><strong>€ ${(imp*1.22).toFixed(2)}</strong></td></tr>`;
     }
     window.onload = initVani;
 </script>
