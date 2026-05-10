@@ -8,11 +8,9 @@
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .wrapper { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         
-        /* Sezioni */
         .section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h3 { margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 8px; color: #007bff; font-size: 1.1em; }
         
-        /* Layout Griglie */
         .header-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; align-items: end; }
         .main-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -20,39 +18,37 @@
         label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 4px; color: #555; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         
-        /* Vani */
         #contVani { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 10px; }
         .row-item { background: #f8f9fa; padding: 15px; border-radius: 8px; border-top: 4px solid #007bff; }
 
-        /* Risultati e Disegno */
         .output-area { display: flex; flex-direction: column; align-items: center; gap: 30px; }
         #svgContainer svg { background: white; border: 1px solid #ddd; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 0.9em; }
         th { background: #007bff; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
-        .result-box { width: 100%; max-width: 800px; background: #2c3e50; color: white; padding: 30px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        #totale-big { font-size: 48px; font-weight: bold; color: #2ecc71; grid-column: span 2; text-align: center; border-bottom: 1px solid #444; padding-bottom: 20px; }
+        .result-box { width: 100%; background: #2c3e50; color: white; padding: 25px; border-radius: 12px; }
+        #totale-big { font-size: 42px; font-weight: bold; color: #2ecc71; text-align: center; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 15px; }
         .valore-analitico { text-align: right; font-weight: bold; color: #fff; }
 
         .btn-stampa { position: fixed; bottom: 20px; right: 20px; padding: 15px 40px; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; }
 
         @media print {
-            .btn-stampa, .section:not(.output-area):not(#area-preventivo) { display: none !important; }
-            body { background: white; }
-            .section { box-shadow: none; border: none; }
+            .btn-stampa, .section:not(.output-area):not(#area-preventivo), .card, .main-grid { display: none !important; }
+            body { background: white; padding: 0; }
+            .section { box-shadow: none; border: none; width: 100%; }
+            .wrapper { max-width: 100%; }
         }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <!-- 1. HEADER: DATI GENERALI -->
     <div class="section header-grid">
         <div>
             <label>NOME CLIENTE / PROGETTO</label>
-            <input type="text" id="nomeCliente" placeholder="Es: Mario Rossi - Armadio Ingresso" oninput="aggiornaDati()">
+            <input type="text" id="nomeCliente" placeholder="Es: Progetto Armadio" oninput="aggiornaDati()">
         </div>
         <div>
             <label>MATERIALE STRUTTURA</label>
@@ -72,9 +68,7 @@
         </div>
     </div>
 
-    <!-- 2. MAIN: CONFIGURAZIONE SU DUE COLONNE -->
     <div class="main-grid">
-        <!-- Colonna SX: Struttura -->
         <div class="section">
             <h3>PARAMETRI STRUTTURA</h3>
             <div class="input-grid">
@@ -86,7 +80,7 @@
                 <div><label>Sp. Schiena</label>
                     <select id="SPS" onchange="run()"><option value="4">4 mm</option><option value="8">8 mm</option></select>
                 </div>
-                <div><label>Sistema Apertura</label>
+                <div><label>Apertura</label>
                     <select id="tipoApertura" onchange="aggiornaDati()">
                         <option value="pomello">Pomello</option>
                         <option value="premiapri">Premiapri</option>
@@ -97,10 +91,9 @@
             </div>
         </div>
 
-        <!-- Colonna DX: Allestimento Vani -->
         <div class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 15px;">
-                <h3 style="border:none; margin:0;">ALLESTIMENTO VANI INTERNI</h3>
+                <h3 style="border:none; margin:0;">ALLESTIMENTO VANI</h3>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <label style="margin:0">DIVISORI:</label>
                     <input type="number" id="numDiv" value="0" min="0" oninput="initVani()" style="width:60px; padding:5px;">
@@ -110,16 +103,15 @@
         </div>
     </div>
 
-    <!-- 3. BOTTOM: DISEGNO E DISTINTE -->
     <div class="section output-area" id="area-preventivo">
         <div style="text-align: center; width:100%;">
-            <h1 id="titolo-stampa" style="margin:0">PROGETTO ESECUTIVO: <span id="labelCli">Da definire</span></h1>
+            <h1 style="margin:0">PROGETTO ESECUTIVO: <span id="labelCli">Da definire</span></h1>
             <p>Data: <span id="data"></span></p>
         </div>
 
         <div id="svgContainer"></div>
 
-        <div style="width:100%; display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; align-items: start;">
+        <div style="width:100%; display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; align-items: start;">
             <div>
                 <h3>DISTINTA TAGLI PANNELLI</h3>
                 <table id="tabellaTagli">
@@ -130,7 +122,10 @@
             
             <div class="result-box">
                 <div id="totale-big">€ 0.00</div>
-                <table id="costiAnalitici" style="grid-column: span 2; width:100%; border:none;"></table>
+                <h3>DETTAGLIO ANALITICO</h3>
+                <table id="costiAnalitici" style="background:transparent; width:100%; border:none;">
+                    <tbody id="corpoCosti"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -155,10 +150,10 @@
                 <div class="grid" style="margin-top:10px;">
                     <div><label><input type="checkbox" id="anta_${i}" onchange="aggiornaDati()"> Anta</label>
                         <select id="verso_${i}" onchange="aggiornaDati()" style="font-size:11px; margin-top:3px;">
-                            <option value="dx">DX</option><option value="sx">SX</option>
+                            <option value="dx">Apertura DX</option><option value="sx">Apertura SX</option>
                         </select>
                     </div>
-                    <div><label><input type="checkbox" id="asta_${i}" onchange="aggiornaDati()"> Asta</label></div>
+                    <div><label><input type="checkbox" id="asta_${i}" onchange="aggiornaDati()"> Asta Appendiabiti</label></div>
                 </div></div>`;
         }
         cont.innerHTML = html;
@@ -231,7 +226,15 @@
         document.getElementById('svgContainer').innerHTML = svg;
         document.getElementById('tabellaTagli').querySelector('tbody').innerHTML = hT;
         document.getElementById('totale-big').innerText = "€ " + (imp * 1.22).toFixed(2);
-        document.getElementById('costiAnalitici').innerHTML = `<tr><td>Materiali Pannelli</td><td class="valore-analitico">€ ${(mqS*pM*1.25).toFixed(2)}</td></tr><tr><td>Bordatura Totale</td><td class="valore-analitico">€ ${(mlB*1.8).toFixed(2)}</td></tr><tr><td>Ferramenta + Ante</td><td class="valore-analitico">€ ${c_fer.toFixed(2)}</td></tr><tr><td>Lavoro (${ore.toFixed(1)}h)</td><td class="valore-analitico">€ ${(ore*TH).toFixed(2)}</td></tr><tr><td>IVA e Trasporto</td><td class="valore-analitico">€ ${(imp*0.22+70).toFixed(2)}</td></tr>`;
+        
+        // CORREZIONE: Popolamento esplicito della tabella costi
+        document.getElementById('corpoCosti').innerHTML = `
+            <tr><td style="color:#bdc3c7">Materiali Pannelli</td><td class="valore-analitico">€ ${(mqS*pM*1.25).toFixed(2)}</td></tr>
+            <tr><td style="color:#bdc3c7">Bordatura Totale</td><td class="valore-analitico">€ ${(mlB*1.8).toFixed(2)}</td></tr>
+            <tr><td style="color:#bdc3c7">Ferramenta e Style Ante</td><td class="valore-analitico">€ ${c_fer.toFixed(2)}</td></tr>
+            <tr><td style="color:#bdc3c7">Manodopera Professionale</td><td class="valore-analitico">€ ${(ore*TH).toFixed(2)}</td></tr>
+            <tr><td style="color:#bdc3c7">Trasporto e IVA 22%</td><td class="valore-analitico">€ ${(imp*0.22+70).toFixed(2)}</td></tr>
+        `;
     }
     window.onload = initVani;
 </script>
