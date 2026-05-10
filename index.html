@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria Pro - Fix Disegno</title>
+    <title>Configuratore Pro - Falegnameria & iDoor</title>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1300px; width: 100%; justify-content: center; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1; min-width: 380px; }
         .preview { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 450px; text-align: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .highlight-box { background: #e3f2fd; padding: 15px; border-radius: 6px; border: 1px solid #2196f3; margin-bottom: 15px; }
         label { font-size: 0.8em; font-weight: bold; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .row-item { background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #007bff; text-align: left; }
@@ -29,11 +30,21 @@
     <div class="card">
         <h3>1. Cliente e Materiale</h3>
         <input type="text" id="nomeCliente" placeholder="Nome Cliente" oninput="aggiornaDati()">
-        <label style="margin-top:10px">Materiale</label>
+        
+        <label style="margin-top:10px">Materiale Struttura</label>
         <select id="mat" onchange="aggiornaDati()">
             <option value="25">Truciolare (25€/mq)</option>
             <option value="55" selected>Laminato (55€/mq)</option>
             <option value="120">Laccato (120€/mq)</option>
+        </select>
+
+        <label style="margin-top:10px; color:#007bff">Tipologia Ante (Style iDoor.it)</label>
+        <select id="stileAnta" onchange="aggiornaDati()" style="border: 2px solid #007bff;">
+            <option value="0">Solo Scocca (Nessuna Anta)</option>
+            <option value="20">Liscia Bordata (Base)</option>
+            <option value="45">Fresata con Presa Maniglia</option>
+            <option value="65">Gola Integrata (Premium)</option>
+            <option value="85">Telaio con Vetro</option>
         </select>
 
         <h3>2. Struttura (mm)</h3>
@@ -42,25 +53,21 @@
             <div><label>Altezza</label><input type="number" id="A" value="2000" oninput="run()"></div>
             <div><label>Profondità</label><input type="number" id="P" value="600" oninput="run()"></div>
             <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="run()"></div>
-            <div><label>Sp. Scocca</label><input type="number" id="SP" value="19" oninput="run()"></div>
-            <div><label>Sp. Schienale</label><select id="SPS" onchange="run()"><option value="4">4 mm</option><option value="8">8 mm</option></select></div>
-        </div>
-
-        <h3>3. Apertura e Lavoro</h3>
-        <div class="grid">
-            <div><label>Apertura</label>
-                <select id="tipoApertura" onchange="aggiornaDati()">
-                    <option value="premiapri">Premiapri</option>
-                    <option value="pomello">Con Pomello</option>
-                </select>
-            </div>
+            <div><label>Spessore</label><input type="number" id="SP" value="19" oninput="run()"></div>
             <div><label>Operaio €/h</label><input type="number" id="Tariffa" value="80" oninput="aggiornaDati()"></div>
         </div>
 
-        <h3>4. Allestimento</h3>
+        <h3>3. Apertura</h3>
+        <select id="tipoApertura" onchange="aggiornaDati()">
+            <option value="premiapri">Premiapri (Push-Pull)</option>
+            <option value="pomello" selected>Con Pomello/Maniglia</option>
+        </select>
+
+        <h3>4. Vani e Allestimento</h3>
         <label>N° Divisori Verticali</label>
         <input type="number" id="numDiv" value="0" min="0" oninput="initVani()">
         <div id="contVani"></div>
+        
         <button class="btn-stampa" onclick="window.print()">🖨️ STAMPA PDF</button>
     </div>
 
@@ -68,7 +75,10 @@
         <h2 style="margin:0">PREVENTIVO TECNICO</h2>
         <p id="infoCliente" style="font-weight:bold; color:#007bff">Cliente: Da definire</p>
         <div id="svgContainer"></div>
-        <div class="result-box"><div id="totale">€ 0.00</div><div id="reportCosti"></div></div>
+        <div class="result-box">
+            <div id="totale">€ 0.00</div>
+            <div id="reportCosti"></div>
+        </div>
         <table id="tabellaTagli">
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Sp</th></tr></thead>
             <tbody></tbody>
@@ -87,11 +97,11 @@
             html += `<div class="row-item"><strong>Vano ${i+1}</strong>
                 <div class="grid">
                     <div><label>Ripiani</label><input type="number" id="q_${i}" value="0" oninput="aggiornaDati()"></div>
-                    <div><label>N° Cassetti</label><input type="number" id="cass_${i}" value="0" oninput="aggiornaDati()"></div>
+                    <div><label>Cassetti</label><input type="number" id="cass_${i}" value="0" oninput="aggiornaDati()"></div>
                 </div>
                 <div class="grid">
-                    <div><label><input type="checkbox" id="anta_${i}" onchange="aggiornaDati()"> Anta</label></div>
-                    <div><label><input type="checkbox" id="asta_${i}" onchange="aggiornaDati()"> Asta</label></div>
+                    <label><input type="checkbox" id="anta_${i}" onchange="aggiornaDati()"> Applica Anta</label>
+                    <label><input type="checkbox" id="asta_${i}" onchange="aggiornaDati()"> Asta</label>
                 </div></div>`;
         }
         cont.innerHTML = html;
@@ -100,9 +110,10 @@
 
     function aggiornaDati() {
         const L=parseFloat(document.getElementById('L').value)||0, A=parseFloat(document.getElementById('A').value)||0, P=parseFloat(document.getElementById('P').value)||0;
-        const Z=parseFloat(document.getElementById('Z').value)||0, SP=parseFloat(document.getElementById('SP').value)||0, SPS=parseFloat(document.getElementById('SPS').value)||4;
+        const Z=parseFloat(document.getElementById('Z').value)||0, SP=parseFloat(document.getElementById('SP').value)||0;
         const TH=parseFloat(document.getElementById('Tariffa').value)||80, nD=parseInt(document.getElementById('numDiv').value)||0;
         const pM=parseFloat(document.getElementById('mat').value), tipoAp=document.getElementById('tipoApertura').value;
+        const sovrapprezzoStile = parseFloat(document.getElementById('stileAnta').value);
         
         document.getElementById('infoCliente').innerText = "Cliente: " + (document.getElementById('nomeCliente').value || "Da definire");
 
@@ -110,56 +121,36 @@
         const sc=380/Math.max(L,A), w=L*sc, h=A*sc, sp=SP*sc, z=Z*sc, offX=60, offY=60;
 
         let svg = `<svg viewBox="0 0 500 550" width="400" height="440">`;
-        svg += `<rect x="${offX}" y="${offY}" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`; // Schiena fondo
+        svg += `<rect x="${offX}" y="${offY}" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`;
 
-        let mqS=0, mlB=0, nAste=0, nCern=0, nGuide=0, nAperture=0, hT="";
-        let pezzi = [{n:"Fianchi", q:2, a:A, b:P, s:SP}, {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:SPS}];
+        let mqS=0, mlB=0, nAste=0, nCern=0, nGuide=0, nAp=0, hT="";
+        let pezzi = [{n:"Fianchi", q:2, a:A, b:P, s:SP}, {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:4}];
         if(nD>0) pezzi.push({n:"Divisori", q:nD, a:A-Z-(SP*2), b:P-20, s:SP});
 
         for(let i=0; i<=nD; i++) {
             let xV = offX+sp+(i*(lVano*sc+sp));
-            let qR = parseInt(document.getElementById(`q_${i}`)?.value)||0;
-            let qC = parseInt(document.getElementById(`cass_${i}`)?.value)||0;
-            let hasAnta = document.getElementById(`anta_${i}`)?.checked;
-            let hasAsta = document.getElementById(`asta_${i}`)?.checked;
-
+            let qR = parseInt(document.getElementById(`q_${i}`)?.value)||0, qC = parseInt(document.getElementById(`cass_${i}`)?.value)||0;
             if(qR>0) {
                 pezzi.push({n:`Ripiani Vano ${i+1}`, q:qR, a:lVano, b:P-20, s:SP});
-                for(let j=1; j<=qR; j++) { 
-                    let yR = offY+h-z-sp-(320*j*sc); 
-                    if(yR>offY+sp) svg += `<rect x="${xV}" y="${yR}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; 
-                }
+                for(let j=1; j<=qR; j++) { let yR = offY+h-z-sp-(320*j*sc); if(yR>offY+sp) svg += `<rect x="${xV}" y="${yR}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
             }
             if(qC>0) {
-                nGuide += qC; nAperture += qC;
-                pezzi.push({n:`Frontali Cass. Vano ${i+1}`, q:qC, a:198, b:lVano-4, s:SP});
-                for(let k=0; k<qC; k++) {
-                    let yC = offY+h-z-sp-((k+1)*200*sc);
-                    svg += `<rect x="${xV+2}" y="${yC+2}" width="${lVano*sc-4}" height="${200*sc-4}" fill="#eee" stroke="#7f8c8d"/>`;
-                    if(tipoAp==="pomello") svg += `<circle cx="${xV+lVano*sc/2}" cy="${yC+100*sc}" r="3" fill="#333"/>`;
-                }
+                nGuide += qC; nAp += qC; pezzi.push({n:`Frontale Cass. Vano ${i+1}`, q:qC, a:198, b:lVano-4, s:SP});
+                for(let k=0; k<qC; k++) { let yC = offY+h-z-sp-((k+1)*200*sc); svg += `<rect x="${xV+2}" y="${yC+2}" width="${lVano*sc-4}" height="${200*sc-4}" fill="#eee" stroke="#7f8c8d"/>`; if(tipoAp==="pomello") svg += `<circle cx="${xV+lVano*sc/2}" cy="${yC+100*sc}" r="3" fill="#333"/>`; }
             }
-            if(hasAnta) {
-                nCern += Math.max(2, Math.ceil(A/700)); nAperture += 1;
-                pezzi.push({n:`Anta Vano ${i+1}`, q:1, a:A-Z-4, b:lVano-4, s:SP});
+            if(document.getElementById(`anta_${i}`)?.checked) {
+                nCern += Math.max(2, Math.ceil(A/700)); nAp += 1; pezzi.push({n:`Anta Style Vano ${i+1}`, q:1, a:A-Z-4, b:lVano-4, s:SP});
                 svg += `<rect x="${xV+2}" y="${offY+2}" width="${lVano*sc-4}" height="${(A-Z)*sc-4}" fill="#dfe6e9" stroke="#2d3436" fill-opacity="0.7"/>`;
                 if(tipoAp==="pomello") svg += `<circle cx="${xV+lVano*sc-15}" cy="${offY+h/2}" r="4" fill="#333"/>`;
             }
-            if(hasAsta) { nAste++; svg += `<rect x="${xV}" y="${offY+sp+40*sc}" width="${lVano*sc}" height="6" fill="#95a5a6"/>`; }
+            if(document.getElementById(`asta_${i}`)?.checked) { nAste++; svg += `<rect x="${xV}" y="${offY+sp+40*sc}" width="${lVano*sc}" height="6" fill="#95a5a6"/>`; }
             if(i<nD) svg += `<rect x="${xV+lVano*sc}" y="${offY+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
 
-        // Struttura esterna (disegnata sopra i contenuti interni)
-        svg += `<rect x="${offX}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`;
-        svg += `<rect x="${offX+w-sp}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`;
-        svg += `<rect x="${offX+sp}" y="${offY+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`;
-        svg += `<rect x="${offX+sp}" y="${offY+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
-        svg += `<rect x="${offX+sp}" y="${offY}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
-        
-        // Quote
-        svg += `<text x="${offX+w/2}" y="${offY-15}" font-size="14" font-weight="bold" text-anchor="middle">${L}mm</text>`;
-        svg += `<text x="${offX-20}" y="${offY+h/2}" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(-90,${offX-20},${offY+h/2})">${A}mm</text>`;
-        svg += `</svg>`;
+        // Struttura esterna e Quote
+        svg += `<rect x="${offX}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${offX+w-sp}" y="${offY}" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`;
+        svg += `<rect x="${offX+sp}" y="${offY+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${offX+sp}" y="${offY+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${offX+sp}" y="${offY}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
+        svg += `<text x="${offX+w/2}" y="${offY-15}" font-size="14" font-weight="bold" text-anchor="middle">L: ${L}mm</text><text x="${offX-20}" y="${offY+h/2}" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(-90,${offX-20},${offY+h/2})">A: ${A}mm</text></svg>`;
 
         pezzi.forEach(p => {
             let bP = (p.s > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
@@ -167,12 +158,15 @@
             hT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${p.s}</td></tr>`;
         });
 
-        let cAp = (tipoAp==="premiapri")?15:5, ore = 1.5+(mqS*1.2)+(nCern*0.2)+(nGuide*0.5), c_fer = (nCern*4.5)+(nGuide*25)+(nAperture*cAp)+(nAste*12), imp = (mqS*pM*1.25)+(mlB*1.8)+(ore*TH)+c_fer+70;
+        let cAp = (tipoAp==="premiapri")?15:5, ore = 1.5+(mqS*1.2)+(nCern*0.2)+(nGuide*0.5);
+        let c_fer = (nCern*4.5)+(nGuide*25)+(nAp*cAp)+(nAste*12);
+        let costoAnteExtra = nAp * sovrapprezzoStile;
+        let imp = (mqS*pM*1.25)+(mlB*1.8)+(ore*TH)+c_fer+costoAnteExtra+70;
         
         document.getElementById('svgContainer').innerHTML = svg;
         document.getElementById('tabellaTagli').querySelector('tbody').innerHTML = hT;
         document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
-        document.getElementById('reportCosti').innerHTML = `Lavoro: ${ore.toFixed(1)}h | Cerniere: ${nCern} | Guide: ${nGuide} | Bordi: ${mlB.toFixed(1)}m`;
+        document.getElementById('reportCosti').innerHTML = `Lavoro: ${ore.toFixed(1)}h | Cerniere: ${nCern} | Guide: ${nGuide} | Bordo: ${mlB.toFixed(1)}m | iDoor Style: +€${costoAnteExtra}`;
     }
     window.onload = initVani;
 </script>
