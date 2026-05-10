@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Tecnico Avanzato</title>
+    <title>Configuratore Tecnico Avanzato con Anteprima</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 350px; }
-        .preview-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 400px; }
+        .preview-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 400px; display: flex; flex-direction: column; align-items: center; }
         h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #007bff; }
-        .result-box { margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; text-align: center; }
+        .result-box { margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; text-align: center; width: 100%; box-sizing: border-box; }
         #totale { font-size: 32px; font-weight: bold; color: #2ecc71; }
-        .info-prezzo { font-size: 0.85em; text-align: left; margin-top: 10px; color: #ecf0f1; border-top: 1px solid #555; pt: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8em; }
+        .info-prezzo { font-size: 0.85em; text-align: left; margin-top: 10px; color: #ecf0f1; border-top: 1px solid #555; padding-top: 8px; }
+        svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 400px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         th { background: #007bff; color: white; }
     </style>
@@ -55,6 +56,9 @@
     </div>
 
     <div class="preview-card">
+        <h3>Anteprima Frontale</h3>
+        <svg id="disegno" viewBox="0 0 500 550"></svg>
+        
         <h3>Distinta Tagli e Componenti</h3>
         <table id="tabellaTagli">
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
@@ -74,8 +78,8 @@
             html += `<div class="row-item">
                 <strong>Vano ${i+1}</strong>
                 <div class="grid">
-                    <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="1" oninput="calcola()"></div>
-                    <div style="display:flex; align-items:center; mt:20px;">
+                    <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="1" min="0" oninput="calcola()"></div>
+                    <div style="display:flex; align-items:center; padding-top:20px;">
                         <input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Appendiabiti</label>
                     </div>
                 </div></div>`;
@@ -101,15 +105,16 @@
             { n: "Zoccoli", q: 2, a: L, b: Z },
             { n: "Schienali", q: nDiv + 1, a: hFianco, b: lVano + SP }
         ];
-
         if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: hFianco - (SP*2), b: P - 20 });
 
-        let mqTot = 0;
-        let mlBordo = 0;
-        let htmlT = "";
-        let numAste = 0;
+        let mqTot = 0, mlBordo = 0, htmlT = "", numAste = 0;
 
-        // Calcolo Pezzi e Bordatura Reale
+        // Disegno SVG Setup
+        const sc = 450 / Math.max(L, A);
+        const w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
+        let svg = `<rect x="25" y="25" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="1.5"/>`; // Scocca
+        svg += `<rect x="25" y="${25+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>`; // Zoccolo
+
         pezzi.forEach(p => {
             let bordoPezzo = ((p.a + p.b) * 2 / 1000) * p.q;
             mlBordo += bordoPezzo;
@@ -117,35 +122,47 @@
             htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bordoPezzo.toFixed(2)}</td></tr>`;
         });
 
-        // Ripiani e Aste per vano
+        // Ripiani, Aste e Disegno Dettagli
         for(let i=0; i <= nDiv; i++) {
             let qtaR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
+            let xStart = 25 + sp + (i * ( (lVano*sc) + sp ));
+            
             if(qtaR > 0) {
                 let bR = ((lVano + P - 20) * 2 / 1000) * qtaR;
                 mlBordo += bR;
                 mqTot += (lVano * (P - 20) * qtaR) / 1000000;
                 htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qtaR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${bR.toFixed(2)}</td></tr>`;
+                
+                for(let j=1; j<=qtaR; j++) {
+                    let yR = 25 + sp + ( (h-z-sp*2) / (qtaR+1) ) * j;
+                    svg += `<line x1="${xStart}" y1="${yR}" x2="${xStart + lVano*sc}" y2="${yR}" stroke="#3498db" stroke-dasharray="4"/>`;
+                }
             }
-            if(document.getElementById(`asta_${i}`)?.checked) numAste++;
+            if(document.getElementById(`asta_${i}`)?.checked) {
+                numAste++;
+                let yAsta = 25 + sp + 40; // A 40mm dal top
+                svg += `<rect x="${xStart + 5}" y="${yAsta}" width="${lVano*sc - 10}" height="4" rx="2" fill="#95a5a6"/>`;
+            }
+            // Disegno Divisori
+            if(i < nDiv) {
+                let xDiv = 25 + sp + (lVano*sc)*(i+1) + (sp*i);
+                svg += `<rect x="${xDiv}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#bbb"/>`;
+            }
         }
 
-        // Calcolo Cerniere (1 ogni 70cm, min 2 per anta. Assumiamo 1 anta per vano)
         let cernierePerAnta = Math.max(2, Math.ceil(hFianco / 700));
         let totCerniere = cernierePerAnta * (nDiv + 1);
 
-        // --- COSTI ---
-        let costoPannelli = mqTot * prezzoMq * 1.2; // 20% sfrido
-        let costoBordatura = mlBordo * 1.50; // 1.50€ al metro lineare
-        let costoCerniere = totCerniere * 4.50; // 4.50€ a cerniera (Blum o simili)
-        let costoAste = numAste * 12.00; // 12€ kit asta + supporti
-        let lavorazione = 80; // Fisso foratura e taglio
+        let costoPannelli = mqTot * prezzoMq * 1.25;
+        let costoBordatura = mlBordo * 1.50;
+        let costoCerniere = totCerniere * 4.50;
+        let costoAste = numAste * 12.00;
+        let totale = (costoPannelli + costoBordatura + costoCerniere + costoAste + 80) * 1.22;
 
-        let totale = (costoPannelli + costoBordatura + costoCerniere + costoAste + lavorazione) * 1.22;
-
+        document.getElementById('disegno').innerHTML = svg;
         document.getElementById('corpoTabella').innerHTML = htmlT;
         document.getElementById('totale').innerText = "€ " + totale.toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `
-            Bordo: ${mlBordo.toFixed(2)} m | Cerniere: ${totCerniere} pz | Aste: ${numAste}`;
+        document.getElementById('dettaglioCosti').innerHTML = `Bordo: ${mlBordo.toFixed(2)}m | Cerniere: ${totCerniere}pz | Aste: ${numAste}`;
     }
     window.onload = run;
 </script>
