@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Tecnico Falegnameria - Clean Default</title>
+    <title>Configuratore Falegnameria Professionale - Full</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -27,7 +27,7 @@
 
         @media print {
             body { background: white; padding: 0; }
-            .card, .btn-print, h2 { display: none !important; }
+            .card, .btn-print, h2, h3:first-of-type { display: none !important; }
             .preview-card { box-shadow: none; width: 100%; max-width: 100%; padding: 0; }
             .container { display: block; }
             .result-box { background: white !important; color: black !important; border: 1px solid #ccc; }
@@ -50,16 +50,22 @@
             <div><label>Altezza (mm)</label><input type="number" id="A" value="2000" oninput="run()"></div>
             <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
             <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="run()"></div>
-            <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
-            <div><label>Costo Operaio (€/h)</label><input type="number" id="TarH" value="80" oninput="run()"></div>
+            <div><label>Spessore Scocca (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
+            <div><label>Spessore Schienale</label>
+                <select id="SPS" onchange="run()">
+                    <option value="4" selected>4 mm</option>
+                    <option value="8">8 mm</option>
+                    <option value="10">10 mm</option>
+                </select>
+            </div>
         </div>
 
         <div class="grid">
             <div><label>Materiale</label>
                 <select id="mat" onchange="run()">
-                    <option value="25">Truciolare Melaminico (25€/mq)</option>
-                    <option value="55" selected>Laminato Standard (55€/mq)</option>
-                    <option value="120">Laccato Opaco (120€/mq)</option>
+                    <option value="25">Truciolare Melaminico (25€)</option>
+                    <option value="55" selected>Laminato Standard (55€)</option>
+                    <option value="120">Laccato Opaco (120€)</option>
                 </select>
             </div>
             <div><label>Bordo</label>
@@ -72,8 +78,10 @@
         </div>
 
         <h3>Vani e Allestimento</h3>
-        <label>Numero Divisori Verticali</label>
-        <input type="number" id="numDiv" value="0" min="0" oninput="run()">
+        <div class="grid">
+            <div><label>Costo Operaio (€/h)</label><input type="number" id="TarH" value="80" oninput="run()"></div>
+            <div><label>N° Divisori Verticali</label><input type="number" id="numDiv" value="0" min="0" oninput="run()"></div>
+        </div>
         <div id="contRipiani" style="margin-top:10px;"></div>
 
         <button class="btn-print" onclick="window.print()">🖨️ STAMPA / SALVA PDF</button>
@@ -95,7 +103,7 @@
 
         <h3>Distinta Tagli Esecutiva</h3>
         <table class="distinta">
-            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Sp</th><th>Bordo (m)</th></tr></thead>
+            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Sp (mm)</th><th>Bordo (m)</th></tr></thead>
             <tbody id="corpoT"></tbody>
         </table>
     </div>
@@ -126,6 +134,7 @@
         const L=parseFloat(document.getElementById('L').value), A=parseFloat(document.getElementById('A').value), P=parseFloat(document.getElementById('P').value);
         const Z=parseFloat(document.getElementById('Z').value), SP=parseFloat(document.getElementById('SP').value), TH=parseFloat(document.getElementById('TarH').value);
         const nD=parseInt(document.getElementById('numDiv').value), pM=parseFloat(document.getElementById('mat').value), pB=parseFloat(document.getElementById('spB').value);
+        const SPS=parseFloat(document.getElementById('SPS').value);
 
         const lInternaTot = L - (SP*2) - (nD*SP);
         const lVano = lInternaTot / (nD+1);
@@ -134,7 +143,7 @@
             { n: "Fianchi Esterni (a terra)", q: 2, a: A, b: P, s: SP },
             { n: "Base + Top (interni)", q: 2, a: L - (SP*2), b: P, s: SP },
             { n: "Zoccoli", q: 2, a: L - (SP*2), b: Z, s: SP },
-            { n: "Schienali Vano", q: nD + 1, a: A - 5, b: lVano + SP, s: 4 }
+            { n: "Schienali Vano", q: nD + 1, a: A - 5, b: lVano + SP, s: SPS }
         ];
         if(nD > 0) pezzi.push({ n: "Divisori Centrali", q: nD, a: A - Z - (SP*2), b: P - 20, s: SP });
 
@@ -162,7 +171,7 @@
                 for(let j=1; j<=q; j++) { let yR = 25+h-z-sp-(it*j*sc); if(yR>25+sp+50) svg += `<rect x="${xV}" y="${yR}" width="${lV*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
             }
             if(document.getElementById(`a_${i}`)?.checked) { 
-                nA++; svg += `<rect x="${xV+5}" y="${25+sp+40*sc}" width="${lVca*sc-10}" height="6" rx="3" fill="#7f8c8d"/>`; 
+                nA++; svg += `<rect x="${xV+5}" y="${25+sp+40*sc}" width="${lV*sc-10}" height="6" rx="3" fill="#7f8c8d"/>`; 
             }
             if(i<nD) svg += `<rect x="${xV+lV*sc}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
