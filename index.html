@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Tecnico - MobileSuMisura Style</title>
+    <title>Preventivatore Professionale Falegnameria</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -13,9 +13,10 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #28a745; }
-        .result-box { margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; text-align: center; width: 100%; }
-        #totale { font-size: 32px; font-weight: bold; color: #2ecc71; }
-        .dettaglio-prezzo { font-size: 0.9em; text-align: left; margin-top: 10px; color: #ecf0f1; border-top: 1px solid #555; padding-top: 8px; line-height: 1.6; }
+        .result-box { margin-top: 20px; padding: 20px; background: #2c3e50; color: white; border-radius: 8px; width: 100%; box-sizing: border-box; }
+        #totale { font-size: 36px; font-weight: bold; color: #2ecc71; margin-bottom: 10px; }
+        .dettaglio-prezzo { font-size: 0.85em; text-align: left; line-height: 1.6; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #555; padding-top: 10px; }
+        .valore { text-align: right; font-weight: bold; }
         svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 400px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -33,12 +34,19 @@
             <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
             <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="run()"></div>
             <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
+            <div>
+                <label>Sp. Schienale</label>
+                <select id="SPS" onchange="run()">
+                    <option value="4" selected>4 mm</option>
+                    <option value="8">8 mm</option>
+                    <option value="10">10 mm</option>
+                </select>
+            </div>
         </div>
 
-        <label>Materiale Scocca</label>
+        <label>Materiale</label>
         <select id="mat" onchange="run()" style="margin-bottom: 15px;">
-            <option value="25">Truciolare Melaminico Bianco (25€/mq)</option>
-            <option value="35">Truciolare Melaminico Legno (35€/mq)</option>
+            <option value="25">Truciolare Melaminico (25€/mq)</option>
             <option value="55" selected>Laminato Standard (55€/mq)</option>
             <option value="120">Laccato Opaco (120€/mq)</option>
         </select>
@@ -49,9 +57,11 @@
         <div id="contRipiani" style="margin-top:10px;"></div>
 
         <div class="result-box">
-            <span>Totale Stimato (IVA incl.)</span>
+            <span>PREVENTIVO TOTALE (IVA incl.)</span>
             <div id="totale">€ 0.00</div>
-            <div id="dettaglioCosti" class="dettaglio-prezzo"></div>
+            <div id="dettaglioCosti" class="dettaglio-prezzo">
+                <!-- Riempito via JS -->
+            </div>
         </div>
     </div>
 
@@ -59,7 +69,7 @@
         <h3>Anteprima Frontale</h3>
         <svg id="disegno" viewBox="0 0 500 550"></svg>
         
-        <h3>Distinta Tagli e Componenti</h3>
+        <h3>Distinta Tagli</h3>
         <table id="tabellaTagli">
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
             <tbody id="corpoTabella"></tbody>
@@ -93,6 +103,7 @@
         const P = parseFloat(document.getElementById('P').value) || 0;
         const Z = parseFloat(document.getElementById('Z').value) || 0;
         const SP = parseFloat(document.getElementById('SP').value) || 0;
+        const SPS = parseFloat(document.getElementById('SPS').value) || 0;
         const nDiv = parseInt(document.getElementById('numDiv').value) || 0;
         const prezzoMq = parseFloat(document.getElementById('mat').value);
 
@@ -102,75 +113,62 @@
         let pezzi = [
             { n: "Fianchi Esterni", q: 2, a: hFianco, b: P, sp: SP },
             { n: "Base + Top", q: 2, a: L - (SP*2), b: P, sp: SP },
-            { n: "Zoccoli (F+R)", q: 2, a: L, b: Z, sp: SP }
+            { n: "Zoccoli", q: 2, a: L, b: Z, sp: SP },
+            { n: "Schienali", q: nDiv + 1, a: hFianco, b: lVano + SP, sp: SPS }
         ];
-
-        // Schienale frazionato da 4mm (non si borda)
-        pezzi.push({ n: "Schienale Vano", q: nDiv + 1, a: hFianco, b: lVano + SP, sp: 4 });
-
         if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: hFianco - (SP*2), b: P - 20, sp: SP });
 
-        let mqTot = 0, mlBordo = 0, htmlT = "", numAste = 0;
-
-        // Disegno SVG Setup
-        const sc = 450 / Math.max(L, A);
-        const w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
-        let svg = `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ddd"/>`; // Sfondo schienale
-        svg += `<rect x="25" y="25" width="${w}" height="${h}" fill="none" stroke="#333" stroke-width="1.5"/>`;
-        svg += `<rect x="25" y="${25+h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>`;
+        let mqStruttura = 0, mqSchienale = 0, mlBordo = 0, numAste = 0;
+        let htmlT = "";
 
         pezzi.forEach(p => {
             let bordoPezzo = (p.sp > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
             mlBordo += bordoPezzo;
-            mqTot += (p.a * p.b * p.q) / 1000000;
+            if(p.sp > 4) mqStruttura += (p.a * p.b * p.q) / 1000000;
+            else mqSchienale += (p.a * p.b * p.q) / 1000000;
             htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bordoPezzo.toFixed(2)}</td></tr>`;
         });
 
+        // Ripiani e Aste
         for(let i=0; i <= nDiv; i++) {
             let qtaR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
-            let xStart = 25 + sp + (i * ( (lVano*sc) + sp ));
             if(qtaR > 0) {
                 let bR = ((lVano + P - 20) * 2 / 1000) * qtaR;
                 mlBordo += bR;
-                mqTot += (lVano * (P - 20) * qtaR) / 1000000;
+                mqStruttura += (lVano * (P - 20) * qtaR) / 1000000;
                 htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qtaR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${bR.toFixed(2)}</td></tr>`;
-                for(let j=1; j<=qtaR; j++) {
-                    let yR = 25 + sp + ( (h-z-sp*2) / (qtaR+1) ) * j;
-                    svg += `<line x1="${xStart}" y1="${yR}" x2="${xStart + lVano*sc}" y2="${yR}" stroke="#3498db" stroke-dasharray="4"/>`;
-                }
             }
-            if(document.getElementById(`asta_${i}`)?.checked) {
-                numAste++;
-                svg += `<rect x="${xStart+5}" y="${25+sp+40}" width="${lVano*sc-10}" height="4" rx="2" fill="#95a5a6"/>`;
-            }
-            if(i < nDiv) {
-                let xDiv = 25 + sp + (lVano*sc)*(i+1) + (sp*i);
-                svg += `<rect x="${xDiv}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#bbb"/>`;
-            }
+            if(document.getElementById(`asta_${i}`)?.checked) numAste++;
         }
 
-        // Calcoli Finali
-        let cernierePerAnta = Math.max(2, Math.ceil(hFianco / 700));
-        let totCerniere = cernierePerAnta * (nDiv + 1);
-        
-        let costoPannelli = mqTot * prezzoMq * 1.25; // 25% sfrido
-        let costoBordo = mlBordo * 1.50;
-        let costoCerniere = totCerniere * 4.50;
-        let costoAste = numAste * 12.00;
-        let totale = (costoPannelli + costoBordo + costoCerniere + costoAste + 80) * 1.22;
+        // --- CALCOLO COSTI ANALITICO ---
+        let c_materiale = (mqStruttura * prezzoMq * 1.25) + (mqSchienale * 15); // 15€/mq fisso schienale
+        let c_bordatura = mlBordo * 1.80; // 1.80€/ml bordo ABS applicato
+        let c_ferramenta = (Math.max(2, Math.ceil(hFianco/700)) * (nDiv+1) * 4.5) + (numAste * 12);
+        let c_manodopera = 120 + (mqStruttura * 15); // Fisso + variabile su complessità
+        let c_consegna = 70; // Fisso trasporto zona urbana
 
-        document.getElementById('disegno').innerHTML = svg;
-        document.getElementById('corpoTabella').innerHTML = htmlT;
+        let imponibile = c_materiale + c_bordatura + c_ferramenta + c_manodopera + c_consegna;
+        let totale = imponibile * 1.22;
+
+        // Rendering Risultati
         document.getElementById('totale').innerText = "€ " + totale.toFixed(2);
-        
-        // REINSERITI DETTAGLI VISIVI
         document.getElementById('dettaglioCosti').innerHTML = `
-            <strong>Dettaglio componenti:</strong><br>
-            • Bordatura: ${mlBordo.toFixed(2)} m (1.50€/m)<br>
-            • Cerniere: ${totCerniere} pz (4.50€ cad.)<br>
-            • Kit Aste: ${numAste} pz (12.00€ cad.)<br>
-            • Schienali: ${nDiv + 1} pz inclusi
+            <span>Costo Materiali (Legno):</span> <span class="valore">€ ${c_materiale.toFixed(2)}</span>
+            <span>Bordatura (${mlBordo.toFixed(1)} m):</span> <span class="valore">€ ${c_bordatura.toFixed(2)}</span>
+            <span>Ferramenta e Aste:</span> <span class="valore">€ ${c_ferramenta.toFixed(2)}</span>
+            <span>Lavorazione Falegnameria:</span> <span class="valore">€ ${c_manodopera.toFixed(2)}</span>
+            <span>Trasporto e Consegna:</span> <span class="valore">€ ${c_consegna.toFixed(2)}</span>
+            <span>IVA (22%):</span> <span class="valore">€ ${(imponibile * 0.22).toFixed(2)}</span>
         `;
+        
+        document.getElementById('corpoTabella').innerHTML = htmlT;
+
+        // Disegno SVG (estremamente semplificato per brevità)
+        const sc = 450 / Math.max(L, A);
+        let svg = `<rect x="25" y="25" width="${L*sc}" height="${A*sc}" fill="none" stroke="#333" stroke-width="2"/>`;
+        svg += `<rect x="25" y="${25+(A-Z)*sc}" width="${L*sc}" height="${Z*sc}" fill="#ddd" />`;
+        document.getElementById('disegno').innerHTML = svg;
     }
     window.onload = run;
 </script>
