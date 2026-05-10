@@ -2,52 +2,99 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Preventivatore Mobili</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuratore Mobile su Misura</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 500px; }
-        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
-        input, select { width: 100%; margin: 10px 0; padding: 8px; }
-        #prezzo { font-size: 24px; color: green; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 450px; width: 100%; }
+        h2 { color: #333; margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9em; color: #555; }
+        input[type="number"], select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .checkbox-group { margin-top: 20px; background: #e9ecef; padding: 10px; border-radius: 6px; }
+        .checkbox-group label { display: inline; cursor: pointer; }
+        .result-box { margin-top: 25px; padding: 15px; background: #28a745; color: white; border-radius: 8px; text-align: center; }
+        #prezzo { font-size: 28px; font-weight: bold; }
+        .info-pos { font-size: 0.8em; color: #666; font-style: italic; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2>Il mio Mobile su Misura</h2>
-        
-        <label>Larghezza (mm)</label>
-        <input type="number" id="L" value="1000" oninput="calcola()">
-        
-        <label>Altezza (mm)</label>
-        <input type="number" id="A" value="2000" oninput="calcola()">
-        
-        <label>Profondità (mm)</label>
-        <input type="number" id="P" value="600" oninput="calcola()">
 
-        <label>Materiale</label>
-        <select id="mat" onchange="calcola()">
-            <option value="40">Laminato Bianco (40€/mq)</option>
-            <option value="60">Effetto Legno (60€/mq)</option>
-            <option value="120">Laccato Opaco (120€/mq)</option>
-        </select>
+<div class="card">
+    <h2>Preventivatore Mobile</h2>
+    
+    <!-- MISURE -->
+    <label>Larghezza (mm)</label>
+    <input type="number" id="L" value="1000" oninput="calcola()">
+    
+    <label>Altezza (mm)</label>
+    <input type="number" id="A" value="2000" oninput="calcola()">
+    
+    <label>Profondità (mm)</label>
+    <input type="number" id="P" value="600" oninput="calcola()">
 
-        <p>Prezzo Stimato:</p>
-        <div id="prezzo">€ 0.00</div>
+    <!-- MATERIALE -->
+    <label>Materiale e Finitura</label>
+    <select id="mat" onchange="calcola()">
+        <option value="45">Laminato Bianco Standard (45€/mq)</option>
+        <option value="65">Effetto Legno Premium (65€/mq)</option>
+        <option value="110">Laccato Opaco (110€/mq)</option>
+        <option value="140">Laccato Lucido (140€/mq)</option>
+    </select>
+
+    <!-- OPZIONI EXTRA -->
+    <div class="checkbox-group">
+        <input type="checkbox" id="hasDivisorio" onchange="toggleDivisorio()"> 
+        <label for="hasDivisorio">Aggiungi divisorio verticale</label>
+        
+        <div id="opzioniDivisorio" style="display:none; margin-top: 15px; border-top: 1px solid #ccc; pt-10px;">
+            <label>Posizione divisorio (distanza da sinistra in mm)</label>
+            <input type="number" id="posDivisorio" value="500" oninput="calcola()">
+            <p class="info-pos">La posizione non varia il prezzo, ma definisce la struttura.</p>
+        </div>
     </div>
 
-    <script>
-        function calcola() {
-            let l = document.getElementById('L').value / 1000;
-            let a = document.getElementById('A').value / 1000;
-            let p = document.getElementById('P').value / 1000;
-            let prezzoMq = document.getElementById('mat').value;
+    <!-- RISULTATO -->
+    <div class="result-box">
+        <span>Prezzo Stimato (IVA incl.)</span>
+        <div id="prezzo">€ 0.00</div>
+    </div>
+</div>
 
-            // Calcolo approssimativo superficie esterna
-            let superficie = (l * a * 2) + (l * p * 2) + (a * p * 2);
-            let totale = superficie * prezzoMq;
+<script>
+    function toggleDivisorio() {
+        const check = document.getElementById('hasDivisorio');
+        const divOpzioni = document.getElementById('opzioniDivisorio');
+        divOpzioni.style.display = check.checked ? 'block' : 'none';
+        calcola();
+    }
 
-            document.getElementById('prezzo').innerText = "€ " + totale.toFixed(2);
+    function calcola() {
+        // Recupero valori e conversione in metri
+        let l = parseFloat(document.getElementById('L').value) / 1000;
+        let a = parseFloat(document.getElementById('A').value) / 1000;
+        let p = parseFloat(document.getElementById('P').value) / 1000;
+        let prezzoMq = parseFloat(document.getElementById('mat').value);
+
+        if (isNaN(l) || isNaN(a) || isNaN(p)) return;
+
+        // 1. Calcolo superficie Scocca (2 fianchi + base + top + schiena)
+        let superficie = (a * p * 2) + (l * p * 2) + (l * a);
+
+        // 2. Aggiunta eventuale Divisorio Verticale (Altezza x Profondità)
+        if (document.getElementById('hasDivisorio').checked) {
+            superficie += (a * p);
         }
-        window.onload = calcola;
-    </script>
+
+        // 3. Calcolo Totale con Sfrido del 10%
+        let totale = (superficie * prezzoMq) * 1.10;
+
+        // Visualizzazione
+        document.getElementById('prezzo').innerText = "€ " + totale.toFixed(2);
+    }
+
+    // Calcolo iniziale al caricamento
+    window.onload = calcola;
+</script>
+
 </body>
 </html>
