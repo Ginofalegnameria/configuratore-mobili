@@ -10,22 +10,22 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1; min-width: 350px; }
         .preview { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 400px; text-align: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        label { font-size: 0.8em; font-weight: bold; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .row-item { background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 10px; border-left: 4px solid #27ae60; }
-        .result-box { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-top: 15px; }
-        #totale { font-size: 30px; font-weight: bold; color: #2ecc71; margin-bottom: 10px; text-align: center; }
+        .row-item { background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 10px; border-left: 4px solid #007bff; text-align: left; }
+        .result-box { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-top: 15px; text-align: left; }
+        #totale { font-size: 30px; font-weight: bold; color: #2ecc71; text-align: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8em; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #007bff; color: white; }
-        svg { border: 1px solid #eee; background: #fff; margin-bottom: 20px; max-width: 100%; }
-        .btn-stampa { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.1em; }
+        svg { border: 1px solid #eee; background: #fff; margin-bottom: 20px; max-width: 100%; height: auto; }
+        .btn-stampa { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.1em; margin-top: 10px; }
         @media print { .card, .btn-stampa { display: none !important; } .preview { box-shadow: none; width: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- INPUT -->
     <div class="card">
         <h3>Dati Cliente</h3>
         <input type="text" id="nomeCliente" placeholder="Nome Cliente" oninput="aggiornaDati()">
@@ -47,16 +47,12 @@
         </div>
 
         <div class="grid">
-            <div><label>Materiale</label>
-                <select id="mat" onchange="aggiornaDati()">
-                    <option value="25">Truciolare (25€)</option>
-                    <option value="55" selected>Laminato (55€)</option>
-                </select>
-            </div>
+            <div><label>Materiale €/mq</label><input type="number" id="pMq" value="55" oninput="aggiornaDati()"></div>
+            <div><label>Bordo €/m</label><input type="number" id="pBordo" value="1.80" oninput="aggiornaDati()"></div>
             <div><label>Operaio €/h</label><input type="number" id="Tariffa" value="80" oninput="aggiornaDati()"></div>
         </div>
 
-        <h3>Allestimento</h3>
+        <h3>Vani</h3>
         <label>N° Divisori Verticali</label>
         <input type="number" id="numDiv" value="0" min="0" oninput="initVani()">
         <div id="contVani"></div>
@@ -64,19 +60,18 @@
         <button class="btn-stampa" onclick="window.print()">🖨️ STAMPA / SALVA PDF</button>
     </div>
 
-    <!-- PREVIEW -->
     <div class="preview">
-        <h2 id="titoloStampa">Preventivo Tecnico</h2>
-        <p id="infoCliente">Cliente: Da definire</p>
+        <h2 style="margin:0">PREVENTIVO TECNICO</h2>
+        <p id="infoCliente" style="font-weight:bold; color:#007bff">Cliente: Da definire</p>
         
         <svg id="disegno" viewBox="0 0 500 550" width="400" height="440"></svg>
 
         <div class="result-box">
             <div id="totale">€ 0.00</div>
-            <div id="reportCosti" style="font-size: 0.9em; line-height: 1.5;"></div>
+            <div id="reportCosti"></div>
         </div>
 
-        <h3>Distinta Tagli</h3>
+        <h3>Distinta Tagli e Materiali</h3>
         <table>
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Sp</th></tr></thead>
             <tbody id="tabellaTagli"></tbody>
@@ -93,7 +88,7 @@
             html += `<div class="row-item"><strong>Vano ${i+1}</strong><div class="grid">
                 <div><label>Ripiani</label><input type="number" id="q_${i}" value="0" oninput="aggiornaDati()"></div>
                 <div><label>Interasse</label><input type="number" id="int_${i}" value="320" oninput="aggiornaDati()"></div>
-            </div><input type="checkbox" id="a_${i}" onchange="aggiornaDati()"> Asta</div>`;
+            </div><label><input type="checkbox" id="a_${i}" onchange="aggiornaDati()"> Asta Appendiabiti</label></div>`;
         }
         cont.innerHTML = html;
         aggiornaDati();
@@ -102,32 +97,30 @@
     function aggiornaDati() {
         const L=parseFloat(document.getElementById('L').value)||0, A=parseFloat(document.getElementById('A').value)||0, P=parseFloat(document.getElementById('P').value)||0;
         const Z=parseFloat(document.getElementById('Z').value)||0, SP=parseFloat(document.getElementById('SP').value)||0, SPS=parseFloat(document.getElementById('SPS').value)||4;
-        const TH=parseFloat(document.getElementById('Tariffa').value)||80, nD=parseInt(document.getElementById('numDiv').value)||0, pM=parseFloat(document.getElementById('mat').value);
+        const TH=parseFloat(document.getElementById('Tariffa').value)||80, nD=parseInt(document.getElementById('numDiv').value)||0;
+        const pM=parseFloat(document.getElementById('pMq').value), pB=parseFloat(document.getElementById('pBordo').value);
         
         document.getElementById('infoCliente').innerText = "Cliente: " + (document.getElementById('nomeCliente').value || "Da definire");
 
         const lVano = (L - (SP * 2) - (nD * SP)) / (nD + 1);
-        let mqS=0, mqSch=0, mlB=0, nA=0, hT="";
+        let mqS=0, mqSch=0, mlB=0, nA=0, hT="", nCerniere=0;
         const sc=400/Math.max(L,A), w=L*sc, h=A*sc, sp=SP*sc, z=Z*sc;
 
-        // Disegno SVG base
         let svg = `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`;
         svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`;
         svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`;
         svg += `<rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
 
-        // Pezzi principali
         let pezzi = [{n:"Fianchi", q:2, a:A, b:P, s:SP}, {n:"Base+Top", q:2, a:L-(SP*2), b:P, s:SP}, {n:"Zoccoli", q:2, a:L-(SP*2), b:Z, s:SP}, {n:"Schienali", q:nD+1, a:A-5, b:lVano+SP, s:SPS}];
         if(nD>0) pezzi.push({n:"Divisori", q:nD, a:A-Z-(SP*2), b:P-20, s:SP});
 
-        // Loop Vani per disegno e aggiunta ripiani
         for(let i=0; i<=nD; i++) {
             let q = parseInt(document.getElementById(`q_${i}`)?.value)||0, it = parseFloat(document.getElementById(`int_${i}`)?.value)||320, xV = 25+sp+(i*(lVano*sc+sp));
             if(q>0) {
                 pezzi.push({n:`Ripiani Vano ${i+1}`, q:q, a:lVano, b:P-20, s:SP});
                 for(let j=1; j<=q; j++) { let yR = 25+h-z-sp-(it*j*sc); if(yR>25+sp+50) svg += `<rect x="${xV}" y="${yR}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
             }
-            if(document.getElementById(`a_${i}`)?.checked) { nA++; svg += `<rect x="${xV}" y="${25+sp+40*sc}" width="${lVano*sc}" height="6" fill="#95a5a6"/>`; }
+            if(document.getElementById(`a_${i}`)?.checked) { nA++; svg += `<rect x="${xV}" y="${25+sp+40*sc}" width="${lVano*sc}" height="6" rx="3" fill="#95a5a6"/>`; }
             if(i<nD) svg += `<rect x="${xV+lVano*sc}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
 
@@ -137,15 +130,21 @@
             hT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${p.s}</td></tr>`;
         });
 
-        let ore = 1.5+(mqS*1.2)+(mlB*0.08)+(nA*0.3), c_mat = (mqS*pM*1.25)+(mqSch*15), c_man = ore*TH, c_fer = (nA*12)+(nD+1)*15, imp = c_mat + c_man + c_fer + mlB*1.8 + 70;
+        nCerniere = Math.max(2, Math.ceil(A/700)) * (nD+1);
+        let ore = 1.5 + (mqS*1.2) + (mlB*0.08) + (nA*0.3), c_mat = (mqS*pM*1.25) + (mqSch*15), c_bor = mlB*pB, c_man = ore*TH, c_fer = (nA*12) + (nCerniere*4.5);
+        let imp = c_mat + c_bor + c_man + c_fer + 70;
 
         document.getElementById('disegno').innerHTML = svg;
         document.getElementById('tabellaTagli').innerHTML = hT;
-        document.getElementById('totale').innerText = "€ " + (imp*1.22).toFixed(2);
-        document.getElementById('reportCosti').innerHTML = `Materiale: €${c_mat.toFixed(2)} | Bordo: €${(mlB*1.8).toFixed(2)} | Lavoro: €${c_man.toFixed(2)} (${ore.toFixed(1)}h) | IVA e varie inclusi.`;
+        document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
+        document.getElementById('reportCosti').innerHTML = `
+            <b>Materiale:</b> ${mqS.toFixed(2)}mq scocca + ${mqSch.toFixed(2)}mq schiena (€${c_mat.toFixed(2)})<br>
+            <b>Bordatura:</b> ${mlB.toFixed(1)}m (€${c_bor.toFixed(2)})<br>
+            <b>Ferramenta:</b> ${nCerniere} cerniere + ${nA} aste (€${c_fer.toFixed(2)})<br>
+            <b>Manodopera:</b> ${ore.toFixed(1)}h a ${TH}€/h (€${c_man.toFixed(2)})<br>
+            <b>Varie:</b> Trasporto e IVA inclusi.`;
     }
     window.onload = initVani;
 </script>
-
 </body>
 </html>
