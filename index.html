@@ -3,174 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preventivatore Professionale Falegnameria</title>
+    <title>Configuratore Mobile 3D Professionale</title>
+    <!-- Carichiamo Three.js da CDN -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 350px; }
-        .preview-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 400px; display: flex; flex-direction: column; align-items: center; }
-        h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; justify-content: center; max-width: 1400px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 350px; max-height: 90vh; overflow-y: auto; }
+        .preview-3d { background: #eee; border-radius: 12px; flex: 1.5; min-width: 400px; height: 600px; position: relative; }
+        #canvas-container { width: 100%; height: 100%; border-radius: 12px; overflow: hidden; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #28a745; }
-        .result-box { margin-top: 20px; padding: 20px; background: #2c3e50; color: white; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        #totale { font-size: 36px; font-weight: bold; color: #2ecc71; margin-bottom: 10px; }
-        .dettaglio-prezzo { font-size: 0.85em; text-align: left; line-height: 1.6; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #555; padding-top: 10px; }
-        .valore { text-align: right; font-weight: bold; }
-        svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 400px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .result-box { margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; }
+        #totale { font-size: 28px; font-weight: bold; color: #2ecc71; text-align:center; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75em; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 5px; text-align: left; }
         th { background: #007bff; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- CONTROLLI -->
     <div class="card">
-        <h2>Parametri Struttura</h2>
+        <h2>Parametri Mobile</h2>
         <div class="grid">
-            <div><label>Larghezza (mm)</label><input type="number" id="L" value="1000" oninput="run()"></div>
-            <div><label>Altezza (mm)</label><input type="number" id="A" value="2000" oninput="run()"></div>
-            <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
-            <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="run()"></div>
-            <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
-            <div>
-                <label>Sp. Schienale</label>
-                <select id="SPS" onchange="run()">
-                    <option value="4" selected>4 mm</option>
-                    <option value="8">8 mm</option>
-                    <option value="10">10 mm</option>
-                </select>
-            </div>
+            <div><label>Larghezza (mm)</label><input type="number" id="L" value="1000" oninput="aggiornaTutto()"></div>
+            <div><label>Altezza (mm)</label><input type="number" id="A" value="2000" oninput="aggiornaTutto()"></div>
+            <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="aggiornaTutto()"></div>
+            <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="aggiornaTutto()"></div>
+            <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="aggiornaTutto()"></div>
         </div>
 
         <label>Materiale</label>
-        <select id="mat" onchange="run()" style="margin-bottom: 15px;">
-            <option value="25">Truciolare Melaminico (25€/mq)</option>
-            <option value="55" selected>Laminato Standard (55€/mq)</option>
-            <option value="120">Laccato Opaco (120€/mq)</option>
+        <select id="mat" onchange="aggiornaTutto()">
+            <option value="30">Truciolare Melaminico (30€/mq)</option>
+            <option value="55" selected>Laminato Bianco (55€/mq)</option>
+            <option value="110">Laccato Opaco (110€/mq)</option>
         </select>
 
-        <h3>Allestimento Vani</h3>
+        <h3>Vani</h3>
         <label>N° Divisori Verticali</label>
-        <input type="number" id="numDiv" value="1" min="0" oninput="run()">
-        <div id="contRipiani" style="margin-top:10px;"></div>
-
-        <div class="result-box">
-            <span>PREVENTIVO TOTALE (IVA incl.)</span>
-            <div id="totale">€ 0.00</div>
-            <div id="dettaglioCosti" class="dettaglio-prezzo">
-                <!-- Riempito via JS -->
-            </div>
-        </div>
-    </div>
-
-    <div class="preview-card">
-        <h3>Anteprima Frontale</h3>
-        <svg id="disegno" viewBox="0 0 500 550"></svg>
+        <input type="number" id="numDiv" value="1" min="0" max="4" oninput="aggiornaTutto()">
         
-        <h3>Distinta Tagli</h3>
+        <div class="result-box">
+            <div id="totale">€ 0.00</div>
+            <div id="dettaglio" style="font-size: 0.8em; margin-top:10px; border-top: 1px solid #555; padding-top:5px;"></div>
+        </div>
+
         <table id="tabellaTagli">
-            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
+            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th></tr></thead>
             <tbody id="corpoTabella"></tbody>
         </table>
+    </div>
+
+    <!-- ANTEPRIMA 3D -->
+    <div class="preview-3d">
+        <div id="canvas-container"></div>
+        <div style="position:absolute; bottom:10px; left:10px; font-size:12px; color:#666;">Usa il mouse per ruotare e zoomare</div>
     </div>
 </div>
 
 <script>
-    function run() { renderInputs(); calcola(); }
+    let scene, camera, renderer, controls, group;
 
-    function renderInputs() {
-        const n = parseInt(document.getElementById('numDiv').value) || 0;
-        const cont = document.getElementById('contRipiani');
-        let html = "";
-        for(let i=0; i <= n; i++) {
-            html += `<div class="row-item">
-                <strong>Vano ${i+1}</strong>
-                <div class="grid">
-                    <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="1" min="0" oninput="calcola()"></div>
-                    <div style="display:flex; align-items:center; padding-top:20px;">
-                        <input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Appendiabiti</label>
-                    </div>
-                </div></div>`;
-        }
-        if(cont.dataset.num != n) { cont.innerHTML = html; cont.dataset.num = n; }
+    function init3D() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xeeeeee);
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+        camera.position.set(1500, 1500, 2500);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        const container = document.getElementById('canvas-container');
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        
+        const light1 = new THREE.DirectionalLight(0xffffff, 1);
+        light1.position.set(1000, 2000, 1000);
+        scene.add(light1);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+        group = new THREE.Group();
+        scene.add(group);
+
+        animate();
     }
 
-    function calcola() {
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    function creaPannello(w, h, d, x, y, z, colore = 0xffffff) {
+        const geometry = new THREE.BoxGeometry(w, h, d);
+        const material = new THREE.MeshLambertMaterial({ color: colore });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, y, z);
+        group.add(mesh);
+        
+        // Bordi neri per vedere meglio le giunzioni
+        const edges = new THREE.EdgesGeometry(geometry);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x333333 }));
+        line.position.set(x, y, z);
+        group.add(line);
+    }
+
+    function aggiornaTutto() {
         const L = parseFloat(document.getElementById('L').value) || 0;
         const A = parseFloat(document.getElementById('A').value) || 0;
         const P = parseFloat(document.getElementById('P').value) || 0;
         const Z = parseFloat(document.getElementById('Z').value) || 0;
         const SP = parseFloat(document.getElementById('SP').value) || 0;
-        const SPS = parseFloat(document.getElementById('SPS').value) || 0;
         const nDiv = parseInt(document.getElementById('numDiv').value) || 0;
-        const prezzoMq = parseFloat(document.getElementById('mat').value);
+        const pMq = parseFloat(document.getElementById('mat').value);
+
+        group.clear();
 
         const hFianco = A - Z;
         const lVano = (L - (SP * 2) - (nDiv * SP)) / (nDiv + 1);
 
-        let pezzi = [
-            { n: "Fianchi Esterni", q: 2, a: hFianco, b: P, sp: SP },
-            { n: "Base + Top", q: 2, a: L - (SP*2), b: P, sp: SP },
-            { n: "Zoccoli", q: 2, a: L, b: Z, sp: SP },
-            { n: "Schienali", q: nDiv + 1, a: hFianco, b: lVano + SP, sp: SPS }
-        ];
-        if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: hFianco - (SP*2), b: P - 20, sp: SP });
+        // 3D: DISEGNO STRUTTURA
+        creaPannello(SP, hFianco, P, -L/2 + SP/2, hFianco/2 + Z, 0, 0xcccccc); // Fianco SX
+        creaPannello(SP, hFianco, P, L/2 - SP/2, hFianco/2 + Z, 0, 0xcccccc);  // Fianco DX
+        creaPannello(L - SP*2, SP, P, 0, A - SP/2, 0); // Top
+        creaPannello(L - SP*2, SP, P, 0, Z + SP/2, 0); // Base
+        creaPannello(L, Z, P - 20, 0, Z/2, -10, 0x999999); // Zoccolo
+        creaPannello(L, hFianco, 4, 0, hFianco/2 + Z, -P/2 + 2, 0xdddddd); // Schienale
 
-        let mqStruttura = 0, mqSchienale = 0, mlBordo = 0, numAste = 0;
-        let htmlT = "";
-
-        pezzi.forEach(p => {
-            let bordoPezzo = (p.sp > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
-            mlBordo += bordoPezzo;
-            if(p.sp > 4) mqStruttura += (p.a * p.b * p.q) / 1000000;
-            else mqSchienale += (p.a * p.b * p.q) / 1000000;
-            htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bordoPezzo.toFixed(2)}</td></tr>`;
-        });
-
-        // Ripiani e Aste
-        for(let i=0; i <= nDiv; i++) {
-            let qtaR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
-            if(qtaR > 0) {
-                let bR = ((lVano + P - 20) * 2 / 1000) * qtaR;
-                mlBordo += bR;
-                mqStruttura += (lVano * (P - 20) * qtaR) / 1000000;
-                htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qtaR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${bR.toFixed(2)}</td></tr>`;
-            }
-            if(document.getElementById(`asta_${i}`)?.checked) numAste++;
+        // Divisori e Ripiani
+        for(let i=0; i < nDiv; i++) {
+            let xDiv = -L/2 + SP + lVano * (i+1) + SP * i + SP/2;
+            creaPannello(SP, hFianco - SP*2, P - 20, xDiv, Z + hFianco/2, 0, 0xbbbbbb);
         }
 
-        // --- CALCOLO COSTI ANALITICO ---
-        let c_materiale = (mqStruttura * prezzoMq * 1.25) + (mqSchienale * 15); // 15€/mq fisso schienale
-        let c_bordatura = mlBordo * 1.80; // 1.80€/ml bordo ABS applicato
-        let c_ferramenta = (Math.max(2, Math.ceil(hFianco/700)) * (nDiv+1) * 4.5) + (numAste * 12);
-        let c_manodopera = 120 + (mqStruttura * 15); // Fisso + variabile su complessità
-        let c_consegna = 70; // Fisso trasporto zona urbana
-
-        let imponibile = c_materiale + c_bordatura + c_ferramenta + c_manodopera + c_consegna;
-        let totale = imponibile * 1.22;
-
-        // Rendering Risultati
-        document.getElementById('totale').innerText = "€ " + totale.toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `
-            <span>Costo Materiali (Legno):</span> <span class="valore">€ ${c_materiale.toFixed(2)}</span>
-            <span>Bordatura (${mlBordo.toFixed(1)} m):</span> <span class="valore">€ ${c_bordatura.toFixed(2)}</span>
-            <span>Ferramenta e Aste:</span> <span class="valore">€ ${c_ferramenta.toFixed(2)}</span>
-            <span>Lavorazione Falegnameria:</span> <span class="valore">€ ${c_manodopera.toFixed(2)}</span>
-            <span>Trasporto e Consegna:</span> <span class="valore">€ ${c_consegna.toFixed(2)}</span>
-            <span>IVA (22%):</span> <span class="valore">€ ${(imponibile * 0.22).toFixed(2)}</span>
-        `;
+        // CALCOLO COSTI E TABELLA
+        let mq = (L*A*2 + L*P*2 + A*P*2) / 1000000;
+        let mlBordo = (L+A+P)*4 / 1000;
+        let imp = (mq * pMq * 1.25) + (mlBordo * 1.8) + 150; 
         
-        document.getElementById('corpoTabella').innerHTML = htmlT;
-
-        // Disegno SVG (estremamente semplificato per brevità)
-        const sc = 450 / Math.max(L, A);
-        let svg = `<rect x="25" y="25" width="${L*sc}" height="${A*sc}" fill="none" stroke="#333" stroke-width="2"/>`;
-        svg += `<rect x="25" y="${25+(A-Z)*sc}" width="${L*sc}" height="${Z*sc}" fill="#ddd" />`;
-        document.getElementById('disegno').innerHTML = svg;
+        document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
+        document.getElementById('dettaglio').innerHTML = `Superficie: ${mq.toFixed(2)} mq | Bordo: ${mlBordo.toFixed(1)} m`;
+        
+        let html = `<tr><td>Fianchi</td><td>2</td><td>${hFianco}</td><td>${P}</td></tr>`;
+        html += `<tr><td>Base/Top</td><td>2</td><td>${L-SP*2}</td><td>${P}</td></tr>`;
+        document.getElementById('corpoTabella').innerHTML = html;
     }
-    window.onload = run;
+
+    window.onload = () => {
+        init3D();
+        aggiornaTutto();
+    };
+
+    window.onresize = () => {
+        const container = document.getElementById('canvas-container');
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    };
 </script>
+
 </body>
 </html>
