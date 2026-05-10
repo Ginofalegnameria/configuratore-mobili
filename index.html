@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preventivo Analitico Falegnameria</title>
+    <title>Preventivatore Professionale Falegnameria</title>
+    <!-- Libreria per esportazione PDF -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1400px; width: 100%; }
@@ -22,12 +24,19 @@
         table.distinta { width: 100%; border-collapse: collapse; font-size: 0.75em; }
         table.distinta th, table.distinta td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         table.distinta th { background: #007bff; color: white; }
+        .btn-export { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; }
+        .btn-export:hover { background: #219150; }
+        #area-stampa { width: 100%; background: white; padding: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- INPUT -->
     <div class="card">
+        <h2>Dati Cliente</h2>
+        <input type="text" id="nomeCliente" placeholder="Nome e Cognome Cliente" oninput="aggiornaTitolo()" style="margin-bottom: 15px; border: 2px solid #007bff;">
+        
         <h2>Parametri Struttura</h2>
         <div class="grid">
             <div><label>Larghezza (mm)</label><input type="number" id="L" value="1000" oninput="run()"></div>
@@ -43,19 +52,29 @@
             <div><label>Bordo</label><select id="spBordo" onchange="run()"><option value="1.20">0.4mm</option><option value="1.80" selected>1mm</option><option value="2.50">2mm</option></select></div>
         </div>
 
-        <h3>Configurazione Vani</h3>
+        <h3>Vani</h3>
         <input type="number" id="numDiv" value="1" min="0" oninput="run()">
         <div id="contRipiani" style="margin-top:10px;"></div>
 
-        <div class="result-box">
-            <div id="totale">€ 0.00</div>
-            <table class="tech-table" id="reportCosti"></table>
-        </div>
+        <button class="btn-export" onclick="esportaPDF()">📥 SCARICA PREVENTIVO PDF</button>
     </div>
 
-    <div class="preview-card">
-        <h3>Progetto e Lista Tagli</h3>
+    <!-- AREA DI STAMPA PDF -->
+    <div class="preview-card" id="area-stampa">
+        <div style="width: 100%; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="margin:0;">PREVENTIVO FALEGNAMERIA</h1>
+            <p id="labelCliente" style="font-size: 1.2em; font-weight: bold; color: #007bff;">Cliente: Da definire</p>
+            <p>Data: <span id="dataCorrente"></span></p>
+        </div>
+
         <svg id="disegno" viewBox="0 0 500 550"></svg>
+
+        <div class="result-box" style="color: black !important; background: #f8f9fa !important; border: 1px solid #ccc;">
+            <div id="totale" style="color: #27ae60 !important;">€ 0.00</div>
+            <table class="tech-table" id="reportCosti" style="color: #333 !important;"></table>
+        </div>
+
+        <h3>Distinta Tagli</h3>
         <table class="distinta">
             <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
             <tbody id="corpoTabella"></tbody>
@@ -64,6 +83,11 @@
 </div>
 
 <script>
+    function aggiornaTitolo() {
+        const nome = document.getElementById('nomeCliente').value;
+        document.getElementById('labelCliente').innerText = "Cliente: " + (nome || "Da definire");
+    }
+
     function run() { renderInputs(); calcola(); }
 
     function renderInputs() {
@@ -128,17 +152,31 @@
 
         document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
         document.getElementById('reportCosti').innerHTML = `
-            <tr><td>Materiale Scocca</td><td>${mqStr.toFixed(2)} mq</td><td class="valore">€ ${c_mat.toFixed(2)}</td></tr>
-            <tr><td>Bordatura Totale</td><td>${mlB.toFixed(2)} m</td><td class="valore">€ ${c_bor.toFixed(2)}</td></tr>
-            <tr><td>Cerniere (Anta)</td><td>${nCern} pz</td><td class="valore">€ ${(nCern*4.5).toFixed(2)}</td></tr>
-            <tr><td>Kit Aste Appendiabiti</td><td>${numAste} pz</td><td class="valore">€ ${(numAste*12).toFixed(2)}</td></tr>
-            <tr><td>Manodopera Specializzata</td><td>${ore.toFixed(1)} h</td><td class="valore">€ ${c_man.toFixed(2)}</td></tr>
-            <tr><td>Trasporto e Spese Fisse</td><td>Lump Sum</td><td class="valore">€ 70.00</td></tr>
+            <tr><td>Materiale</td><td>${mqStr.toFixed(2)} mq</td><td class="valore">€ ${c_mat.toFixed(2)}</td></tr>
+            <tr><td>Bordatura</td><td>${mlB.toFixed(2)} m</td><td class="valore">€ ${c_bor.toFixed(2)}</td></tr>
+            <tr><td>Manodopera</td><td>${ore.toFixed(1)} h</td><td class="valore">€ ${c_man.toFixed(2)}</td></tr>
+            <tr><td>Ferramenta</td><td>Varie</td><td class="valore">€ ${c_fer.toFixed(2)}</td></tr>
+            <tr><td>Spese Fisse</td><td>-</td><td class="valore">€ 70.00</td></tr>
             <tr><td>IVA (22%)</td><td>-</td><td class="valore">€ ${(imp*0.22).toFixed(2)}</td></tr>
         `;
         document.getElementById('disegno').innerHTML = svg + `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
         document.getElementById('corpoTabella').innerHTML = htmlT;
+        document.getElementById('dataCorrente').innerText = new Date().toLocaleDateString('it-IT');
     }
+
+    function esportaPDF() {
+        const elemento = document.getElementById('area-stampa');
+        const nomeCliente = document.getElementById('nomeCliente').value || "Cliente";
+        const opzioni = {
+            margin: 10,
+            filename: `Preventivo_${nomeCliente}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opzioni).from(elemento).save();
+    }
+
     window.onload = run;
 </script>
 </body>
