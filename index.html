@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria - Default Clean</title>
+    <title>Configuratore Tecnico - Anteprima Asta</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -45,7 +45,7 @@
 
         <h3>Vani e Allestimento</h3>
         <label>Numero Divisori Verticali</label>
-        <input type="number" id="numDiv" value="0" min="0" max="10" oninput="run()">
+        <input type="number" id="numDiv" value="1" min="0" oninput="run()">
         <div id="contRipiani" style="margin-top:10px;"></div>
 
         <div class="result-box">
@@ -73,16 +73,16 @@
         const cont = document.getElementById('contRipiani');
         let html = "";
         for(let i=0; i <= n; i++) {
-            // Default a 0 ripiani per ogni vano
-            html += `<div class="row-item"><strong>Vano ${i+1}</strong><div class="grid">
-                <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="0" min="0" oninput="calcola()"></div>
-                <div style="padding-top:25px"><input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Asta Appendiabiti</label></div>
-            </div></div>`;
+            html += `<div class="row-item">
+                <strong>Vano ${i+1}</strong>
+                <div class="grid">
+                    <div><label>N° Ripiani</label><input type="number" id="rip_qta_${i}" value="0" min="0" oninput="calcola()"></div>
+                    <div><label>Interasse (mm)</label><input type="number" id="rip_int_${i}" value="320" min="32" oninput="calcola()"></div>
+                </div>
+                <div style="padding-top:10px"><input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Asta Appendiabiti</label></div>
+            </div>`;
         }
-        if(cont.dataset.num != n) {
-            cont.innerHTML = html;
-            cont.dataset.num = n;
-        }
+        if(cont.dataset.num != n) { cont.innerHTML = html; cont.dataset.num = n; }
     }
 
     function calcola() {
@@ -93,7 +93,6 @@
         const lInternaVanoTot = L - (SP * 2) - (nDiv * SP);
         const lVano = lInternaVanoTot / (nDiv + 1);
 
-        // Pezzi con logica Fianchi a Terra
         let pezzi = [
             { n: "Fianchi Esterni", q: 2, a: A, b: P, s: SP },
             { n: "Base + Top", q: 2, a: L - (SP*2), b: P, s: SP },
@@ -104,14 +103,13 @@
 
         let mqStr = 0, mqSch = 0, mlB = 0, htmlT = "", numA = 0;
 
-        // Disegno SVG
         const sc = 450 / Math.max(L, A), w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
         let svg = `<rect x="25" y="25" width="${w}" height="${h}" fill="#f9f9f9" stroke="#ccc"/>`; 
-        svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; // Fianco SX
-        svg += `<rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; // Fianco DX
-        svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`; // Zoccolo
-        svg += `<rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; // Base
-        svg += `<rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; // Top
+        svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; 
+        svg += `<rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; 
+        svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`; 
+        svg += `<rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; 
+        svg += `<rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; 
 
         pezzi.forEach(p => {
             let bP = (p.s > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
@@ -122,17 +120,31 @@
 
         for(let i=0; i <= nDiv; i++) {
             let qR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
+            let interasse = parseFloat(document.getElementById(`rip_int_${i}`)?.value) || 320;
             let xV = 25 + sp + (i * ( (lVano*sc) + sp ));
+            
+            // Disegno Ripiani
             if(qR > 0) {
                 let bR = ((lVano + P - 20) * 2 / 1000) * qR; mlB += bR; mqStr += (lVano*(P-20)*qR)/1000000;
                 htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${SP}</td><td>${bR.toFixed(2)}</td></tr>`;
                 for(let j=1; j<=qR; j++) {
-                    let yR = 25 + sp + ( (h-z-sp*2) / (qR+1) ) * j;
-                    svg += `<rect x="${xV}" y="${yR}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`;
+                    let yRip = 25 + h - z - sp - (interasse * j * sc);
+                    if(yRip > 25 + sp + 60) { // Disegna se non sovrapposto al top o all'asta
+                        svg += `<rect x="${xV}" y="${yRip}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`;
+                    }
                 }
             }
+            // Disegno ASTA (Sopra i ripiani)
             if(document.getElementById(`asta_${i}`)?.checked) {
-                numA++; svg += `<rect x="${xV+5}" y="${25+sp+40}" width="${lVano*sc-10}" height="4" rx="2" fill="#7f8c8d"/>`;
+                numA++;
+                let yAsta = 25 + sp + (40 * sc); // Posizionata a 40mm reali dal top
+                // Supporti laterali
+                svg += `<rect x="${xV}" y="${yAsta-5}" width="3" height="15" fill="#7f8c8d"/>`;
+                svg += `<rect x="${xV + lVano*sc - 3}" y="${yAsta-5}" width="3" height="15" fill="#7f8c8d"/>`;
+                // Tubo asta
+                svg += `<rect x="${xV}" y="${yAsta}" width="${lVano*sc}" height="6" rx="3" fill="url(#tuboGradiente)"/>`;
+                // Gradiente per effetto metallo
+                svg = `<defs><linearGradient id="tuboGradiente" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#bdc3c7"/><stop offset="50%" style="stop-color:#ecf0f1"/><stop offset="100%" style="stop-color:#95a5a6"/></linearGradient></defs>` + svg;
             }
             if(i < nDiv) svg += `<rect x="${xV + lVano*sc}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
@@ -144,7 +156,7 @@
         document.getElementById('disegno').innerHTML = svg;
         document.getElementById('corpoTabella').innerHTML = htmlT;
         document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `<span>Materiali:</span><b>€ ${c_mat.toFixed(2)}</b><span>Bordatura:</span><b>€ ${c_bor.toFixed(2)}</b><span>Ferramenta:</span><b>€ ${c_fer.toFixed(2)}</b><span>Manodopera:</span><b>€ ${c_man.toFixed(2)}</b><span>Trasporto:</span><b>€ ${c_tra.toFixed(2)}</b><span>IVA (22%):</span><b>€ ${(imp*0.22).toFixed(2)}</b>`;
+        document.getElementById('dettaglioCosti').innerHTML = `<span>Materiali:</span><b>€ ${c_mat.toFixed(2)}</b><span>Bordatura:</span><b>€ ${c_bor.toFixed(2)}</b><span>Ferramenta:</span><b>€ ${c_fer.toFixed(2)}</b><span>Manodopera:</span><b>€ ${c_man.toFixed(2)}</b><span>Trasporto:</span><b>€ ${c_tra.toFixed(2)}</b><span>IVA:</span><b>€ ${(imp*0.22).toFixed(2)}</b>`;
     }
     window.onload = run;
 </script>
