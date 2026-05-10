@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria - Struttura a Terra</title>
+    <title>Configuratore Falegnameria - Default Clean</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
@@ -43,9 +43,9 @@
             <option value="120">Laccato Opaco (120€/mq)</option>
         </select>
 
-        <h3>Vani</h3>
-        <label>N° Divisori Verticali</label>
-        <input type="number" id="numDiv" value="1" min="0" oninput="run()">
+        <h3>Vani e Allestimento</h3>
+        <label>Numero Divisori Verticali</label>
+        <input type="number" id="numDiv" value="0" min="0" max="10" oninput="run()">
         <div id="contRipiani" style="margin-top:10px;"></div>
 
         <div class="result-box">
@@ -55,7 +55,7 @@
     </div>
 
     <div class="preview-card">
-        <h3>Anteprima Tecnica 2D (Fianchi a terra)</h3>
+        <h3>Anteprima Tecnica 2D</h3>
         <svg id="disegno" viewBox="0 0 500 550"></svg>
         <h3>Distinta Tagli</h3>
         <table id="tabellaTagli">
@@ -73,12 +73,16 @@
         const cont = document.getElementById('contRipiani');
         let html = "";
         for(let i=0; i <= n; i++) {
+            // Default a 0 ripiani per ogni vano
             html += `<div class="row-item"><strong>Vano ${i+1}</strong><div class="grid">
-                <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="1" oninput="calcola()"></div>
-                <div style="padding-top:25px"><input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Asta</label></div>
+                <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="0" min="0" oninput="calcola()"></div>
+                <div style="padding-top:25px"><input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Asta Appendiabiti</label></div>
             </div></div>`;
         }
-        if(cont.dataset.num != n) { cont.innerHTML = html; cont.dataset.num = n; }
+        if(cont.dataset.num != n) {
+            cont.innerHTML = html;
+            cont.dataset.num = n;
+        }
     }
 
     function calcola() {
@@ -89,11 +93,11 @@
         const lInternaVanoTot = L - (SP * 2) - (nDiv * SP);
         const lVano = lInternaVanoTot / (nDiv + 1);
 
-        // --- NUOVA LOGICA COSTRUTTIVA ---
+        // Pezzi con logica Fianchi a Terra
         let pezzi = [
-            { n: "Fianchi Esterni (a terra)", q: 2, a: A, b: P, s: SP }, // Fianchi alti quanto A
-            { n: "Base + Top (interni)", q: 2, a: L - (SP*2), b: P, s: SP }, // Basi tra i fianchi
-            { n: "Zoccoli (interni)", q: 2, a: L - (SP*2), b: Z, s: SP }, // Zoccolo tra i fianchi
+            { n: "Fianchi Esterni", q: 2, a: A, b: P, s: SP },
+            { n: "Base + Top", q: 2, a: L - (SP*2), b: P, s: SP },
+            { n: "Zoccoli", q: 2, a: L - (SP*2), b: Z, s: SP },
             { n: "Schienali", q: nDiv + 1, a: A - 5, b: lVano + SP, s: SPS }
         ];
         if(nDiv > 0) pezzi.push({ n: "Divisori", q: nDiv, a: A - Z - (SP*2), b: P - 20, s: SP });
@@ -102,16 +106,10 @@
 
         // Disegno SVG
         const sc = 450 / Math.max(L, A), w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
-        let svg = `<rect x="25" y="25" width="${w}" height="${h}" fill="#f9f9f9" stroke="#ccc"/>`; // Schienale fondo
-        
-        // Fianchi a terra
-        svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; // SX
-        svg += `<rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; // DX
-        
-        // Zoccolo interno
-        svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`;
-        
-        // Base sopra lo zoccolo e Top
+        let svg = `<rect x="25" y="25" width="${w}" height="${h}" fill="#f9f9f9" stroke="#ccc"/>`; 
+        svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; // Fianco SX
+        svg += `<rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`; // Fianco DX
+        svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/>`; // Zoccolo
         svg += `<rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; // Base
         svg += `<rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`; // Top
 
@@ -141,12 +139,12 @@
 
         let nCern = Math.max(2, Math.ceil((A-Z)/700)) * (nDiv+1);
         let c_mat = (mqStr * pMq * 1.25) + (mqSch * 15), c_bor = mlB * 1.8, c_fer = (nCern * 4.5) + (numA * 12), c_man = 150 + (mqStr * 15), c_tra = 80;
-        let imp = c_mat + c_bor + c_fer + c_man + c_tra, tot = imp * 1.22;
+        let imp = c_mat + c_bor + c_fer + c_man + c_tra;
 
         document.getElementById('disegno').innerHTML = svg;
         document.getElementById('corpoTabella').innerHTML = htmlT;
-        document.getElementById('totale').innerText = "€ " + tot.toFixed(2);
-        document.getElementById('dettaglioCosti').innerHTML = `<span>Materiali:</span><b>€ ${c_mat.toFixed(2)}</b><span>Bordatura:</span><b>€ ${c_bor.toFixed(2)}</b><span>Ferramenta:</span><b>€ ${c_fer.toFixed(2)}</b><span>Falegnameria:</span><b>€ ${c_man.toFixed(2)}</b><span>Trasporto:</span><b>€ ${c_tra.toFixed(2)}</b><span>IVA (22%):</span><b>€ ${(imp*0.22).toFixed(2)}</b>`;
+        document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
+        document.getElementById('dettaglioCosti').innerHTML = `<span>Materiali:</span><b>€ ${c_mat.toFixed(2)}</b><span>Bordatura:</span><b>€ ${c_bor.toFixed(2)}</b><span>Ferramenta:</span><b>€ ${c_fer.toFixed(2)}</b><span>Manodopera:</span><b>€ ${c_man.toFixed(2)}</b><span>Trasporto:</span><b>€ ${c_tra.toFixed(2)}</b><span>IVA (22%):</span><b>€ ${(imp*0.22).toFixed(2)}</b>`;
     }
     window.onload = run;
 </script>
