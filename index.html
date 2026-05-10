@@ -4,28 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preventivatore Professionale Falegnameria</title>
-    <!-- Libreria PDF -->
+    <!-- Usiamo una versione stabile e collaudata di html2pdf -->
     <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1400px; width: 100%; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 380px; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1300px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 350px; }
         .preview-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1.5; min-width: 400px; display: flex; flex-direction: column; align-items: center; }
         h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .row-item { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #28a745; }
         .result-box { margin-top: 20px; padding: 20px; background: #2c3e50; color: white; border-radius: 8px; width: 100%; }
-        #totale { font-size: 34px; font-weight: bold; color: #2ecc71; text-align:center; margin-bottom: 10px; border-bottom: 1px solid #555; }
-        .tech-table { width: 100%; font-size: 0.85em; border-collapse: collapse; color: #ecf0f1; }
-        .tech-table td { padding: 4px 0; border-bottom: 1px solid #444; }
-        .valore { text-align: right; font-weight: bold; color: #fff; }
-        svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 420px; margin-bottom: 20px; }
-        table.distinta { width: 100%; border-collapse: collapse; font-size: 0.75em; }
-        table.distinta th, table.distinta td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        table.distinta th { background: #007bff; color: white; }
-        .btn-export { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; transition: 0.3s; }
-        .btn-export:disabled { background: #95a5a6; cursor: not-allowed; }
+        #totale { font-size: 32px; font-weight: bold; color: #2ecc71; text-align:center; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .tech-table { width: 100%; font-size: 0.85em; border-collapse: collapse; }
+        .tech-table td { padding: 5px 0; border-bottom: 1px solid #444; color: #ecf0f1; }
+        .valore { text-align: right; font-weight: bold; }
+        svg { background: #fff; border: 1px solid #ddd; width: 100%; height: auto; max-width: 400px; }
+        table.distinta { width: 100%; border-collapse: collapse; font-size: 0.75em; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background: #007bff; color: white; }
+        .btn-export { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; }
     </style>
 </head>
 <body>
@@ -33,164 +32,96 @@
 <div class="container">
     <div class="card">
         <h2>Dati Cliente</h2>
-        <input type="text" id="nomeCliente" placeholder="Nome Cliente" oninput="aggiornaTitolo()" style="margin-bottom:15px; border:2px solid #007bff;">
+        <input type="text" id="nomeCliente" placeholder="Nome Cliente" oninput="document.getElementById('cliLabel').innerText='Cliente: '+this.value" style="margin-bottom:15px; border:2px solid #007bff;">
         
         <h2>Parametri Struttura</h2>
         <div class="grid">
-            <div><label>Larghezza (mm)</label><input type="number" id="L" value="1000" oninput="run()"></div>
-            <div><label>Altezza (mm)</label><input type="number" id="A" value="2000" oninput="run()"></div>
-            <div><label>Profondità (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
-            <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="run()"></div>
-            <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="run()"></div>
-            <div><label>Costo Operaio (€/h)</label><input type="number" id="TariffaH" value="80" oninput="run()"></div>
+            <div><label>L (mm)</label><input type="number" id="L" value="1000" oninput="run()"></div>
+            <div><label>A (mm)</label><input type="number" id="A" value="2000" oninput="run()"></div>
+            <div><label>P (mm)</label><input type="number" id="P" value="600" oninput="run()"></div>
+            <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="run()"></div>
+            <div><label>Spessore</label><input type="number" id="SP" value="19" oninput="run()"></div>
+            <div><label>Operaio €/h</label><input type="number" id="TarH" value="80" oninput="run()"></div>
         </div>
 
         <div class="grid">
-            <div><label>Materiale</label><select id="mat" onchange="run()"><option value="25">Truciolare (25€)</option><option value="55" selected>Laminato (55€)</option></select></div>
-            <div><label>Bordo</label><select id="spBordo" onchange="run()"><option value="1.20">0.4mm</option><option value="1.80" selected>1mm</option><option value="2.50">2mm</option></select></div>
+            <div><label>Materiale</label><select id="mat" onchange="run()"><option value="25">Truciolare</option><option value="55" selected>Laminato</option></select></div>
+            <div><label>Bordo</label><select id="spB" onchange="run()"><option value="1.20">0.4mm</option><option value="1.80" selected>1mm</option></select></div>
         </div>
 
         <h3>Vani</h3>
         <input type="number" id="numDiv" value="1" min="0" oninput="run()">
         <div id="contRipiani" style="margin-top:10px;"></div>
 
-        <button id="btnPdf" class="btn-export" onclick="esportaPDF()">📥 SCARICA PREVENTIVO PDF</button>
+        <button class="btn-export" onclick="salvaPDF()">📥 SCARICA PDF</button>
     </div>
 
+    <!-- AREA STAMPA -->
     <div class="preview-card" id="area-stampa">
-        <div style="width:100%; border-bottom:2px solid #333; padding-bottom:10px; margin-bottom:20px;">
+        <div style="width:100%; border-bottom:3px solid #333; margin-bottom:15px;">
             <h1 style="margin:0;">PREVENTIVO TECNICO</h1>
-            <p id="labelCliente" style="font-size:1.2em; font-weight:bold; color:#007bff;">Cliente: Da definire</p>
-            <p>Data: <span id="dataCorrente"></span></p>
+            <p id="cliLabel" style="font-size:1.2em; font-weight:bold; color:#007bff;">Cliente: Da definire</p>
         </div>
 
-        <div id="wrapper-svg">
-            <svg id="disegno" viewBox="0 0 500 550"></svg>
+        <!-- Il disegno viene renderizzato qui -->
+        <div id="canvas-wrap">
+            <svg id="disegno" viewBox="0 0 500 550" width="400" height="440"></svg>
         </div>
 
-        <div class="result-box" style="background:#f8f9fa!important; border:1px solid #ccc; color:black!important;">
+        <div class="result-box" style="background:#f8f9fa!important; color:black!important; border:1px solid #ccc;">
             <div id="totale" style="color:#27ae60!important;">€ 0.00</div>
-            <table class="tech-table" id="reportCosti" style="color:#333!important;"></table>
+            <table class="tech-table" id="report" style="color:#333!important;"></table>
         </div>
 
-        <h3>Distinta Tagli</h3>
         <table class="distinta">
-            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H (mm)</th><th>L (mm)</th><th>Bordo (m)</th></tr></thead>
-            <tbody id="corpoTabella"></tbody>
+            <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Bordo</th></tr></thead>
+            <tbody id="corpoT"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    function aggiornaTitolo() { document.getElementById('labelCliente').innerText = "Cliente: " + (document.getElementById('nomeCliente').value || "Da definire"); }
-
-    function run() { renderInputs(); calcola(); }
-
-    function renderInputs() {
+    function run() {
         const n = parseInt(document.getElementById('numDiv').value) || 0;
         const cont = document.getElementById('contRipiani');
-        let html = "";
-        for(let i=0; i <= n; i++) {
-            html += `<div class="row-item"><strong>Vano ${i+1}</strong><div class="grid">
-                <div><label>Ripiani</label><input type="number" id="rip_qta_${i}" value="1" min="0" oninput="calcola()"></div>
-                <div><label>Interasse (mm)</label><input type="number" id="rip_int_${i}" value="320" min="32" oninput="calcola()"></div>
-            </div><div style="margin-top:10px"><input type="checkbox" id="asta_${i}" onchange="calcola()"> <label>Asta Appendiabiti</label></div></div>`;
+        if(cont.dataset.num != n) {
+            let h = "";
+            for(let i=0; i<=n; i++) h += `<div class="row-item"><strong>Vano ${i+1}</strong><div class="grid"><div><label>Ripiani</label><input type="number" id="q_${i}" value="1" oninput="calcola()"></div><div><label>Interasse</label><input type="number" id="int_${i}" value="320" oninput="calcola()"></div></div><input type="checkbox" id="a_${i}" onchange="calcola()"> Asta</div>`;
+            cont.innerHTML = h; cont.dataset.num = n;
         }
-        if(cont.dataset.num != n) { cont.innerHTML = html; cont.dataset.num = n; }
+        calcola();
     }
 
     function calcola() {
-        const L = parseFloat(document.getElementById('L').value), A = parseFloat(document.getElementById('A').value), P = parseFloat(document.getElementById('P').value);
-        const Z = parseFloat(document.getElementById('Z').value), SP = parseFloat(document.getElementById('SP').value), Tariffa = parseFloat(document.getElementById('TariffaH').value);
-        const nDiv = parseInt(document.getElementById('numDiv').value), pMq = parseFloat(document.getElementById('mat').value), pBor = parseFloat(document.getElementById('spBordo').value);
+        const L=parseFloat(document.getElementById('L').value), A=parseFloat(document.getElementById('A').value), P=parseFloat(document.getElementById('P').value), Z=parseFloat(document.getElementById('Z').value), SP=parseFloat(document.getElementById('SP').value), TH=parseFloat(document.getElementById('TarH').value), nD=parseInt(document.getElementById('numDiv').value), pM=parseFloat(document.getElementById('mat').value), pB=parseFloat(document.getElementById('spB').value);
+        const lV = (L - (SP*2) - (nD*SP)) / (nD+1);
+        let mqS=0, mlB=0, nA=0, hT="";
+        const sc=400/Math.max(L,A), w=L*sc, h=A*sc, sp=SP*sc, z=Z*sc;
 
-        const lVano = (L - (SP * 2) - (nDiv * SP)) / (nDiv + 1);
-        let pezzi = [
-            { n: "Fianchi Esterni (a terra)", q: 2, a: A, b: P, s: SP },
-            { n: "Base + Top (interni)", q: 2, a: L - (SP*2), b: P, s: SP },
-            { n: "Zoccoli", q: 2, a: L - (SP*2), b: Z, s: SP },
-            { n: "Schienali", q: nDiv + 1, a: A - 5, b: lVano + SP, s: 4 }
-        ];
-        if(nDiv > 0) pezzi.push({ n: "Divisori Centrali", q: nDiv, a: A - Z - (SP*2), b: P - 20, s: SP });
+        let svg = `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`;
+        svg += `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/>`;
+        svg += `<rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
 
-        let mqStr = 0, mlB = 0, htmlT = "", numAste = 0;
-        const sc = 450 / Math.max(L, A), w = L*sc, h = A*sc, sp = SP*sc, z = Z*sc;
-        let svg = `<defs><linearGradient id="astaG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#bdc3c7"/><stop offset="50%" style="stop-color:#ecf0f1"/><stop offset="100%" style="stop-color:#95a5a6"/></linearGradient></defs>`;
-        svg += `<rect x="25" y="25" width="${w}" height="${h-z}" fill="#f9f9f9" stroke="#ccc"/>`;
-
-        pezzi.forEach(p => {
-            let bP = (p.s > 4) ? ((p.a + p.b) * 2 / 1000) * p.q : 0;
-            mlB += bP; if(p.s > 4) mqStr += (p.a*p.b*p.q)/1000000;
-            htmlT += `<tr><td>${p.n}</td><td>${p.q}</td><td>${Math.round(p.a)}</td><td>${Math.round(p.b)}</td><td>${bP.toFixed(2)}</td></tr>`;
-        });
-
-        for(let i=0; i <= nDiv; i++) {
-            let qR = parseInt(document.getElementById(`rip_qta_${i}`)?.value) || 0;
-            let inter = parseFloat(document.getElementById(`rip_int_${i}`)?.value) || 320;
-            let xV = 25 + sp + (i * ( (lVano*sc) + sp ));
-            if(qR > 0) {
-                let bR = ((lVano + P - 20) * 2 / 1000) * qR; mlB += bR; mqStr += (lVano*(P-20)*qR)/1000000;
-                htmlT += `<tr><td>Ripiani Vano ${i+1}</td><td>${qR}</td><td>${Math.round(lVano)}</td><td>${Math.round(P-20)}</td><td>${bR.toFixed(2)}</td></tr>`;
-                for(let j=1; j<=qR; j++) {
-                    let yRip = 25 + h - z - sp - (inter * j * sc);
-                    if(yRip > 25 + sp + 60) svg += `<rect x="${xV}" y="${yRip}" width="${lVano*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`;
-                }
+        for(let i=0; i<=nD; i++) {
+            let q = parseInt(document.getElementById(`q_${i}`)?.value)||0, it = parseFloat(document.getElementById(`int_${i}`)?.value)||320, xV = 25+sp+(i*(lV*sc+sp));
+            if(q>0) {
+                mlB += ((lV+P-20)*2/1000)*q; mqS += (lV*(P-20)*q)/1000000;
+                for(let j=1; j<=q; j++) { let yR = 25+h-z-sp-(it*j*sc); if(yR>25+sp) svg += `<rect x="${xV}" y="${yR}" width="${lV*sc}" height="${sp/2}" fill="#3498db" opacity="0.6"/>`; }
             }
-            if(document.getElementById(`asta_${i}`)?.checked) {
-                numAste++; svg += `<rect x="${xV}" y="${25+sp+40*sc}" width="${lVano*sc}" height="6" rx="3" fill="url(#astaG)"/>`;
-            }
-            if(i < nDiv) svg += `<rect x="${xV + lVano*sc}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
+            if(document.getElementById(`a_${i}`)?.checked) { nA++; svg += `<rect x="${xV}" y="${25+sp+40*sc}" width="${lV*sc}" height="6" fill="#95a5a6"/>`; }
+            if(i<nD) svg += `<rect x="${xV+lV*sc}" y="${25+sp}" width="${sp}" height="${h-z-sp*2}" fill="#aaa" stroke="#333"/>`;
         }
 
-        let ore = 1.5 + (mqStr * 1.2) + (mlB * 0.08) + (numAste * 0.3);
-        let nCern = Math.max(2, Math.ceil((A-Z)/700)) * (nDiv+1);
-        let c_mat = mqStr * pMq * 1.25, c_bor = mlB * pBor, c_man = ore * Tariffa, c_fer = (numAste * 12) + (nCern * 4.5);
-        let imp = c_mat + c_bor + c_man + c_fer + 70;
-
-        document.getElementById('disegno').innerHTML = svg + `<rect x="25" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+w-sp}" y="25" width="${sp}" height="${h}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="${25+h-z}" width="${w-sp*2}" height="${z}" fill="#ddd" stroke="#333"/><rect x="${25+sp}" y="${25+h-z-sp}" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/><rect x="${25+sp}" y="25" width="${w-sp*2}" height="${sp}" fill="#bbb" stroke="#333"/>`;
-        document.getElementById('totale').innerText = "€ " + (imp * 1.22).toFixed(2);
-        document.getElementById('reportCosti').innerHTML = `
-            <tr><td>Materiale</td><td>${mqStr.toFixed(2)} mq</td><td class="valore">€ ${c_mat.toFixed(2)}</td></tr>
-            <tr><td>Bordatura Totale</td><td>${mlB.toFixed(2)} m</td><td class="valore">€ ${c_bor.toFixed(2)}</td></tr>
-            <tr><td>Lavorazione (${ore.toFixed(1)} h)</td><td>${Tariffa}€/h</td><td class="valore">€ ${c_man.toFixed(2)}</td></tr>
-            <tr><td>Ferramenta</td><td>Varie</td><td class="valore">€ ${c_fer.toFixed(2)}</td></tr>
-            <tr><td>Trasporto e IVA</td><td>-</td><td class="valore">€ ${(imp*0.22 + 70).toFixed(2)}</td></tr>
-        `;
-        document.getElementById('corpoTabella').innerHTML = htmlT;
-        document.getElementById('dataCorrente').innerText = new Date().toLocaleDateString('it-IT');
+        let ore = 2+(mqS*1.2)+(mlB*0.08)+(nA*0.3), imp = (mqS*pM*1.25)+(mlB*pB)+(ore*TH)+80;
+        document.getElementById('disegno').innerHTML = svg;
+        document.getElementById('totale').innerText = "€ " + (imp*1.22).toFixed(2);
+        document.getElementById('report').innerHTML = `<tr><td>Materiale</td><td class="valore">€ ${(mqS*pM*1.25).toFixed(2)}</td></tr><tr><td>Lavorazione (${ore.toFixed(1)}h)</td><td class="valore">€ ${(ore*TH).toFixed(2)}</td></tr><tr><td>IVA + Spese</td><td class="valore">€ ${(imp*0.22+80).toFixed(2)}</td></tr>`;
     }
 
-    async function esportaPDF() {
-        const btn = document.getElementById('btnPdf');
-        btn.innerText = "⏳ GENERAZIONE...";
-        btn.disabled = true;
-
-        // Piccola attesa per permettere al browser di aggiornare l'interfaccia
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const elemento = document.getElementById('area-stampa');
-        const nome = document.getElementById('nomeCliente').value || "Cliente";
-
-        const opt = {
-            margin: 10,
-            filename: `Preventivo_${nome}.pdf`,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true,
-                letterRendering: true
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(elemento).save().then(() => {
-            btn.innerText = "📥 SCARICA PREVENTIVO PDF";
-            btn.disabled = false;
-        }).catch(err => {
-            alert("Errore PDF. Prova a ricaricare la pagina.");
-            btn.innerText = "📥 SCARICA PREVENTIVO PDF";
-            btn.disabled = false;
-        });
+    function salvaPDF() {
+        const element = document.getElementById('area-stampa');
+        const opt = { margin: 10, filename: 'Preventivo.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save();
     }
 
     window.onload = run;
