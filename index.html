@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria - Preventivo Professionale</title>
+    <title>Configuratore Falegnameria Pro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .wrapper { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         .section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h3 { margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 8px; color: #007bff; font-size: 1.1em; }
@@ -20,34 +20,33 @@
         #svgContainer svg { background: white; border: 1px solid #ddd; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 100%; height: auto; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 0.9em; }
-        th { background: #007bff; color: white; text-transform: uppercase; }
+        th { background: #007bff; color: white; }
         .result-box { width: 100%; background: #2c3e50; color: white; padding: 25px; border-radius: 12px; box-sizing: border-box;}
         #totale-big { font-size: 42px; font-weight: bold; color: #2ecc71; text-align: center; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 15px; }
-        .btn-stampa { position: fixed; bottom: 20px; right: 20px; padding: 15px 40px; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-stampa { position: fixed; bottom: 20px; right: 20px; padding: 15px 40px; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; }
         @media print { .btn-stampa, .section:not(.output-area):not(#area-preventivo), .main-grid { display: none !important; } body { background: white; padding: 0; } .wrapper { max-width: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <!-- HEADER -->
+    <!-- INPUT DATI -->
     <div class="section header-grid">
-        <div><label>NOME CLIENTE</label><input type="text" id="nomeCliente" placeholder="Es: Mario Rossi" oninput="aggiornaDati()"></div>
+        <div><label>CLIENTE</label><input type="text" id="nomeCliente" placeholder="Es: Progetto Rossi" oninput="aggiornaDati()"></div>
         <div><label>MATERIALE SCOCCA</label>
             <select id="mat" onchange="aggiornaDati()">
-                <option value="25">Truciolare Melaminico (25€/mq)</option>
-                <option value="55" selected>Laminato Standard (55€/mq)</option>
+                <option value="25">Truciolare Melaminico (25€)</option>
+                <option value="55" selected>Laminato Standard (55€)</option>
             </select>
         </div>
-        <div><label>MODELLO ANTA (MDF LACCATO)</label>
-            <select id="modelloAnta" onchange="aggiornaDati()" style="border: 2px solid #007bff;">
+        <div><label>MODELLO ANTA</label>
+            <select id="modelloAnta" onchange="aggiornaDati()">
                 <option value="199">Profilo SLAB (199€/mq)</option>
-                <option value="249">Apertura a GOLA (249€/mq)</option>
+                <option value="249">Apertura GOLA (249€/mq)</option>
             </select>
         </div>
     </div>
 
-    <!-- CONFIGURAZIONE -->
     <div class="main-grid">
         <div class="section">
             <h3>STRUTTURA ESTERNA</h3>
@@ -57,41 +56,33 @@
                 <div><label>Profondità P (mm)</label><input type="number" id="P" value="600" oninput="aggiornaDati()"></div>
                 <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="aggiornaDati()"></div>
                 <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="aggiornaDati()"></div>
-                <div><label>Tariffa h (€)</label><input type="number" id="Tariffa" value="80" oninput="aggiornaDati()"></div>
             </div>
         </div>
         <div class="section">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>VANI E DIVISORI</h3>
-                <div style="display:flex; align-items:center; gap:10px;"><label>DIVISORI:</label><input type="number" id="numDiv" value="1" min="0" oninput="initVani()" style="width:60px;"></div>
+                <h3>CONFIGURAZIONE VANI</h3>
+                <div style="display:flex; align-items:center; gap:5px;"><label>DIVISORI:</label><input type="number" id="numDiv" value="1" min="0" oninput="initVani()" style="width:50px;"></div>
             </div>
             <div id="contVani"></div>
         </div>
     </div>
 
-    <!-- OUTPUT PREVENTIVO -->
+    <!-- AREA PREVENTIVO E STAMPA -->
     <div class="section output-area" id="area-preventivo">
-        <div style="text-align:center; width:100%;">
-            <h1 style="margin:0">PREVENTIVO ANALITICO: <span id="labelCli">Da definire</span></h1>
-            <p>Data: <span id="data"></span></p>
-        </div>
-
+        <h1 style="margin:0">PREVENTIVO: <span id="labelCli">Da definire</span></h1>
         <div id="svgContainer"></div>
-
+        
         <div style="width:100%; display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
             <div>
-                <h3>DISTINTA TAGLI (MM)</h3>
+                <h3>DISTINTA TAGLI (mm)</h3>
                 <table id="tabellaTagli">
-                    <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Sp</th></tr></thead>
+                    <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
             <div class="result-box">
-                <div style="text-align:center; font-size:14px; color:#bdc3c7;">TOTALE STIMATO (IVA escl.)</div>
                 <div id="totale-big">€ 0.00</div>
-                <table style="background:transparent; color:white; border:none; width:100%;">
-                    <tbody id="corpoCosti"></tbody>
-                </table>
+                <div id="dettaglioCosti" style="font-size: 0.95em; line-height: 2;"></div>
             </div>
         </div>
     </div>
@@ -105,75 +96,81 @@
         const cont = document.getElementById('contVani');
         let html = "";
         for(let i=0; i <= n; i++) {
-            html += `
-            <div class="row-item">
-                <strong>Vano ${i+1}</strong>
+            html += `<div class="row-item"><strong>Vano ${i+1}</strong>
                 <div class="input-grid" style="margin-top:10px;">
                     <div><label>Ripiani</label><input type="number" id="q_${i}" value="2" oninput="aggiornaDati()"></div>
                     <div><label>Cassetti</label><input type="number" id="cass_${i}" value="0" oninput="aggiornaDati()"></div>
-                    <div><label><input type="checkbox" id="anta_${i}" checked onchange="aggiornaDati()"> Anta</label></div>
-                </div>
-            </div>`;
+                    <div style="grid-column: span 2;"><label><input type="checkbox" id="anta_${i}" checked onchange="aggiornaDati()"> Anta Intera</label></div>
+                </div></div>`;
         }
         cont.innerHTML = html;
         aggiornaDati();
     }
 
     function aggiornaDati() {
-        const L=parseFloat(document.getElementById('L').value)||0, A=parseFloat(document.getElementById('A').value)||0, P=parseFloat(document.getElementById('P').value)||0, Z=parseFloat(document.getElementById('Z').value)||0, SP=parseFloat(document.getElementById('SP').value)||19, pM=parseFloat(document.getElementById('mat').value), pMA=parseFloat(document.getElementById('modelloAnta').value), nD=parseInt(document.getElementById('numDiv').value)||0;
+        const L=parseFloat(document.getElementById('L').value)||0, 
+              A=parseFloat(document.getElementById('A').value)||0, 
+              P=parseFloat(document.getElementById('P').value)||0, 
+              Z=parseFloat(document.getElementById('Z').value)||0, 
+              SP=parseFloat(document.getElementById('SP').value)||19, 
+              pM=parseFloat(document.getElementById('mat').value), 
+              pMA=parseFloat(document.getElementById('modelloAnta').value), 
+              nD=parseInt(document.getElementById('numDiv').value)||0;
+        
+        const COSTO_GUIDA = 35; // Costo coppia guide richiesto
 
         document.getElementById('labelCli').innerText = document.getElementById('nomeCliente').value || "Da definire";
-        document.getElementById('data').innerText = new Date().toLocaleDateString('it-IT');
-
-        // CALCOLO SUPERFICI E COSTI
-        let mqScocca = ((A*P*2) + (L*P*2) + (L*A)) / 1000000;
-        let mqAnte = 0;
-        let numRipiani = 0;
-        let numCassetti = 0;
-
-        let vaniWidth = (L - (SP * 2) - (nD * SP)) / (nD + 1);
+        
+        let numRipiani = 0, numCassetti = 0, mqAnte = 0;
+        let vanoW = (L - (SP * 2) - (nD * SP)) / (nD + 1);
 
         for(let i=0; i <= nD; i++) {
-            let qR = parseInt(document.getElementById('q_'+i)?.value)||0;
-            let qC = parseInt(document.getElementById('cass_'+i)?.value)||0;
-            numRipiani += qR;
-            numCassetti += qC;
-            if(document.getElementById('anta_'+i)?.checked) {
-                mqAnte += ((A - Z) * vaniWidth) / 1000000;
-            }
+            numRipiani += parseInt(document.getElementById('q_'+i)?.value)||0;
+            numCassetti += parseInt(document.getElementById('cass_'+i)?.value)||0;
+            if(document.getElementById('anta_'+i)?.checked) mqAnte += ((A - Z) * vanoW) / 1000000;
         }
 
+        // Calcolo costi
+        let mqScocca = ((A*P*2) + (L*P*2) + (L*A) + (numRipiani*vanoW*P)) / 1000000;
         let costoScocca = mqScocca * pM;
         let costoAnte = mqAnte * pMA;
-        let costoExtra = (numRipiani * 15) + (numCassetti * 45);
-        let totale = costoScocca + costoAnte + costoExtra;
-
+        let costoFerramenta = numCassetti * COSTO_GUIDA;
+        
+        let totale = costoScocca + costoAnte + costoFerramenta;
+        
         document.getElementById('totale-big').innerText = "€ " + totale.toFixed(2);
-
-        // DISEGNO SVG
-        const scale = 0.25;
-        let w = L * scale, h = A * scale, sp = SP * scale, z = Z * scale;
-        let svg = `<svg width="${w + 50}" height="${h + 50}" viewBox="-25 -10 ${w + 50} ${h + 50}">
-            <rect x="0" y="0" width="${w}" height="${h}" fill="#eee" stroke="#333" stroke-width="2"/>
-            <rect x="0" y="${h-z}" width="${w}" height="${z}" fill="#ddd" stroke="#333"/>
-            <text x="${w/2}" y="${h+25}" text-anchor="middle" font-size="12">L: ${L}mm</text>
-            <text x="-15" y="${h/2}" text-anchor="middle" font-size="12" transform="rotate(-90, -15, ${h/2})">A: ${A}mm</text>
-        </svg>`;
-        document.getElementById('svgContainer').innerHTML = svg;
+        document.getElementById('dettaglioCosti').innerHTML = `
+            <div style="display:flex; justify-content:space-between;"><span>Materiale Struttura:</span> <span>€ ${costoScocca.toFixed(2)}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Lavorazione Ante:</span> <span>€ ${costoAnte.toFixed(2)}</span></div>
+            <div style="display:flex; justify-content:space-between; color:#2ecc71; font-weight:bold;"><span>Guide Cassetti (${numCassetti} paia):</span> <span>€ ${costoFerramenta.toFixed(2)}</span></div>
+        `;
 
         // DISTINTA TAGLI
-        let tBody = `
-            <tr><td>Fianchi Esterni</td><td>2</td><td>${A}</td><td>${P}</td><td>${SP}</td></tr>
-            <tr><td>Base e Cappello</td><td>2</td><td>${P}</td><td>${L-(SP*2)}</td><td>${SP}</td></tr>
-            <tr><td>Schienale</td><td>1</td><td>${A-Z-5}</td><td>${L-10}</td><td>4</td></tr>
-            <tr><td>Ripiani Interni</td><td>${numRipiani}</td><td>${P-20}</td><td>${vaniWidth.toFixed(0)}</td><td>${SP}</td></tr>
-        `;
-        document.querySelector("#tabellaTagli tbody").innerHTML = tBody;
-    }
+        let rows = `
+            <tr><td>Fianchi Esterni</td><td>2</td><td>${A}</td><td>${P}</td></tr>
+            <tr><td>Base e Cappello</td><td>2</td><td>${P}</td><td>${(L-SP*2).toFixed(0)}</td></tr>
+            <tr><td>Ripiani Interni</td><td>${numRipiani}</td><td>${P-10}</td><td>${vanoW.toFixed(0)}</td></tr>`;
+        
+        if(numCassetti > 0) {
+            rows += `
+            <tr style="background:#e8f4fd"><td colspan="4"><b>Dettaglio Cassetti</b></td></tr>
+            <tr><td>Frontali</td><td>${numCassetti}</td><td>180</td><td>${(vanoW-4).toFixed(0)}</td></tr>
+            <tr><td>Sponde Lat.</td><td>${numCassetti*2}</td><td>120</td><td>${P-50}</td></tr>
+            <tr><td>Fondi (4mm)</td><td>${numCassetti}</td><td>${P-55}</td><td>${(vanoW-35).toFixed(0)}</td></tr>`;
+        }
+        document.querySelector("#tabellaTagli tbody").innerHTML = rows;
 
-    // Avvio iniziale
+        // DISEGNO SVG
+        const sc = 0.2;
+        let w=L*sc, h=A*sc, z=Z*sc;
+        document.getElementById('svgContainer').innerHTML = `
+        <svg width="${w+40}" height="${h+40}" viewBox="-20 -10 ${w+40} ${h+40}">
+            <rect x="0" y="0" width="${w}" height="${h}" fill="none" stroke="black" stroke-width="2"/>
+            <line x1="0" y1="${h-z}" x2="${w}" y2="${h-z}" stroke="red" stroke-dasharray="3"/>
+            <text x="${w/2}" y="${h+15}" text-anchor="middle" font-size="10">L: ${L}mm</text>
+        </svg>`;
+    }
     initVani();
 </script>
-
 </body>
 </html>
