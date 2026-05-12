@@ -93,7 +93,7 @@
 
         <div class="result-box">
             <div id="totale-big">€ 0,00</div>
-            <p style="text-align:center; font-size:0.8em; margin-bottom:10px; color:#bdc3c7;">DETTAGLIO COSTI ANALITICI</p>
+            <p style="text-align:center; font-size:0.8em; margin-bottom:10px; color:#bdc3c7;">TOTALE IMPONIBILE (IVA ESCLUSA)</p>
             <table style="width:100%; color:white; border:none; font-size: 0.9em;" id="tabellaCosti"></table>
         </div>
     </div>
@@ -137,7 +137,7 @@
         const s = 350 / Math.max(L, A);
         let svg = `<svg width="${L*s + 20}" height="${A*s + 20}">`;
         
-        // Fianchi a terra
+        // Fianchi esterni
         svg += `<rect x="10" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/>`;
         svg += `<rect x="${10 + (L-SP)*s}" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/>`;
         
@@ -185,36 +185,36 @@
         }
 
         metriBordo += (nRipiani * larghVano) / 1000;
-        rows += `<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>Front H</td></tr>`;
-        rows += `<tr><td>Ripiani</td><td>${nRipiani}</td><td>${Math.round(larghVano-2)}</td><td>${P-20}</td><td>Front L</td></tr>`;
+        rows += `<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>Front H</td></tr>
+                <tr><td>Ripiani</td><td>${nRipiani}</td><td>${Math.round(larghVano-2)}</td><td>${P-20}</td><td>Front L</td></tr>`;
         
         document.querySelector("#tabellaTagli tbody").innerHTML = rows;
         document.getElementById('svgContainer').innerHTML = svg + "</svg>";
         
-        // CALCOLO ANALITICO COSTI
+        // CALCOLI COSTI ANALITICI
         let mqLegno = (( (A*P*2)+(L*P*2)+(L*A)+(nRipiani*larghVano*P)+(nD*(A-Z-SP*2)*P) )/1000000) * 1.2;
         let costoLegno = mqLegno * pM;
         let costoBordi = metriBordo * cB;
-        let costoAnte = mqAnte * 120; // Costo mq anta finita
+        let costoAnte = mqAnte * 120;
         let costoFerramenta = (nCassetti * 45) + (nAste * 10) + (nRipiani * 2) + 20; 
-        
         let oreLavoro = (mqLegno * 2) + (nCassetti * 1.5) + (mqAnte * 1);
         let costoManoOpera = oreLavoro * tO;
         
-        let subTotale = costoLegno + costoBordi + costoAnte + costoFerramenta + costoManoOpera + cT;
-        let iva = subTotale * 0.22;
-        let totaleFinito = subTotale + iva;
+        let imponibile = costoLegno + costoBordi + costoAnte + costoFerramenta + costoManoOpera + cT;
+        let iva = imponibile * 0.22;
+        let totaleIvato = imponibile + iva;
 
-        document.getElementById('totale-big').innerText = `€ ${totaleFinito.toFixed(2)}`;
+        // AGGIORNAMENTO UI
+        document.getElementById('totale-big').innerText = `€ ${imponibile.toFixed(2)}`;
         document.getElementById('tabellaCosti').innerHTML = `
-            <tr><td>Legno (${mqLegno.toFixed(2)} mq)</td><td class="valore-r">€ ${costoLegno.toFixed(2)}</td></tr>
-            <tr><td>Bordo (${metriBordo.toFixed(1)} m)</td><td class="valore-r">€ ${costoBordi.toFixed(2)}</td></tr>
+            <tr><td>Materiale Pannelli (${mqLegno.toFixed(2)} mq)</td><td class="valore-r">€ ${costoLegno.toFixed(2)}</td></tr>
+            <tr><td>Bordatura (${metriBordo.toFixed(1)} m)</td><td class="valore-r">€ ${costoBordi.toFixed(2)}</td></tr>
             <tr><td>Ante (${mqAnte.toFixed(2)} mq)</td><td class="valore-r">€ ${costoAnte.toFixed(2)}</td></tr>
-            <tr><td>Ferramenta</td><td class="valore-r">€ ${costoFerramenta.toFixed(2)}</td></tr>
+            <tr><td>Ferramenta e Minuteria</td><td class="valore-r">€ ${costoFerramenta.toFixed(2)}</td></tr>
             <tr><td>Manodopera (${oreLavoro.toFixed(1)} h)</td><td class="valore-r">€ ${costoManoOpera.toFixed(2)}</td></tr>
-            <tr><td>Trasporto</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr>
-            <tr style="border-top:2px solid #555"><td><strong>IMPONIBILE</strong></td><td class="valore-r"><strong>€ ${subTotale.toFixed(2)}</strong></td></tr>
-            <tr><td>IVA (22%)</td><td class="valore-r">€ ${iva.toFixed(2)}</td></tr>
+            <tr><td>Trasporto e Consegna</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr>
+            <tr style="border-top: 1px solid #555;"><td>IVA (22%)</td><td class="valore-r">€ ${iva.toFixed(2)}</td></tr>
+            <tr style="font-size: 1.2em; color: #2ecc71;"><td><strong>TOTALE IVATO</strong></td><td class="valore-r"><strong>€ ${totaleIvato.toFixed(2)}</strong></td></tr>
         `;
     }
 
