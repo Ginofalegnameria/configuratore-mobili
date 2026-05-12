@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria Pro - Dettaglio Costi</title>
+    <title>Configuratore Falegnameria Pro</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .wrapper { max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: 450px 1fr; gap: 20px; align-items: start; }
@@ -67,7 +67,7 @@
                 <div><label>Profondità (P)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
                 <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
                 <div><label>Spessore</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
-                <div><label>N. Divisori</label><input type="number" id="nD" value="1" min="0" oninput="initVani()"></div>
+                <div><label>N. Divisori</label><input type="number" id="nD" value="0" min="0" oninput="initVani()"></div>
             </div>
         </div>
 
@@ -114,7 +114,7 @@
             <div class="row-item">
                 <strong>Vano ${i+1}</strong>
                 <div class="input-grid" style="margin-top:5px;">
-                    <div><label>Ripiani</label><input type="number" id="q_${i}" value="1" oninput="aggiorna()"></div>
+                    <div><label>Ripiani</label><input type="number" id="q_${i}" value="0" oninput="aggiorna()"></div>
                     <div><label>Cassetti</label><input type="number" id="c_${i}" value="0" oninput="aggiorna()"></div>
                 </div>
                 <div style="display:flex; gap:15px; margin-top:10px;">
@@ -137,17 +137,12 @@
         const s = 350 / Math.max(L, A);
         let svg = `<svg width="${L*s + 20}" height="${A*s + 20}">`;
         
-        // Fianchi esterni
         svg += `<rect x="10" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/>`;
         svg += `<rect x="${10 + (L-SP)*s}" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/>`;
-        
-        // Cappello e Base
         svg += `<rect x="${10 + SP*s}" y="10" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333" stroke-width="1"/>`;
         svg += `<line x1="${10+SP*s}" y1="${10+SP*s}" x2="${10+(L-SP)*s}" y2="${10+SP*s}" stroke="#007bff" stroke-width="2"/>`; 
         svg += `<rect x="${10 + SP*s}" y="${10 + (A-Z-SP)*s}" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333" stroke-width="1"/>`;
         svg += `<line x1="${10+SP*s}" y1="${10+(A-Z-SP)*s}" x2="${10+(L-SP)*s}" y2="${10+(A-Z-SP)*s}" stroke="#007bff" stroke-width="2"/>`;
-
-        // Zoccolo
         svg += `<rect x="${10 + SP*s}" y="${10 + (A-Z)*s}" width="${(L-SP*2)*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
 
         metriBordo += (A*2 + L*2) / 1000;
@@ -169,15 +164,12 @@
                 svg += `<rect x="${xVano}" y="${yR}" width="${larghVano*s}" height="${SP*s}" fill="#fff" stroke="#333" stroke-width="1"/>`;
                 svg += `<line x1="${xVano}" y1="${yR}" x2="${xVano + larghVano*s}" y2="${yR}" stroke="#007bff" stroke-width="2"/>`;
             }
-            
             if(asta) {
                 let yAsta = 10 + (SP+150)*s;
                 svg += `<circle cx="${xVano + (larghVano*s)/2}" cy="${yAsta}" r="${8*s}" fill="#777" />`;
                 svg += `<line x1="${xVano}" y1="${yAsta}" x2="${xVano + larghVano*s}" y2="${yAsta}" stroke="#777" stroke-width="2"/>`;
             }
-
             for(let c=0; c<cass; c++) svg += `<rect x="${xVano+2}" y="${10+(A-Z-SP)*s - (c*150*s) - 150*s}" width="${larghVano*s-4}" height="${145*s}" fill="none" stroke="#e67e22"/>`;
-            
             if(anta) {
                 svg += `<rect x="${xVano}" y="10" width="${larghVano*s}" height="${(A-Z)*s}" fill="rgba(46, 204, 113, 0.05)" stroke="#2ecc71" stroke-width="1" stroke-dasharray="2"/>`;
                 mqAnte += ((A-Z)*larghVano)/1000000;
@@ -191,7 +183,6 @@
         document.querySelector("#tabellaTagli tbody").innerHTML = rows;
         document.getElementById('svgContainer').innerHTML = svg + "</svg>";
         
-        // CALCOLI COSTI ANALITICI
         let mqLegno = (( (A*P*2)+(L*P*2)+(L*A)+(nRipiani*larghVano*P)+(nD*(A-Z-SP*2)*P) )/1000000) * 1.2;
         let costoLegno = mqLegno * pM;
         let costoBordi = metriBordo * cB;
@@ -204,15 +195,14 @@
         let iva = imponibile * 0.22;
         let totaleIvato = imponibile + iva;
 
-        // AGGIORNAMENTO UI
         document.getElementById('totale-big').innerText = `€ ${imponibile.toFixed(2)}`;
         document.getElementById('tabellaCosti').innerHTML = `
-            <tr><td>Materiale Pannelli (${mqLegno.toFixed(2)} mq)</td><td class="valore-r">€ ${costoLegno.toFixed(2)}</td></tr>
+            <tr><td>Pannelli (${mqLegno.toFixed(2)} mq)</td><td class="valore-r">€ ${costoLegno.toFixed(2)}</td></tr>
             <tr><td>Bordatura (${metriBordo.toFixed(1)} m)</td><td class="valore-r">€ ${costoBordi.toFixed(2)}</td></tr>
             <tr><td>Ante (${mqAnte.toFixed(2)} mq)</td><td class="valore-r">€ ${costoAnte.toFixed(2)}</td></tr>
-            <tr><td>Ferramenta e Minuteria</td><td class="valore-r">€ ${costoFerramenta.toFixed(2)}</td></tr>
+            <tr><td>Ferramenta</td><td class="valore-r">€ ${costoFerramenta.toFixed(2)}</td></tr>
             <tr><td>Manodopera (${oreLavoro.toFixed(1)} h)</td><td class="valore-r">€ ${costoManoOpera.toFixed(2)}</td></tr>
-            <tr><td>Trasporto e Consegna</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr>
+            <tr><td>Trasporto</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr>
             <tr style="border-top: 1px solid #555;"><td>IVA (22%)</td><td class="valore-r">€ ${iva.toFixed(2)}</td></tr>
             <tr style="font-size: 1.2em; color: #2ecc71;"><td><strong>TOTALE IVATO</strong></td><td class="valore-r"><strong>€ ${totaleIvato.toFixed(2)}</strong></td></tr>
         `;
