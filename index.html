@@ -13,41 +13,24 @@
         label { font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 4px; color: #555; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         .row-item { background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 10px; }
-        #svgContainer { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; justify-content: center; min-height: 400px; width: 100%; }
+        #svgContainer { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; justify-content: center; min-height: 400px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; font-size: 0.85em; }
         th { background: #007bff; color: white; }
         .result-box { background: #2c3e50; color: white; padding: 25px; border-radius: 12px; }
         #totale-big { font-size: 42px; font-weight: bold; color: #2ecc71; text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .controlli-stampa { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 1000; }
-        .btn { padding: 12px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; color: white; text-transform: uppercase; }
+        .btn { padding: 10px 15px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; color: white; }
         .btn-tech { background: #7f8c8d; }
         .btn-client { background: #27ae60; }
-        .btn-listino { background: #007bff; }
+        .btn-listino { background: #007bff; font-size: 10px; }
         .valore-r { text-align: right; }
 
         /* MODALE LISTINO */
-        #modalListino { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); 
-            z-index: 9999; 
-            justify-content: center; 
-            align-items: center; 
-        }
-        .modal-content { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 15px; 
-            width: 90%; 
-            max-width: 700px; 
-            max-height: 90vh; 
-            overflow-y: auto; 
-            color: #333;
-        }
-        .list-item { display: flex; justify-content: space-between; align-items: center; background: #eee; padding: 10px; border-radius: 6px; margin-bottom: 5px; }
+        #modalListino { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 650px; max-height: 90vh; overflow-y: auto; }
+        .list-box { border: 1px solid #eee; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
+        .list-item { display: flex; justify-content: space-between; padding: 5px; background: #f9f9f9; margin-bottom: 4px; font-size: 13px; }
 
         @media print {
             .no-print, .controlli-stampa { display: none !important; }
@@ -55,6 +38,7 @@
             .section { box-shadow: none; border: none; padding: 0; }
             body.print-tech .result-box { display: none !important; }
             body.print-client #sezione-tagli { display: none !important; }
+            body.print-client .result-box { background: white !important; color: black !important; border: 1px solid #333; }
         }
     </style>
 </head>
@@ -65,7 +49,7 @@
         <div class="section">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>DATI GENERALI</h3>
-                <button class="btn btn-listino" style="padding: 5px 15px; font-size: 10px;" onclick="apriListino()">⚙️ LISTINO</button>
+                <button class="btn btn-listino" onclick="apriModal()">⚙️ LISTINO</button>
             </div>
             <label>CLIENTE</label>
             <input type="text" id="nomeCliente" oninput="aggiorna()">
@@ -84,9 +68,9 @@
         <div class="section">
             <h3>STRUTTURA (mm)</h3>
             <div class="input-grid">
-                <div><label>Larghezza (L)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
-                <div><label>Altezza (A)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
-                <div><label>Profondità (P)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
+                <div><label>Largh. (L)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
+                <div><label>Alt. (A)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
+                <div><label>Prof. (P)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
                 <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
                 <div><label>Spessore</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
                 <div><label>N. Divisori</label><input type="number" id="nD" value="0" min="0" oninput="initVani()"></div>
@@ -97,17 +81,17 @@
 
     <div class="output-col">
         <div class="section">
-            <h1 id="labelCli" style="text-align: center;">PREVENTIVO</h1>
+            <h1 id="labelCli" style="text-align: center; color: #007bff;">PREVENTIVO</h1>
             <div id="svgContainer"></div>
         </div>
         <div class="section" id="sezione-tagli">
-            <h3>DISTINTA TECNICA</h3>
+            <h3>DISTINTA TECNICA E BORDI</h3>
             <table id="tabellaTagli"><thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Note</th></tr></thead><tbody></tbody></table>
         </div>
         <div class="result-box">
             <div id="totale-big">€ 0,00</div>
-            <p style="text-align:center; font-size:10px; color:#ccc;">IMPONIBILE ESCLUSO IVA</p>
-            <table id="tabellaCosti" style="width:100%; color:white;"></table>
+            <p style="text-align:center; font-size:10px; color:#bdc3c7;">TOTALE IMPONIBILE (IVA ESCLUSA)</p>
+            <table id="tabellaCosti" style="width:100%; color:white; font-size: 14px;"></table>
         </div>
     </div>
 </div>
@@ -115,9 +99,9 @@
 <!-- MODALE LISTINO -->
 <div id="modalListino">
     <div class="modal-content">
-        <h3>GESTIONE LISTINO</h3>
-        <div class="section" style="border: 1px solid #ddd;">
-            <label>AGGIUNGI VOCE (SCOCCA O ANTA)</label>
+        <h3>⚙️ GESTIONE LISTINO PREZZI</h3>
+        <div class="list-box">
+            <label>AGGIUNGI SCOCCA O ANTA</label>
             <div class="input-grid">
                 <input type="text" id="newN" placeholder="Nome">
                 <input type="number" id="newP" placeholder="€/mq">
@@ -127,54 +111,49 @@
                 <button class="btn" style="background:#27ae60; flex:1" onclick="aggiungi('A')">+ ANTA</button>
             </div>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
             <div id="listS"></div>
             <div id="listA"></div>
         </div>
-        <button class="btn btn-client" style="width:100%; margin-top:20px;" onclick="chiudiListino()">SALVA E TORNA AL PREVENTIVO</button>
+        <hr>
+        <div class="input-grid">
+            <div><label>Costo Cassetto (€)</label><input type="number" id="pCass" value="50"></div>
+            <div><label>Costo Asta (€)</label><input type="number" id="pAsta" value="15"></div>
+        </div>
+        <button class="btn btn-client" style="width:100%; margin-top:20px;" onclick="chiudiModal()">SALVA E CHIUDI</button>
     </div>
 </div>
 
 <div class="controlli-stampa no-print">
-    <button class="btn btn-tech" onclick="stampa('tech')">TECNICA</button>
-    <button class="btn btn-client" onclick="stampa('client')">CLIENTE</button>
+    <button class="btn btn-tech" onclick="stampa('tech')">STAMPA TECNICA</button>
+    <button class="btn btn-client" onclick="stampa('client')">EXPORT CLIENTE</button>
 </div>
 
 <script>
     let dbS = JSON.parse(localStorage.getItem('dbS')) || [{n:"Laminato", p:55}];
     let dbA = JSON.parse(localStorage.getItem('dbA')) || [{n:"Anta Liscia", p:80}];
 
-    function apriListino() { 
-        document.getElementById('modalListino').style.display = 'flex'; 
-        renderListe(); 
-    }
-    
-    function chiudiListino() { 
+    function apriModal() { document.getElementById('modalListino').style.display = 'flex'; renderListe(); }
+    function chiudiModal() { 
+        localStorage.setItem('pCass', document.getElementById('pCass').value);
+        localStorage.setItem('pAsta', document.getElementById('pAsta').value);
         document.getElementById('modalListino').style.display = 'none'; 
-        popolaSelects(); 
-        aggiorna(); 
+        popolaSelects(); aggiorna(); 
     }
 
     function aggiungi(tipo) {
         let n = document.getElementById('newN').value, p = Number(document.getElementById('newP').value);
-        if(n && p) {
-            if(tipo === 'S') dbS.push({n, p}); else dbA.push({n, p});
-            document.getElementById('newN').value = ""; document.getElementById('newP').value = "";
-            renderListe();
-        }
+        if(n && p) { if(tipo === 'S') dbS.push({n, p}); else dbA.push({n, p}); renderListe(); }
     }
 
-    function rimuovi(tipo, i) { 
-        if(tipo === 'S') dbS.splice(i,1); else dbA.splice(i,1); 
-        renderListe(); 
-    }
+    function rimuovi(tipo, i) { if(tipo === 'S') dbS.splice(i,1); else dbA.splice(i,1); renderListe(); }
 
     function renderListe() {
         localStorage.setItem('dbS', JSON.stringify(dbS)); localStorage.setItem('dbA', JSON.stringify(dbA));
         let lS = document.getElementById('listS'), lA = document.getElementById('listA');
         lS.innerHTML = "<b>SCOCCHE:</b>"; lA.innerHTML = "<b>ANTE:</b>";
-        dbS.forEach((m,i) => lS.innerHTML += `<div class="list-item">${m.n} <span onclick="rimuovi('S',${i})" style="color:red;cursor:pointer">X</span></div>`);
-        dbA.forEach((m,i) => lA.innerHTML += `<div class="list-item">${m.n} <span onclick="rimuovi('A',${i})" style="color:red;cursor:pointer">X</span></div>`);
+        dbS.forEach((m,i) => lS.innerHTML += `<div class="list-item">${m.n} (${m.p}€) <span onclick="rimuovi('S',${i})" style="color:red;cursor:pointer">X</span></div>`);
+        dbA.forEach((m,i) => lA.innerHTML += `<div class="list-item">${m.n} (${m.p}€) <span onclick="rimuovi('A',${i})" style="color:red;cursor:pointer">X</span></div>`);
     }
 
     function popolaSelects() {
@@ -188,18 +167,20 @@
         let n = parseInt(document.getElementById('nD').value) || 0, cont = document.getElementById('contVani');
         cont.innerHTML = "";
         for(let i=0; i <= n; i++) {
-            cont.innerHTML += `<div class="section row-item"><strong>Vano ${i+1}</strong><div class="input-grid"><div>Ripiani<input type="number" id="q_${i}" value="0" oninput="aggiorna()"></div><div>Cassetti<input type="number" id="c_${i}" value="0" oninput="aggiorna()"></div></div><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Anta | <input type="checkbox" id="asta_${i}" onchange="aggiorna()"> Asta</div>`;
+            cont.innerHTML += `<div class="section row-item"><strong>Vano ${i+1}</strong><div class="input-grid"><div>Ripiani<input type="number" id="q_${i}" value="0" oninput="aggiorna()"></div><div>Cassetti<input type="number" id="c_${i}" value="0" oninput="aggiorna()"></div></div><label><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Anta</label> | <label><input type="checkbox" id="asta_${i}" onchange="aggiorna()"> Asta</label></div>`;
         }
         aggiorna();
     }
 
     function aggiorna() {
         const L=Number(document.getElementById('L').value), A=Number(document.getElementById('A').value), P=Number(document.getElementById('P').value), Z=Number(document.getElementById('Z').value), SP=Number(document.getElementById('SP').value), nD=Number(document.getElementById('nD').value), pS=Number(document.getElementById('mat').value), pA=Number(document.getElementById('matAnta').value), cB=Number(document.getElementById('costoBordo').value), tO=Number(document.getElementById('tariffaOraria').value), cT=Number(document.getElementById('costoTrasporto').value);
+        const pc = Number(localStorage.getItem('pCass') || 50), pa = Number(localStorage.getItem('pAsta') || 15);
         document.getElementById('labelCli').innerText = document.getElementById('nomeCliente').value || "PREVENTIVO";
-        let nR=0, nC=0, mqA=0, mB=0, nAs=0, lV=(L-(SP*2)-(nD*SP))/(nD+1), s=350/Math.max(L,A);
-        let svg=`<svg width="${L*s+20}" height="${A*s+20}"><rect x="10" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="2"/><rect x="${10+(L-SP)*s}" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="2"/><rect x="${10+SP*s}" y="10" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${10+SP*s}" y1="${10+SP*s}" x2="${10+(L-SP)*s}" y2="${10+SP*s}" stroke="#007bff" stroke-width="2"/><rect x="${10+SP*s}" y="${10+(A-Z-SP)*s}" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${10+SP*s}" y1="${10+(A-Z-SP)*s}" x2="${10+(L-SP)*s}" y2="${10+(A-Z-SP)*s}" stroke="#007bff" stroke-width="2"/><rect x="${10+SP*s}" y="${10+(A-Z)*s}" width="${(L-SP*2)*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
-        mB+=(A*2+L*2)/1000;
-        let rows=`<tr><td>Fianchi</td><td>2</td><td>${A}</td><td>${P}</td><td>Front H</td></tr><tr><td>Base/Cap</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>Front L</td></tr>`;
+        
+        let nR=0, nC=0, mqA=0, mB=(A*2+L*2)/1000, nAs=0, lV=(L-(SP*2)-(nD*SP))/(nD+1), s=350/Math.max(L,A);
+        let svg=`<svg width="${L*s+20}" height="${A*s+20}"><rect x="10" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/><rect x="${10+(L-SP)*s}" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/><rect x="${10+SP*s}" y="10" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${10+SP*s}" y1="${10+SP*s}" x2="${10+(L-SP)*s}" y2="${10+SP*s}" stroke="#007bff" stroke-width="2"/><rect x="${10+SP*s}" y="${10+(A-Z-SP)*s}" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${10+SP*s}" y1="${10+(A-Z-SP)*s}" x2="${10+(L-SP)*s}" y2="${10+(A-Z-SP)*s}" stroke="#007bff" stroke-width="2"/><rect x="${10+SP*s}" y="${10+(A-Z)*s}" width="${(L-SP*2)*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
+        let rows=`<tr><td>Fianchi Est.</td><td>2</td><td>${A}</td><td>${P}</td><td>Front H</td></tr><tr><td>Basi</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>Front L</td></tr>`;
+        
         for(let i=0; i<=nD; i++){
             let xV=10+(SP*s)+(i*(lV+SP)*s), rip=Number(document.getElementById('q_'+i)?.value)||0, cass=Number(document.getElementById('c_'+i)?.value)||0, asta=document.getElementById('asta_'+i)?.checked, anta=document.getElementById('anta_'+i)?.checked;
             nR+=rip; nC+=cass; if(asta) nAs++;
@@ -211,13 +192,20 @@
         }
         mB+=(nR*lV)/1000; rows+=`<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>H</td></tr><tr><td>Ripiani</td><td>${nR}</td><td>${Math.round(lV-2)}</td><td>${P-20}</td><td>L</td></tr>`;
         document.querySelector("#tabellaTagli tbody").innerHTML=rows; document.getElementById('svgContainer').innerHTML=svg+"</svg>";
-        let mqL=(( (A*P*2)+(L*P*2)+(L*A)+(nR*lV*P)+(nD*(A-Z-SP*2)*P) )/1000000)*1.2, cL=mqL*pS, cB=mB*cB, cAn=mqA*pA, imp=cL+cB+cAn+cT+(nC*50)+(nAs*15), iva=imp*0.22;
+        
+        let mqL=(( (A*P*2)+(L*P*2)+(L*A)+(nR*lV*P)+(nD*(A-Z-SP*2)*P) )/1000000)*1.2;
+        let cL=mqL*pS, cB=mB*cB, cAn=mqA*pA, cF=(nC*pc)+(nAs*pa)+(nR*2)+20, ore=(mqL*2)+(nC*1.5)+(mqA*1), cM=ore*tO, imp=cL+cB+cAn+cF+cM+cT, iva=imp*0.22, totIv=imp+iva;
+        
         document.getElementById('totale-big').innerText=`€ ${imp.toFixed(2)}`;
-        document.getElementById('tabellaCosti').innerHTML=`<tr><td>Legno</td><td class="valore-r">€ ${cL.toFixed(2)}</td></tr><tr><td>Bordo</td><td class="valore-r">€ ${cB.toFixed(2)}</td></tr><tr><td>Trasporto</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr><tr style="color:#2ecc71"><td><b>TOT IVATO</b></td><td class="valore-r"><b>€ ${(imp+iva).toFixed(2)}</b></td></tr>`;
+        document.getElementById('tabellaCosti').innerHTML=`<tr><td>Materiale (${mqL.toFixed(2)} mq)</td><td class="valore-r">€ ${cL.toFixed(2)}</td></tr><tr><td>Bordatura (${mB.toFixed(1)} m)</td><td class="valore-r">€ ${cB.toFixed(2)}</td></tr><tr><td>Ante (${mqA.toFixed(2)} mq)</td><td class="valore-r">€ ${cAn.toFixed(2)}</td></tr><tr><td>Manodopera (${ore.toFixed(1)} h)</td><td class="valore-r">€ ${cM.toFixed(2)}</td></tr><tr><td>Trasporto</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr><tr style="border-top:1px solid #555"><td>IVA (22%)</td><td class="valore-r">€ ${iva.toFixed(2)}</td></tr><tr style="font-size:1.2em; color:#2ecc71"><td><b>TOTALE IVATO</b></td><td class="valore-r"><b>€ ${totIv.toFixed(2)}</b></td></tr>`;
     }
 
     function stampa(t) { document.body.className = 'print-'+t; window.print(); }
-    window.onload = () => { popolaSelects(); initVani(); };
+    window.onload = () => { 
+        if(localStorage.getItem('pCass')) document.getElementById('pCass').value = localStorage.getItem('pCass');
+        if(localStorage.getItem('pAsta')) document.getElementById('pAsta').value = localStorage.getItem('pAsta');
+        popolaSelects(); initVani(); 
+    };
 </script>
 </body>
 </html>
