@@ -89,7 +89,7 @@
         <div class="section" id="sezione-tagli">
             <h3>DISTINTA TECNICA E BORDI</h3>
             <table id="tabellaTagli">
-                <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Bordo</th></tr></thead>
+                <thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Bordo / Note</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -122,10 +122,13 @@
             <div class="row-item">
                 <strong>Vano ${i+1}</strong>
                 <div class="input-grid" style="margin-top:5px;">
-                    <div><label>Ripiani</label><input type="number" id="q_${i}" value="2" oninput="aggiorna()"></div>
+                    <div><label>Ripiani</label><input type="number" id="q_${i}" value="1" oninput="aggiorna()"></div>
                     <div><label>Cassetti</label><input type="number" id="c_${i}" value="0" oninput="aggiorna()"></div>
                 </div>
-                <label style="margin-top:5px;"><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Applica Anta</label>
+                <div style="display:flex; gap:15px; margin-top:10px;">
+                    <label><input type="checkbox" id="asta_${i}" onchange="aggiorna()"> Asta Appendiabiti</label>
+                    <label><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Applica Anta</label>
+                </div>
             </div>`;
         }
         aggiorna();
@@ -137,7 +140,7 @@
         document.getElementById('labelCli').innerText = (document.getElementById('nomeCliente').value || "Preventivo Progetto").toUpperCase();
         document.getElementById('dettaglio-mat').innerText = "Materiale: " + document.getElementById('mat').options[document.getElementById('mat').selectedIndex].text;
 
-        let nRipiani = 0, nCassetti = 0, mqAnte = 0, metriBordo = 0;
+        let nRipiani = 0, nCassetti = 0, mqAnte = 0, metriBordo = 0, nAste = 0;
         let larghVano = (L - (SP * 2) - (nD * SP)) / (nD + 1);
 
         const s = 350 / Math.max(L, A);
@@ -145,20 +148,33 @@
         svg += `<rect x="10" y="10" width="${L*s}" height="${(A-Z)*s}" fill="#fff" stroke="#333" stroke-width="2"/>`;
         svg += `<rect x="10" y="${(A-Z)*s + 10}" width="${L*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
 
-        let rows = `<tr><td>Fianchi Esterni</td><td>2</td><td>${A}</td><td>${P}</td><td>H-Front</td></tr>
-                    <tr><td>Base e Cappello</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>L-Front</td></tr>`;
+        let rows = `<tr><td>Fianchi Esterni</td><td>2</td><td>${A}</td><td>${P}</td><td>Bordo Frontale</td></tr>
+                    <tr><td>Base e Cappello</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>Bordo Frontale</td></tr>`;
         metriBordo += (A*2 + L*2) / 1000;
 
         for(let i=0; i <= nD; i++) {
             let xVano = 10 + (SP*s) + (i * (larghVano + SP) * s);
             let rip = Number(document.getElementById('q_'+i)?.value) || 0;
             let cass = Number(document.getElementById('c_'+i)?.value) || 0;
+            let asta = document.getElementById('asta_'+i)?.checked;
             let anta = document.getElementById('anta_'+i)?.checked;
-            nRipiani += rip; nCassetti += cass;
+            nRipiani += rip; nCassetti += cass; if(asta) nAste++;
 
             if(i < nD) svg += `<rect x="${xVano + larghVano*s}" y="10" width="${SP*s}" height="${(A-Z)*s}" fill="#ddd" stroke="#333"/>`;
+            
+            // Disegno Ripiani
             for(let r=1; r<=rip; r++) svg += `<line x1="${xVano}" y1="${10 + ((A-Z)*s / (rip+1)) * r}" x2="${xVano + larghVano*s}" y2="${10 + ((A-Z)*s / (rip+1)) * r}" stroke="#007bff" stroke-dasharray="2"/>`;
+            
+            // Disegno Asta
+            if(asta) {
+                let yAsta = 10 + 150*s; // Asta a circa 150mm dal cappello
+                svg += `<circle cx="${xVano + (larghVano*s)/2}" cy="${yAsta}" r="${8*s}" fill="#777" />`;
+                svg += `<line x1="${xVano}" y1="${yAsta}" x2="${xVano + larghVano*s}" y2="${yAsta}" stroke="#777" stroke-width="2"/>`;
+            }
+
+            // Disegno Cassetti
             for(let c=0; c<cass; c++) svg += `<rect x="${xVano+2}" y="${10+(A-Z)*s - (c*150*s) - 150*s}" width="${larghVano*s-4}" height="${145*s}" fill="none" stroke="#e67e22"/>`;
+            
             if(anta) {
                 svg += `<rect x="${xVano}" y="10" width="${larghVano*s}" height="${(A-Z)*s}" fill="rgba(46, 204, 113, 0.1)" stroke="#2ecc71" stroke-width="1"/>`;
                 mqAnte += ((A-Z)*larghVano)/1000000;
@@ -166,13 +182,14 @@
         }
 
         metriBordo += (nRipiani * larghVano) / 1000;
-        rows += `<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>H-Front</td></tr>`;
-        rows += `<tr><td>Ripiani</td><td>${nRipiani}</td><td>${Math.round(larghVano-2)}</td><td>${P-20}</td><td>L-Front</td></tr>`;
+        rows += `<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>Bordo Frontale</td></tr>`;
+        rows += `<tr><td>Ripiani</td><td>${nRipiani}</td><td>${Math.round(larghVano-2)}</td><td>${P-20}</td><td>Bordo Frontale</td></tr>`;
+        if(nAste > 0) rows += `<tr><td>Aste Appendiabiti</td><td>${nAste}</td><td>Ø 25</td><td>${Math.round(larghVano-5)}</td><td>Ferramenta</td></tr>`;
         
         document.querySelector("#tabellaTagli tbody").innerHTML = rows;
         document.getElementById('svgContainer').innerHTML = svg + "</svg>";
         
-        let totale = (( ( (A*P*2)+(L*P*2)+(L*A)+(nRipiani*larghVano*P) )/1000000 ) * 1.2 * pM) + (metriBordo * cB) + (nCassetti * 50) + (mqAnte * 60);
+        let totale = (( ( (A*P*2)+(L*P*2)+(L*A)+(nRipiani*larghVano*P) )/1000000 ) * 1.2 * pM) + (metriBordo * cB) + (nCassetti * 50) + (mqAnte * 60) + (nAste * 15);
         document.getElementById('totale-big').innerText = `€ ${(totale * 1.4).toFixed(2)}`;
     }
 
