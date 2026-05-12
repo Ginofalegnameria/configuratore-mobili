@@ -126,8 +126,8 @@
                     <div><label>Cassetti</label><input type="number" id="c_${i}" value="0" oninput="aggiorna()"></div>
                 </div>
                 <div style="display:flex; gap:15px; margin-top:10px;">
-                    <label><input type="checkbox" id="asta_${i}" onchange="aggiorna()"> Asta Appendiabiti</label>
-                    <label><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Applica Anta</label>
+                    <label><input type="checkbox" id="asta_${i}" onchange="aggiorna()"> Asta</label>
+                    <label><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Anta</label>
                 </div>
             </div>`;
         }
@@ -145,11 +145,23 @@
 
         const s = 350 / Math.max(L, A);
         let svg = `<svg width="${L*s + 20}" height="${A*s + 20}">`;
-        svg += `<rect x="10" y="10" width="${L*s}" height="${(A-Z)*s}" fill="#fff" stroke="#333" stroke-width="2"/>`;
-        svg += `<rect x="10" y="${(A-Z)*s + 10}" width="${L*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
+        
+        // Fianchi esterni a terra
+        svg += `<rect x="10" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/>`;
+        svg += `<rect x="${10 + (L-SP)*s}" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/>`;
+        
+        // Cappello e Base
+        svg += `<rect x="${10 + SP*s}" y="10" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333" stroke-width="1"/>`;
+        svg += `<line x1="${10+SP*s}" y1="${10+SP*s}" x2="${10+(L-SP)*s}" y2="${10+SP*s}" stroke="#007bff" stroke-width="2"/>`; 
+        
+        svg += `<rect x="${10 + SP*s}" y="${10 + (A-Z-SP)*s}" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333" stroke-width="1"/>`;
+        svg += `<line x1="${10+SP*s}" y1="${10+(A-Z-SP)*s}" x2="${10+(L-SP)*s}" y2="${10+(A-Z-SP)*s}" stroke="#007bff" stroke-width="2"/>`;
 
-        let rows = `<tr><td>Fianchi Esterni</td><td>2</td><td>${A}</td><td>${P}</td><td>Bordo Frontale</td></tr>
-                    <tr><td>Base e Cappello</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>Bordo Frontale</td></tr>`;
+        // Zoccolo
+        svg += `<rect x="${10 + SP*s}" y="${10 + (A-Z)*s}" width="${(L-SP*2)*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
+
+        let rows = `<tr><td>Fianchi Esterni</td><td>2</td><td>${A}</td><td>${P}</td><td>Bordo Frontale H</td></tr>
+                    <tr><td>Base e Cappello</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>Bordo Frontale L</td></tr>`;
         metriBordo += (A*2 + L*2) / 1000;
 
         for(let i=0; i <= nD; i++) {
@@ -160,31 +172,32 @@
             let anta = document.getElementById('anta_'+i)?.checked;
             nRipiani += rip; nCassetti += cass; if(asta) nAste++;
 
-            if(i < nD) svg += `<rect x="${xVano + larghVano*s}" y="10" width="${SP*s}" height="${(A-Z)*s}" fill="#ddd" stroke="#333"/>`;
+            if(i < nD) svg += `<rect x="${xVano + larghVano*s}" y="${10+SP*s}" width="${SP*s}" height="${(A-Z-SP*2)*s}" fill="#ddd" stroke="#333"/>`;
+
+            // Ripiani con spessore e bordo blu
+            for(let r=1; r<=rip; r++) {
+                let yR = 10 + SP*s + ((A-Z-SP*2)*s / (rip+1)) * r;
+                svg += `<rect x="${xVano}" y="${yR}" width="${larghVano*s}" height="${SP*s}" fill="#fff" stroke="#333" stroke-width="1"/>`;
+                svg += `<line x1="${xVano}" y1="${yR}" x2="${xVano + larghVano*s}" y2="${yR}" stroke="#007bff" stroke-width="2"/>`;
+            }
             
-            // Disegno Ripiani
-            for(let r=1; r<=rip; r++) svg += `<line x1="${xVano}" y1="${10 + ((A-Z)*s / (rip+1)) * r}" x2="${xVano + larghVano*s}" y2="${10 + ((A-Z)*s / (rip+1)) * r}" stroke="#007bff" stroke-dasharray="2"/>`;
-            
-            // Disegno Asta
             if(asta) {
-                let yAsta = 10 + 150*s; // Asta a circa 150mm dal cappello
+                let yAsta = 10 + (SP+150)*s;
                 svg += `<circle cx="${xVano + (larghVano*s)/2}" cy="${yAsta}" r="${8*s}" fill="#777" />`;
                 svg += `<line x1="${xVano}" y1="${yAsta}" x2="${xVano + larghVano*s}" y2="${yAsta}" stroke="#777" stroke-width="2"/>`;
             }
 
-            // Disegno Cassetti
-            for(let c=0; c<cass; c++) svg += `<rect x="${xVano+2}" y="${10+(A-Z)*s - (c*150*s) - 150*s}" width="${larghVano*s-4}" height="${145*s}" fill="none" stroke="#e67e22"/>`;
+            for(let c=0; c<cass; c++) svg += `<rect x="${xVano+2}" y="${10+(A-Z-SP)*s - (c*150*s) - 150*s}" width="${larghVano*s-4}" height="${145*s}" fill="none" stroke="#e67e22"/>`;
             
             if(anta) {
-                svg += `<rect x="${xVano}" y="10" width="${larghVano*s}" height="${(A-Z)*s}" fill="rgba(46, 204, 113, 0.1)" stroke="#2ecc71" stroke-width="1"/>`;
+                svg += `<rect x="${xVano}" y="10" width="${larghVano*s}" height="${(A-Z)*s}" fill="rgba(46, 204, 113, 0.05)" stroke="#2ecc71" stroke-width="1" stroke-dasharray="2"/>`;
                 mqAnte += ((A-Z)*larghVano)/1000000;
             }
         }
 
         metriBordo += (nRipiani * larghVano) / 1000;
-        rows += `<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>Bordo Frontale</td></tr>`;
-        rows += `<tr><td>Ripiani</td><td>${nRipiani}</td><td>${Math.round(larghVano-2)}</td><td>${P-20}</td><td>Bordo Frontale</td></tr>`;
-        if(nAste > 0) rows += `<tr><td>Aste Appendiabiti</td><td>${nAste}</td><td>Ø 25</td><td>${Math.round(larghVano-5)}</td><td>Ferramenta</td></tr>`;
+        rows += `<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>Bordo Frontale H</td></tr>`;
+        rows += `<tr><td>Ripiani</td><td>${nRipiani}</td><td>${Math.round(larghVano-2)}</td><td>${P-20}</td><td>Bordo Frontale L</td></tr>`;
         
         document.querySelector("#tabellaTagli tbody").innerHTML = rows;
         document.getElementById('svgContainer').innerHTML = svg + "</svg>";
