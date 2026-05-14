@@ -74,17 +74,16 @@
             <input type="number" id="costoTrasporto" value="150" oninput="aggiorna()">
         </div>
 
-        <!-- PARAMETRI STRUTTURA - DIVISI PER EVITARE CONFLITTI DI SELEZIONE -->
         <div class="section">
             <h3 id="titolo-parametri">PARAMETRI STRUTTURA</h3>
             
             <div id="inputs-mobile" class="input-grid" style="display:none;">
-                <div><label>Largh. (mm)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
-                <div><label>Alt. (mm)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
-                <div><label>Prof. (mm)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
-                <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
-                <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
-                <div><label>N. Ripiani</label><input type="number" id="nD" value="3" min="0" oninput="aggiorna()"></div>
+                <div><label>Largh. L (mm)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
+                <div><label>Alt. A (mm)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
+                <div><label>Prof. P (mm)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
+                <div><label>Zoccolo Z (mm)</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
+                <div><label>Spessore SP (mm)</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
+                <div><label>N. Divisori</label><input type="number" id="nD" value="1" min="0" oninput="initVani()"></div>
             </div>
 
             <div id="inputs-paretina" class="input-grid" style="display:none;">
@@ -102,6 +101,7 @@
                 <div><label>Materiali / Chimica (€)</label><input type="number" id="fMateriali" value="450" oninput="aggiorna()"></div>
             </div>
         </div>
+        <div id="contVani"></div>
     </div>
 
     <div class="output-col">
@@ -219,23 +219,39 @@
     function cambiaTipoCommessa() {
         let tipo = document.getElementById('tipoCommessa').value;
         
-        // Nascondi tutti i blocchi di input strutturali
         document.getElementById('inputs-mobile').style.display = "none";
         document.getElementById('inputs-paretina').style.display = "none";
         document.getElementById('inputs-facciata').style.display = "none";
         document.getElementById('materiali-standard-inputs').style.display = "none";
+        document.getElementById('contVani').style.display = "none";
 
-        // Mostra solo quello corretto ed evita conflitti latenti
         if (tipo === 'mobile') {
             document.getElementById('titolo-parametri').innerText = "PARAMETRI MOBILE (mm)";
             document.getElementById('inputs-mobile').style.display = "grid";
             document.getElementById('materiali-standard-inputs').style.display = "block";
+            document.getElementById('contVani').style.display = "block";
+            initVani();
         } else if (tipo === 'paretina') {
             document.getElementById('titolo-parametri').innerText = "PARAMETRI PARETINA A LISTELLI";
             document.getElementById('inputs-paretina').style.display = "grid";
         } else if (tipo === 'facciata') {
             document.getElementById('titolo-parametri').innerText = "PARAMETRI RESTAURO FACCIATA";
             document.getElementById('inputs-facciata').style.display = "grid";
+        }
+        aggiorna();
+    }
+
+    function initVani() {
+        let nD = parseInt(document.getElementById('nD').value) || 0;
+        let cont = document.getElementById('contVani');
+        cont.innerHTML = "";
+        if(nD > 0) {
+            let divhtml = `<div class="section"><h4>Configurazione Ripiani per Vano</h4>`;
+            for(let i = 0; i <= nD; i++) {
+                divhtml += `<div style="margin-bottom:8px;"><label>N. Ripiani Vano ${i+1}</label><input type="number" id="ripVano_${i}" value="2" min="0" oninput="aggiorna()"></div>`;
+            }
+            divhtml += `</div>`;
+            cont.innerHTML = divhtml;
         }
         aggiorna();
     }
@@ -261,16 +277,24 @@
         let cBordo = parseFloat(document.getElementById('costoBordo').value) || 0;
         let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
 
-        let mqScocca = ((A * P * 2) + (L * P * 2) + (L * A) + (L * P * nD)) / 1000000;
-        let mlBordo = ((A * 4) + (L * 4) + (L * 2 * nD)) / 1000;
+        // Recupero conteggio ripiani dai singoli vani dinamici
+        let totRipiani = 0;
+        for(let i = 0; i <= nD; i++) {
+            let el = document.getElementById(`ripVano_${i}`);
+            if(el) totRipiani += parseInt(el.value) || 0;
+        }
+
+        // Calcolo sviluppo superfici (Scocca + Divisori Verticali + Ripiani)
+        let H_utile = A - Z;
+        let mqScocca = ((H_utile * P * 2) + (L * P * 2) + (L * H_utile) + (H_utile * P * nD) + (L * P * totRipiani)) / 1000000;
+        let mlBordo = ((H_utile * 4) + (L * 4) + (H_utile * 2 * nD) + (L * 2 * totRipiani)) / 1000;
 
         let idxS = document.getElementById('mat').value;
         let idxA = document.getElementById('matAnta').value;
         let scoccaPrezzo = dbS[idxS] ? dbS[idxS].p : 0;
-        let antaPrezzo = dbA[idxA] ? dbA[idxA].p : 0;
 
         let costoMat = (mqScocca * scoccaPrezzo) + (mlBordo * cBordo);
-        let oreLavoro = 4 + (nD * 0.5); 
+        let oreLavoro = 4 + (nD * 1.5) + (totRipiani * 0.3); 
         let costoManodopera = oreLavoro * tariffa;
         
         let imponibile = costoMat + costoManodopera + cTrasporto;
@@ -279,18 +303,32 @@
         let iva = totaleNetto * 0.22;
         let lordoCliente = totaleNetto + iva;
 
+        // Distinta Tecnica
         document.querySelector("#tabellaTagli tbody").innerHTML = `
-            <tr><td>Fianchi Struttura</td><td>2</td><td>${A - Z}</td><td>${P}</td><td>Bordati 2L</td></tr>
-            <tr><td>Base e Cappello</td><td>2</td><td>${P}</td><td>${L - (SP*2)}</td><td>Bordati 1L</td></tr>
-            <tr><td>Schienale Rinforzato</td><td>1</td><td>${A - Z}</td><td>${L}</td><td>Incasso posteriore</td></tr>
-            <tr><td>Ripiani Interni Modulari</td><td>${nD}</td><td>${P - 10}</td><td>${L - (SP*2) - 2}</td><td>Bordati Frontale</td></tr>
+            <tr><td>Fianchi Esterni Mobile</td><td>2</td><td>${H_utile}</td><td>${P}</td><td>Bordati 2L</td></tr>
+            <tr><td>Base e Cappello Orizzontali</td><td>2</td><td>${P}</td><td>${L - (SP*2)}</td><td>Bordati 1L</td></tr>
+            <tr><td>Schienale Strutturale</td><td>1</td><td>${H_utile}</td><td>${L}</td><td>Fissaggio Posteriore</td></tr>
+            <tr><td>Divisori Verticali (Spalle)</td><td>${nD}</td><td>${H_utile - (SP*2)}</td><td>${P - 10}</td><td>Bordati Frontale</td></tr>
+            <tr><td>Ripiani Interni Orizzontali</td><td>${totRipiani}</td><td>${P - 15}</td><td>Variabile</td><td>Bordati Frontale</td></tr>
         `;
+
+        // Grafica SVG Dinamica del Mobile con Divisori Verticali
+        let lineeDivisori = "";
+        let nVani = nD + 1;
+        let larghezzaVanoSVG = 300 / nVani;
+        for(let i = 1; i <= nD; i++) {
+            let xPos = 50 + (larghezzaVanoSVG * i);
+            lineeDivisori += `<line x1="${xPos}" y1="20" x2="${xPos}" y2="420" stroke="#8b5a2b" stroke-width="4" stroke-dasharray="2,2"/>`;
+        }
 
         document.getElementById('svgContainer').innerHTML = `
             <svg width="300" height="400" viewBox="0 0 400 500" style="border:1px solid #ddd; background:#fff;">
-                <rect x="50" y="20" width="300" height="400" fill="#f3e5ab" stroke="#8b5a2b" stroke-width="5"/>
+                <!-- Struttura Esterna Box -->
+                <rect x="50" y="20" width="300" height="400" fill="#f3e5ab" stroke="#8b5a2b" stroke-width="6"/>
+                <!-- Zoccolo Inferiore -->
                 <rect x="50" y="420" width="300" height="30" fill="#5c3a21"/>
-                ${Array.from({length: nD}).map((_, i) => `<line x1="55" y1="${20 + (400/(nD+1))*(i+1)}" x2="345" y2="${20 + (400/(nD+1))*(i+1)}" stroke="#8b5a2b" stroke-width="4"/>`).join('')}
+                <!-- Divisori Verticali Interni -->
+                ${lineeDivisori}
             </svg>
         `;
 
