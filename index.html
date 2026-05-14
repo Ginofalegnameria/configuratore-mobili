@@ -11,9 +11,8 @@
         h3 { margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 8px; color: #007bff; font-size: 1.1em; }
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         label { font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 4px; color: #555; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        .row-item { background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 10px; }
-        #svgContainer { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; justify-content: center; min-height: 400px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        #svgContainer { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; justify-content: center; min-height: 400px; align-items: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; font-size: 0.85em; }
         th { background: #007bff; color: white; }
@@ -26,7 +25,6 @@
         .btn-listino { background: #007bff; font-size: 10px; }
         .valore-r { text-align: right; }
 
-        /* MODALE LISTINO */
         #modalListino { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 650px; max-height: 90vh; overflow-y: auto; }
         .list-box { border: 1px solid #eee; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
@@ -51,32 +49,59 @@
                 <h3>DATI GENERALI</h3>
                 <button class="btn btn-listino" onclick="apriModal()">⚙️ LISTINO</button>
             </div>
+            <label>TIPOLOGIA COMMESSA</label>
+            <select id="tipoCommessa" onchange="cambiaTipoCommessa()" style="margin-bottom: 10px; font-weight: bold; background: #eef5ff;">
+                <option value="mobile">Mobile Standard / Cabinet</option>
+                <option value="paretina">Paretina a Frame Verticale</option>
+                <option value="facciata">Ristrutturazione Facciata Esterna</option>
+            </select>
+
             <label>CLIENTE</label>
             <input type="text" id="nomeCliente" oninput="aggiorna()">
-            <div class="input-grid" style="margin-top:10px;">
-                <div><label>MATERIALE SCOCCA</label><select id="mat" onchange="aggiorna()"></select></div>
-                <div><label>MODELLO ANTA</label><select id="matAnta" onchange="aggiorna()"></select></div>
+            
+            <div id="materiali-standard-inputs">
+                <div class="input-grid" style="margin-top:10px;">
+                    <div><label>MATERIALE SCOCCA</label><select id="mat" onchange="aggiorna()"></select></div>
+                    <div><label>MODELLO ANTA</label><select id="matAnta" onchange="aggiorna()"></select></div>
+                </div>
             </div>
+
             <div class="input-grid" style="margin-top:10px;">
                 <div><label>TARIFFA ORA (€)</label><input type="number" id="tariffaOraria" value="45" oninput="aggiorna()"></div>
                 <div><label>BORDO (€/m)</label><input type="number" id="costoBordo" value="1.50" oninput="aggiorna()"></div>
             </div>
-            <label style="margin-top:10px;">TRASPORTO (€)</label>
+            <label style="margin-top:10px;">TRASPORTO / TRASFERTA (€)</label>
             <input type="number" id="costoTrasporto" value="150" oninput="aggiorna()">
         </div>
 
+        <!-- PARAMETRI STRUTTURA - DIVISI PER EVITARE CONFLITTI DI SELEZIONE -->
         <div class="section">
-            <h3>STRUTTURA (mm)</h3>
-            <div class="input-grid">
-                <div><label>Largh. (L)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
-                <div><label>Alt. (A)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
-                <div><label>Prof. (P)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
-                <div><label>Zoccolo</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
-                <div><label>Spessore</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
-                <div><label>N. Divisori</label><input type="number" id="nD" value="0" min="0" oninput="initVani()"></div>
+            <h3 id="titolo-parametri">PARAMETRI STRUTTURA</h3>
+            
+            <div id="inputs-mobile" class="input-grid" style="display:none;">
+                <div><label>Largh. (mm)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
+                <div><label>Alt. (mm)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
+                <div><label>Prof. (mm)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
+                <div><label>Zoccolo (mm)</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
+                <div><label>Spessore (mm)</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
+                <div><label>N. Ripiani</label><input type="number" id="nD" value="3" min="0" oninput="aggiorna()"></div>
+            </div>
+
+            <div id="inputs-paretina" class="input-grid" style="display:none;">
+                <div><label>Larghezza Tot. (cm)</label><input type="number" id="pLargh" value="120" oninput="aggiorna()"></div>
+                <div><label>Altezza Tot. (cm)</label><input type="number" id="pAlt" value="270" oninput="aggiorna()"></div>
+                <div><label>Largh. Listello (cm)</label><input type="number" id="pListLargh" value="5" oninput="aggiorna()"></div>
+                <div><label>Spessore Legno (mm)</label><input type="number" id="pSpessore" value="25" oninput="aggiorna()"></div>
+                <div><label>Spazio Aria (cm)</label><input type="number" id="pAria" value="5" oninput="aggiorna()"></div>
+            </div>
+
+            <div id="inputs-facciata" class="input-grid" style="display:none;">
+                <div><label>Superficie Legno (mq)</label><input type="number" id="fMq" value="50" oninput="aggiorna()"></div>
+                <div><label>Giorni Lavoro</label><input type="number" id="fGiorni" value="5" oninput="aggiorna()"></div>
+                <div><label>Noleggio Trabattello (€)</label><input type="number" id="fTrabattello" value="250" oninput="aggiorna()"></div>
+                <div><label>Materiali / Chimica (€)</label><input type="number" id="fMateriali" value="450" oninput="aggiorna()"></div>
             </div>
         </div>
-        <div id="contVani"></div>
     </div>
 
     <div class="output-col">
@@ -85,12 +110,12 @@
             <div id="svgContainer"></div>
         </div>
         <div class="section" id="sezione-tagli">
-            <h3>DISTINTA TECNICA E BORDI</h3>
+            <h3>DISTINTA TECNICA E DETTAGLIO ELEMENTI</h3>
             <table id="tabellaTagli"><thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Note</th></tr></thead><tbody></tbody></table>
         </div>
         <div class="result-box">
             <div id="totale-big">€ 0,00</div>
-            <p style="text-align:center; font-size:10px; color:#bdc3c7;">TOTALE IMPONIBILE (IVA ESCLUSA)</p>
+            <p style="text-align:center; font-size:10px; color:#bdc3c7;">TOTALE COMPLESSIVO CLIENTE (IVA 22% INCLUSA)</p>
             <table id="tabellaCosti" style="width:100%; color:white; font-size: 14px;"></table>
         </div>
     </div>
@@ -112,8 +137,14 @@
             </div>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div id="listS"></div>
-            <div id="listA"></div>
+            <div>
+                <h4>Scocche / Materiali base</h4>
+                <div id="listS"></div>
+            </div>
+            <div>
+                <h4>Ante / Finiture superiori</h4>
+                <div id="listA"></div>
+            </div>
         </div>
         <hr>
         <div class="input-grid">
@@ -130,82 +161,241 @@
 </div>
 
 <script>
-    let dbS = JSON.parse(localStorage.getItem('dbS')) || [{n:"Laminato", p:55}];
-    let dbA = JSON.parse(localStorage.getItem('dbA')) || [{n:"Anta Liscia", p:80}];
+    let dbS = JSON.parse(localStorage.getItem('dbS')) || [{n:"Laminato", p:55}, {n:"Listellare Rovere 25mm", p:75}];
+    let dbA = JSON.parse(localStorage.getItem('dbA')) || [{n:"Anta Liscia", p:80}, {n:"Verniciatura Professionale", p:45}];
+
+    window.onload = function() {
+        document.getElementById('pCass').value = localStorage.getItem('pCass') || 50;
+        document.getElementById('pAsta').value = localStorage.getItem('pAsta') || 15;
+        inizializzaSelect();
+        cambiaTipoCommessa();
+    };
 
     function apriModal() { document.getElementById('modalListino').style.display = 'flex'; renderListe(); }
+    
     function chiudiModal() { 
         localStorage.setItem('pCass', document.getElementById('pCass').value);
         localStorage.setItem('pAsta', document.getElementById('pAsta').value);
-        document.getElementById('modalListino').style.display = 'none'; 
-        popolaSelects(); aggiorna(); 
+        document.getElementById('modalListino').style.display = 'none';
+        inizializzaSelect();
+        aggiorna();
+    }
+
+    function inizializzaSelect() {
+        let s1 = document.getElementById('mat');
+        let s2 = document.getElementById('matAnta');
+        if(s1 && s2) {
+            s1.innerHTML = ""; s2.innerHTML = "";
+            dbS.forEach((x,i) => s1.innerHTML += `<option value="${i}">${x.n} (${x.p}€/mq)</option>`);
+            dbA.forEach((x,i) => s2.innerHTML += `<option value="${i}">${x.n} (${x.p}€/mq)</option>`);
+        }
+    }
+
+    function renderListe() {
+        document.getElementById('listS').innerHTML = ""; 
+        document.getElementById('listA').innerHTML = "";
+        dbS.forEach((x,i) => document.getElementById('listS').innerHTML += `<div class="list-item"><span>${x.n} - ${x.p}€</span><button onclick="rimuovi('S',${i})">❌</button></div>`);
+        dbA.forEach((x,i) => document.getElementById('listA').innerHTML += `<div class="list-item"><span>${x.n} - ${x.p}€</span><button onclick="rimuovi('A',${i})">❌</button></div>`);
     }
 
     function aggiungi(tipo) {
-        let n = document.getElementById('newN').value, p = Number(document.getElementById('newP').value);
-        if(n && p) { if(tipo === 'S') dbS.push({n, p}); else dbA.push({n, p}); renderListe(); }
+        let n = document.getElementById('newN').value;
+        let p = parseFloat(document.getElementById('newP').value);
+        if(!n || isNaN(p)) return;
+        if(tipo === 'S') dbS.push({n:n, p:p}); else dbA.push({n:n, p:p});
+        localStorage.setItem('dbS', JSON.stringify(dbS));
+        localStorage.setItem('dbA', JSON.stringify(dbA));
+        document.getElementById('newN').value = ""; document.getElementById('newP').value = "";
+        renderListe();
     }
 
-    function rimuovi(tipo, i) { if(tipo === 'S') dbS.splice(i,1); else dbA.splice(i,1); renderListe(); }
-
-    function renderListe() {
-        localStorage.setItem('dbS', JSON.stringify(dbS)); localStorage.setItem('dbA', JSON.stringify(dbA));
-        let lS = document.getElementById('listS'), lA = document.getElementById('listA');
-        lS.innerHTML = "<b>SCOCCHE:</b>"; lA.innerHTML = "<b>ANTE:</b>";
-        dbS.forEach((m,i) => lS.innerHTML += `<div class="list-item">${m.n} (${m.p}€) <span onclick="rimuovi('S',${i})" style="color:red;cursor:pointer">X</span></div>`);
-        dbA.forEach((m,i) => lA.innerHTML += `<div class="list-item">${m.n} (${m.p}€) <span onclick="rimuovi('A',${i})" style="color:red;cursor:pointer">X</span></div>`);
+    function rimuovi(tipo, idx) {
+        if(tipo === 'S') dbS.splice(idx,1); else dbA.splice(idx,1);
+        localStorage.setItem('dbS', JSON.stringify(dbS));
+        localStorage.setItem('dbA', JSON.stringify(dbA));
+        renderListe();
     }
 
-    function popolaSelects() {
-        let sS = document.getElementById('mat'), sA = document.getElementById('matAnta');
-        sS.innerHTML = ""; sA.innerHTML = "";
-        dbS.forEach(m => sS.add(new Option(`${m.n} (${m.p}€)`, m.p)));
-        dbA.forEach(m => sA.add(new Option(`${m.n} (${m.p}€)`, m.p)));
-    }
+    function cambiaTipoCommessa() {
+        let tipo = document.getElementById('tipoCommessa').value;
+        
+        // Nascondi tutti i blocchi di input strutturali
+        document.getElementById('inputs-mobile').style.display = "none";
+        document.getElementById('inputs-paretina').style.display = "none";
+        document.getElementById('inputs-facciata').style.display = "none";
+        document.getElementById('materiali-standard-inputs').style.display = "none";
 
-    function initVani() {
-        let n = parseInt(document.getElementById('nD').value) || 0, cont = document.getElementById('contVani');
-        cont.innerHTML = "";
-        for(let i=0; i <= n; i++) {
-            cont.innerHTML += `<div class="section row-item"><strong>Vano ${i+1}</strong><div class="input-grid"><div>Ripiani<input type="number" id="q_${i}" value="0" oninput="aggiorna()"></div><div>Cassetti<input type="number" id="c_${i}" value="0" oninput="aggiorna()"></div></div><label><input type="checkbox" id="anta_${i}" checked onchange="aggiorna()"> Anta</label> | <label><input type="checkbox" id="asta_${i}" onchange="aggiorna()"> Asta</label></div>`;
+        // Mostra solo quello corretto ed evita conflitti latenti
+        if (tipo === 'mobile') {
+            document.getElementById('titolo-parametri').innerText = "PARAMETRI MOBILE (mm)";
+            document.getElementById('inputs-mobile').style.display = "grid";
+            document.getElementById('materiali-standard-inputs').style.display = "block";
+        } else if (tipo === 'paretina') {
+            document.getElementById('titolo-parametri').innerText = "PARAMETRI PARETINA A LISTELLI";
+            document.getElementById('inputs-paretina').style.display = "grid";
+        } else if (tipo === 'facciata') {
+            document.getElementById('titolo-parametri').innerText = "PARAMETRI RESTAURO FACCIATA";
+            document.getElementById('inputs-facciata').style.display = "grid";
         }
         aggiorna();
     }
 
     function aggiorna() {
-        const L=Number(document.getElementById('L').value), A=Number(document.getElementById('A').value), P=Number(document.getElementById('P').value), Z=Number(document.getElementById('Z').value), SP=Number(document.getElementById('SP').value), nD=Number(document.getElementById('nD').value), pS=Number(document.getElementById('mat').value), pA=Number(document.getElementById('matAnta').value), cB=Number(document.getElementById('costoBordo').value), tO=Number(document.getElementById('tariffaOraria').value), cT=Number(document.getElementById('costoTrasporto').value);
-        const pc = Number(localStorage.getItem('pCass') || 50), pa = Number(localStorage.getItem('pAsta') || 15);
-        document.getElementById('labelCli').innerText = document.getElementById('nomeCliente').value || "PREVENTIVO";
+        let cli = document.getElementById('nomeCliente').value || "SPETTABILE CLIENTE";
+        document.getElementById('labelCli').innerText = "PREVENTIVO RIGIDO - " + cli.toUpperCase();
         
-        let nR=0, nC=0, mqA=0, mB=(A*2+L*2)/1000, nAs=0, lV=(L-(SP*2)-(nD*SP))/(nD+1), s=350/Math.max(L,A);
-        let svg=`<svg width="${L*s+20}" height="${A*s+20}"><rect x="10" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/><rect x="${10+(L-SP)*s}" y="10" width="${SP*s}" height="${A*s}" fill="#fff" stroke="#333" stroke-width="1.5"/><rect x="${10+SP*s}" y="10" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${10+SP*s}" y1="${10+SP*s}" x2="${10+(L-SP)*s}" y2="${10+SP*s}" stroke="#007bff" stroke-width="2"/><rect x="${10+SP*s}" y="${10+(A-Z-SP)*s}" width="${(L-SP*2)*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${10+SP*s}" y1="${10+(A-Z-SP)*s}" x2="${10+(L-SP)*s}" y2="${10+(A-Z-SP)*s}" stroke="#007bff" stroke-width="2"/><rect x="${10+SP*s}" y="${10+(A-Z)*s}" width="${(L-SP*2)*s}" height="${Z*s}" fill="#ccc" stroke="#333"/>`;
-        let rows=`<tr><td>Fianchi Est.</td><td>2</td><td>${A}</td><td>${P}</td><td>Front H</td></tr><tr><td>Basi</td><td>2</td><td>${L-(SP*2)}</td><td>${P}</td><td>Front L</td></tr>`;
-        
-        for(let i=0; i<=nD; i++){
-            let xV=10+(SP*s)+(i*(lV+SP)*s), rip=Number(document.getElementById('q_'+i)?.value)||0, cass=Number(document.getElementById('c_'+i)?.value)||0, asta=document.getElementById('asta_'+i)?.checked, anta=document.getElementById('anta_'+i)?.checked;
-            nR+=rip; nC+=cass; if(asta) nAs++;
-            if(i<nD) svg+=`<rect x="${xV+lV*s}" y="${10+SP*s}" width="${SP*s}" height="${(A-Z-SP*2)*s}" fill="#ddd" stroke="#333"/>`;
-            for(let r=1; r<=rip; r++){ let yR=10+SP*s+((A-Z-SP*2)*s/(rip+1))*r; svg+=`<rect x="${xV}" y="${yR}" width="${lV*s}" height="${SP*s}" fill="#fff" stroke="#333"/><line x1="${xV}" y1="${yR}" x2="${xV+lV*s}" y2="${yR}" stroke="#007bff" stroke-width="2"/>`; }
-            if(asta){ let yA=10+(SP+150)*s; svg+=`<circle cx="${xV+(lV*s)/2}" cy="${yA}" r="${8*s}" fill="#777"/><line x1="${xV}" y1="${yA}" x2="${xV+lV*s}" y2="${yA}" stroke="#777" stroke-width="2"/>`; }
-            for(let c=0; c<cass; c++) svg+=`<rect x="${xV+2}" y="${10+(A-Z-SP)*s-(c*150*s)-150*s}" width="${lV*s-4}" height="${145*s}" fill="none" stroke="#e67e22"/>`;
-            if(anta){ svg+=`<rect x="${xV}" y="10" width="${lV*s}" height="${(A-Z)*s}" fill="rgba(46, 204, 113, 0.05)" stroke="#2ecc71" stroke-width="1" stroke-dasharray="2"/>`; mqA+=((A-Z)*lV)/1000000; }
-        }
-        mB+=(nR*lV)/1000; rows+=`<tr><td>Divisori</td><td>${nD}</td><td>${A-Z-(SP*2)}</td><td>${P-20}</td><td>H</td></tr><tr><td>Ripiani</td><td>${nR}</td><td>${Math.round(lV-2)}</td><td>${P-20}</td><td>L</td></tr>`;
-        document.querySelector("#tabellaTagli tbody").innerHTML=rows; document.getElementById('svgContainer').innerHTML=svg+"</svg>";
-        
-        let mqL=(( (A*P*2)+(L*P*2)+(L*A)+(nR*lV*P)+(nD*(A-Z-SP*2)*P) )/1000000)*1.2;
-        let cL=mqL*pS, cB=mB*cB, cAn=mqA*pA, cF=(nC*pc)+(nAs*pa)+(nR*2)+20, ore=(mqL*2)+(nC*1.5)+(mqA*1), cM=ore*tO, imp=cL+cB+cAn+cF+cM+cT, iva=imp*0.22, totIv=imp+iva;
-        
-        document.getElementById('totale-big').innerText=`€ ${imp.toFixed(2)}`;
-        document.getElementById('tabellaCosti').innerHTML=`<tr><td>Materiale (${mqL.toFixed(2)} mq)</td><td class="valore-r">€ ${cL.toFixed(2)}</td></tr><tr><td>Bordatura (${mB.toFixed(1)} m)</td><td class="valore-r">€ ${cB.toFixed(2)}</td></tr><tr><td>Ante (${mqA.toFixed(2)} mq)</td><td class="valore-r">€ ${cAn.toFixed(2)}</td></tr><tr><td>Manodopera (${ore.toFixed(1)} h)</td><td class="valore-r">€ ${cM.toFixed(2)}</td></tr><tr><td>Trasporto</td><td class="valore-r">€ ${cT.toFixed(2)}</td></tr><tr style="border-top:1px solid #555"><td>IVA (22%)</td><td class="valore-r">€ ${iva.toFixed(2)}</td></tr><tr style="font-size:1.2em; color:#2ecc71"><td><b>TOTALE IVATO</b></td><td class="valore-r"><b>€ ${totIv.toFixed(2)}</b></td></tr>`;
+        let tipo = document.getElementById('tipoCommessa').value;
+        if(tipo === 'mobile') calcolaMobile();
+        else if(tipo === 'paretina') calcolaParetina();
+        else if(tipo === 'facciata') calcolaFacciata();
     }
 
-    function stampa(t) { document.body.className = 'print-'+t; window.print(); }
-    window.onload = () => { 
-        if(localStorage.getItem('pCass')) document.getElementById('pCass').value = localStorage.getItem('pCass');
-        if(localStorage.getItem('pAsta')) document.getElementById('pAsta').value = localStorage.getItem('pAsta');
-        popolaSelects(); initVani(); 
-    };
+    function calcolaMobile() {
+        let L = parseFloat(document.getElementById('L').value) || 0;
+        let A = parseFloat(document.getElementById('A').value) || 0;
+        let P = parseFloat(document.getElementById('P').value) || 0;
+        let Z = parseFloat(document.getElementById('Z').value) || 0;
+        let SP = parseFloat(document.getElementById('SP').value) || 0;
+        let nD = parseInt(document.getElementById('nD').value) || 0;
+        let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
+        let cBordo = parseFloat(document.getElementById('costoBordo').value) || 0;
+        let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
+
+        let mqScocca = ((A * P * 2) + (L * P * 2) + (L * A) + (L * P * nD)) / 1000000;
+        let mlBordo = ((A * 4) + (L * 4) + (L * 2 * nD)) / 1000;
+
+        let idxS = document.getElementById('mat').value;
+        let idxA = document.getElementById('matAnta').value;
+        let scoccaPrezzo = dbS[idxS] ? dbS[idxS].p : 0;
+        let antaPrezzo = dbA[idxA] ? dbA[idxA].p : 0;
+
+        let costoMat = (mqScocca * scoccaPrezzo) + (mlBordo * cBordo);
+        let oreLavoro = 4 + (nD * 0.5); 
+        let costoManodopera = oreLavoro * tariffa;
+        
+        let imponibile = costoMat + costoManodopera + cTrasporto;
+        let markupUtile = imponibile * 0.45; 
+        let totaleNetto = imponibile + markupUtile;
+        let iva = totaleNetto * 0.22;
+        let lordoCliente = totaleNetto + iva;
+
+        document.querySelector("#tabellaTagli tbody").innerHTML = `
+            <tr><td>Fianchi Struttura</td><td>2</td><td>${A - Z}</td><td>${P}</td><td>Bordati 2L</td></tr>
+            <tr><td>Base e Cappello</td><td>2</td><td>${P}</td><td>${L - (SP*2)}</td><td>Bordati 1L</td></tr>
+            <tr><td>Schienale Rinforzato</td><td>1</td><td>${A - Z}</td><td>${L}</td><td>Incasso posteriore</td></tr>
+            <tr><td>Ripiani Interni Modulari</td><td>${nD}</td><td>${P - 10}</td><td>${L - (SP*2) - 2}</td><td>Bordati Frontale</td></tr>
+        `;
+
+        document.getElementById('svgContainer').innerHTML = `
+            <svg width="300" height="400" viewBox="0 0 400 500" style="border:1px solid #ddd; background:#fff;">
+                <rect x="50" y="20" width="300" height="400" fill="#f3e5ab" stroke="#8b5a2b" stroke-width="5"/>
+                <rect x="50" y="420" width="300" height="30" fill="#5c3a21"/>
+                ${Array.from({length: nD}).map((_, i) => `<line x1="55" y1="${20 + (400/(nD+1))*(i+1)}" x2="345" y2="${20 + (400/(nD+1))*(i+1)}" stroke="#8b5a2b" stroke-width="4"/>`).join('')}
+            </svg>
+        `;
+
+        stampaTabellaCosti(costoMat, costoManodopera, cTrasporto, markupUtile, totaleNetto, iva, lordoCliente);
+    }
+
+    function calcolaParetina() {
+        let pLargh = parseFloat(document.getElementById('pLargh').value) || 0;
+        let pAlt = parseFloat(document.getElementById('pAlt').value) || 0;
+        let pListLargh = parseFloat(document.getElementById('pListLargh').value) || 0;
+        let pSpessore = parseFloat(document.getElementById('pSpessore').value) || 0;
+        let pAria = parseFloat(document.getElementById('pAria').value) || 0;
+        let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
+        let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
+
+        let nListelli = Math.floor(pLargh / (pListLargh + pAria)) || 1;
+        let mqSingoloElemento = ((pAlt * pListLargh * 2) + (pAlt * (pSpessore/10) * 2)) / 10000;
+        let mqTotaleLegno = mqSingoloElemento * (nListelli + 2); 
+
+        let costoLegnoGrezzo = mqTotaleLegno * 75; 
+        let costoVerniciaturaPro = mqTotaleLegno * 45; 
+        let oreLaboratorio = 6; 
+        
+        let costoBase = costoLegnoGrezzo + costoVerniciaturaPro + (oreLaboratorio * tariffa) + cTrasporto;
+        let markupUtile = costoBase * 0.45; 
+        let totaleNetto = costoBase + markupUtile;
+        let iva = totaleNetto * 0.22;
+        let lordoCliente = totaleNetto + iva;
+
+        document.querySelector("#tabellaTagli tbody").innerHTML = `
+            <tr><td>Listelli Verticali Frame</td><td>${nListelli}</td><td>${pAlt * 10}</td><td>${pListLargh * 10}</td><td>Spessore ${pSpessore}mm - Finitura Pro 4 Lati</td></tr>
+            <tr><td>Traversi Orizzontali Lineari</td><td>2</td><td>${pLargh * 10}</td><td>${pListLargh * 10}</td><td>Ancoraggio a Pavimento/Soffitto</td></tr>
+        `;
+
+        let barreHTML = "";
+        for(let i=0; i<nListelli; i++) {
+            barreHTML += `<rect x="${60 + (i * (260/nListelli))}" y="50" width="${130/nListelli}" height="300" fill="#cd853f" stroke="#8b5a2b"/>`;
+        }
+        document.getElementById('svgContainer').innerHTML = `
+            <svg width="300" height="400" viewBox="0 0 400 500" style="background:#fff;">
+                <rect x="40" y="30" width="320" height="20" fill="#5c3a21"/>
+                <rect x="40" y="350" width="320" height="20" fill="#5c3a21"/>
+                ${barreHTML}
+            </svg>
+        `;
+
+        stampaTabellaCosti(costoLegnoGrezzo, costoVerniciaturaPro + (oreLaboratorio * tariffa), cTrasporto, markupUtile, totaleNetto, iva, lordoCliente);
+    }
+
+    function calcolaFacciata() {
+        let fMq = parseFloat(document.getElementById('fMq').value) || 0;
+        let fGiorni = parseFloat(document.getElementById('fGiorni').value) || 0;
+        let fTrabattello = parseFloat(document.getElementById('fTrabattello').value) || 0;
+        let fMateriali = parseFloat(document.getElementById('fMateriali').value) || 0;
+        let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
+        let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
+
+        let oreTotaliSpese = fGiorni * 8 * 2 * tariffa; 
+        let costoBase = fMateriali + fTrabattello + oreTotaliSpese + (cTrasporto * fGiorni);
+
+        let markupUtile = costoBase * 0.45; 
+        let totaleNetto = costoBase + markupUtile;
+        let iva = totaleNetto * 0.22;
+        let lordoCliente = totaleNetto + iva;
+
+        document.querySelector("#tabellaTagli tbody").innerHTML = `
+            <tr><td>Superficie Trattamento Facciata</td><td>1</td><td>In quota</td><td>${fMq} mq</td><td>Sverniciatura, Antifungo, 2M Impregnante, 1M Cera</td></tr>
+            <tr><td>Allestimento e Logistica Cantiere</td><td>1</td><td>H max</td><td>Secondo Piano</td><td>Trabattello metallico con piani di calpestio certificati</td></tr>
+        `;
+
+        document.getElementById('svgContainer').innerHTML = `
+            <svg width="300" height="400" viewBox="0 0 400 500" style="background:#fff;">
+                <polygon points="50,150 200,30 350,150" fill="#8b5a2b"/>
+                <rect x="70" y="150" width="260" height="250" fill="#d7ccc8" stroke="#5d4037"/>
+                <rect x="260" y="120" width="60" height="230" fill="none" stroke="#2c3e50" stroke-width="3"/>
+                <line x1="260" y1="170" x2="320" y2="170" stroke="#2c3e50"/>
+                <line x1="260" y1="220" x2="320" y2="220" stroke="#2c3e50"/>
+                <line x1="260" y1="270" x2="320" y2="270" stroke="#2c3e50"/>
+                <circle cx="290" cy="100" r="10" fill="#ff5722"/>
+            </svg>
+        `;
+
+        stampaTabellaCosti(fMateriali, oreTotaliSpese + fTrabattello, cTrasporto * fGiorni, markupUtile, totaleNetto, iva, lordoCliente);
+    }
+
+    function stampaTabellaCosti(mat, lav, tras, utile, netto, iva, lordo) {
+        document.getElementById('totale-big').innerText = "€ " + lordo.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        document.getElementById('tabellaCosti').innerHTML = `
+            <tr><td>Costo Materie Prime / Prodotti Generici</td><td class="valore-r">${mat.toFixed(2)} €</td></tr>
+            <tr><td>Costo Lavorazione Interna / Allestimenti Struttura</td><td class="valore-r">${lav.toFixed(2)} €</td></tr>
+            <tr><td>Spese Logistica, Carburante e Trasferta</td><td class="valore-r">${tras.toFixed(2)} €</td></tr>
+            <tr style="color:#2ecc71; font-weight:bold;"><td>Margine Utile Aziendale Netto Consigliato (45%)</td><td class="valore-r">${utile.toFixed(2)} €</td></tr>
+            <tr style="border-top:2px solid #fff; font-weight:bold;"><td>TOTALE IMPONIBILE COMMESSA</td><td class="valore-r">${netto.toFixed(2)} €</td></tr>
+            <tr><td>IVA Calcolata al 22% di legge</td><td class="valore-r">${iva.toFixed(2)} €</td></tr>
+            <tr style="font-size:18px; color:#2ecc71; font-weight:bold;"><td>PREZZO FINALE CHIAVI IN MANO</td><td class="valore-r">${lordo.toFixed(2)} €</td></tr>
+        `;
+    }
+
+    function stampa(tipo) {
+        document.body.className = "";
+        if(tipo === 'tech') document.body.classList.add('print-tech');
+        else document.body.classList.add('print-client');
+        window.print();
+    }
 </script>
 </body>
 </html>
