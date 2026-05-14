@@ -22,8 +22,14 @@
         .btn { padding: 10px 15px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; color: white; }
         .btn-tech { background: #7f8c8d; }
         .btn-client { background: #27ae60; }
+        .btn-listino { background: #007bff; font-size: 10px; }
         .valore-r { text-align: right; }
-        .alert-errore { color: #e74c3c; font-size: 0.8em; font-weight: bold; margin-top: 5px; display: none; }
+        .alert-errore { color: #e74c3c; font-size: 0.8em; font-weight: bold; grid-column: span 2; margin-top: 5px; display: none; }
+
+        #modalListino { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 650px; max-height: 90vh; overflow-y: auto; }
+        .list-box { border: 1px solid #eee; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
+        .list-item { display: flex; justify-content: space-between; padding: 5px; background: #f9f9f9; margin-bottom: 4px; font-size: 13px; }
 
         @media print {
             .no-print, .controlli-stampa { display: none !important; }
@@ -38,179 +44,274 @@
 <body>
 
 <div class="wrapper">
-    <!-- COLONNA INPUT (SINISTRA) -->
     <div class="input-col no-print">
-        
-        <!-- DATI GENERALI AZIENDALI -->
         <div class="section">
-            <h3>DATI GENERALI COMMESSA</h3>
-            <label>TIPOLOGIA LAVORAZIONE</label>
-            <select id="tipoCommessa" onchange="switchSchede()" style="margin-bottom: 15px; font-weight: bold; background: #eef5ff;">
-                <option value="cabinet">Cabinet / Mobile Standard</option>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>DATI GENERALI</h3>
+                <button class="btn btn-listino" onclick="apriModal()">⚙️ LISTINO</button>
+            </div>
+            <label>TIPOLOGIA COMMESSA</label>
+            <select id="tipoCommessa" onchange="cambiaTipoCommessa()" style="margin-bottom: 10px; font-weight: bold; background: #eef5ff;">
+                <option value="mobile">Cabinet / Mobile Standard</option>
+                <option value="telaio">Telaio e Sportelli Laccati</option>
                 <option value="paretina">Paretina a Frame Verticale</option>
                 <option value="facciata">Ristrutturazione Facciata Esterna</option>
-                <option value="telaio">Telaio e Ante Laccate</option>
             </select>
 
             <label>CLIENTE</label>
             <input type="text" id="nomeCliente" oninput="aggiorna()">
             
-            <div class="input-grid" style="margin-top:10px;">
-                <div><label>TARIFFA ORARIA (€/h)</label><input type="number" id="tariffaOraria" value="45" oninput="aggiorna()"></div>
-                <div><label>COSTO BORDO (€/m)</label><input type="number" id="costoBordo" value="1.50" oninput="aggiorna()"></div>
+            <div id="materiali-standard-inputs">
+                <div class="input-grid" style="margin-top:10px;">
+                    <div><label>MATERIALE SCOCCA</label><select id="mat" onchange="aggiorna()"></select></div>
+                    <div><label>MODELLO ANTA</label><select id="matAnta" onchange="aggiorna()"></select></div>
+                </div>
             </div>
-            <label style="margin-top:10px;">SPESE TRASPORTO / TRASFERTA (€)</label>
+
+            <div class="input-grid" style="margin-top:10px;">
+                <div><label>TARIFFA ORA (€)</label><input type="number" id="tariffaOraria" value="45" oninput="aggiorna()"></div>
+                <div><label>BORDO (€/m)</label><input type="number" id="costoBordo" value="1.50" oninput="aggiorna()"></div>
+            </div>
+            <label style="margin-top:10px;">TRASPORTO / TRASFERTA (€)</label>
             <input type="number" id="costoTrasporto" value="150" oninput="aggiorna()">
         </div>
 
-        <!-- SCHEDA 1: CABINET / MOBILE -->
-        <div id="panel-cabinet" class="section scheda-tecnica">
+        <!-- BLOCCHI PARAMETRI SEPARATI PER OGNI SCHEDA -->
+        <div class="section" id="blocco-inputs-mobile" style="display:none;">
             <h3>PARAMETRI CABINET (mm)</h3>
             <div class="input-grid">
-                <div><label>Larghezza L</label><input type="number" id="cabL" value="1200" oninput="aggiorna()"></div>
-                <div><label>Altezza A</label><input type="number" id="cabA" value="2000" oninput="aggiorna()"></div>
-                <div><label>Profondità P</label><input type="number" id="cabP" value="600" oninput="aggiorna()"></div>
-                <div><label>Zoccolo Z</label><input type="number" id="cabZ" value="100" oninput="aggiorna()"></div>
-                <div><label>Spessore Legno</label><input type="number" id="cabSP" value="19" oninput="aggiorna()"></div>
-                <div><label>N. Divisori Spalle</label><input type="number" id="cabND" value="1" min="0" oninput="generaCampiVani()"></div>
+                <div><label>Largh. L (mm)</label><input type="number" id="L" value="1200" oninput="aggiorna()"></div>
+                <div><label>Alt. A (mm)</label><input type="number" id="A" value="2000" oninput="aggiorna()"></div>
+                <div><label>Prof. P (mm)</label><input type="number" id="P" value="600" oninput="aggiorna()"></div>
+                <div><label>Zoccolo Z (mm)</label><input type="number" id="Z" value="100" oninput="aggiorna()"></div>
+                <div><label>Spessore SP (mm)</label><input type="number" id="SP" value="19" oninput="aggiorna()"></div>
+                <div><label>N. Divisori</label><input type="number" id="nD" value="1" min="0" oninput="initVani()"></div>
             </div>
-            <div id="container-vani-dinamici" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- SCHEDA 2: PARETINA A LISTELLI -->
-        <div id="panel-paretina" class="section scheda-tecnica" style="display:none;">
-            <h3>PARAMETRI PARETINA DIVISORIA</h3>
+        <div id="contVani" style="display:none;"></div>
+
+        <div class="section" id="blocco-inputs-telaio" style="display:none;">
+            <h3>PARAMETRI TELAIO E SPORTELLI (mm)</h3>
             <div class="input-grid">
-                <div><label>Larghezza Parete (cm)</label><input type="number" id="parLargh" value="120" oninput="aggiorna()"></div>
-                <div><label>Altezza Parete (cm)</label><input type="number" id="parAlt" value="270" oninput="aggiorna()"></div>
-                <div><label>Larghezza Listello (cm)</label><input type="number" id="parListLargh" value="5" oninput="aggiorna()"></div>
-                <div><label>Spessore Listello (mm)</label><input type="number" id="parSpessore" value="25" oninput="aggiorna()"></div>
-                <div><label>Spazio Aria Vuoto (cm)</label><input type="number" id="parAria" value="5" oninput="aggiorna()"></div>
+                <div><label>Larghezza Totale (mm)</label><input type="number" id="tL" value="750" oninput="regolaAnteDefault()"></div>
+                <div><label>Altezza Totale (mm)</label><input type="number" id="tA" value="2100" oninput="aggiorna()"></div>
+                <div style="grid-column: span 2; margin: 10px 0;">
+                    <input type="checkbox" id="tAsimmetrico" onchange="toggleAsimmetrico()" style="width:auto; inline-size: auto;">
+                    <label style="display:inline-block; margin-left:5px;">Configura ante asimmetriche manualmente</label>
+                </div>
+                <div id="div-anta1" style="opacity:0.5;"><label>Larghezza Anta 1 (mm)</label><input type="number" id="tAnta1" value="375" disabled oninput="aggiorna()"></div>
+                <div id="div-anta2" style="opacity:0.5;"><label>Larghezza Anta 2 (mm)</label><input type="number" id="tAnta2" value="375" disabled oninput="aggiorna()"></div>
+                <div id="errore-ante" class="alert-errore">La somma delle ante non corrisponde alla larghezza totale!</div>
             </div>
         </div>
 
-        <!-- SCHEDA 3: RISTRUTTURAZIONE FACCIATA -->
-        <div id="panel-facciata" class="section scheda-tecnica" style="display:none;">
-            <h3>PARAMETRI CANTIERE FACCIATA</h3>
+        <div class="section" id="blocco-inputs-paretina" style="display:none;">
+            <h3>PARAMETRI PARETINA A LISTELLI</h3>
             <div class="input-grid">
-                <div><label>Superficie Legno (mq)</label><input type="number" id="facMq" value="50" oninput="aggiorna()"></div>
-                <div><label>Giorni di Cantiere</label><input type="number" id="facGiorni" value="5" oninput="aggiorna()"></div>
-                <div><label>Costo Quota Trabattello (€)</label><input type="number" id="facTrabattello" value="250" oninput="aggiorna()"></div>
-                <div><label>Prodotti Chimici / Consumabili (€)</label><input type="number" id="facMateriali" value="450" oninput="aggiorna()"></div>
+                <div><label>Larghezza Tot. (cm)</label><input type="number" id="pLargh" value="120" oninput="aggiorna()"></div>
+                <div><label>Altezza Tot. (cm)</label><input type="number" id="pAlt" value="270" oninput="aggiorna()"></div>
+                <div><label>Largh. Listello (cm)</label><input type="number" id="pListLargh" value="5" oninput="aggiorna()"></div>
+                <div><label>Spessore Legno (mm)</label><input type="number" id="pSpessore" value="25" oninput="aggiorna()"></div>
+                <div><label>Spazio Aria (cm)</label><input type="number" id="pAria" value="5" oninput="aggiorna()"></div>
             </div>
         </div>
 
-        <!-- SCHEDA 4: TELAIO E ANTE LACCATE -->
-        <div id="panel-telaio" class="section scheda-tecnica" style="display:none;">
-            <h3>PARAMETRI TELAIO & ANTE</h3>
+        <div class="section" id="blocco-inputs-facciata" style="display:none;">
+            <h3>PARAMETRI RESTAURO FACCIATA</h3>
             <div class="input-grid">
-                <div><label>Larghezza Foro L (mm)</label><input type="number" id="telL" value="750" oninput="gestisciLogicaAnteAutomator()"></div>
-                <div><label>Altezza Foro A (mm)</label><input type="number" id="telA" value="2100" oninput="aggiorna()"></div>
-                <div><label>Profondità Telaio (mm)</label><input type="number" id="telP" value="100" oninput="aggiorna()"></div>
-                <div><label>N. Ante Effettive</label><input type="number" id="telNAnte" value="2" readonly style="background:#eee;"></div>
+                <div><label>Superficie Legno (mq)</label><input type="number" id="fMq" value="50" oninput="aggiorna()"></div>
+                <div><label>Giorni Lavoro</label><input type="number" id="fGiorni" value="5" oninput="aggiorna()"></div>
+                <div><label>Noleggio Trabattello (€)</label><input type="number" id="fTrabattello" value="250" oninput="aggiorna()"></div>
+                <div><label>Materiali / Chimica (€)</label><input type="number" id="fMateriali" value="450" oninput="aggiorna()"></div>
             </div>
-            
-            <div style="margin-top:15px;">
-                <input type="checkbox" id="telCheckAsimmetrica" onchange="toggleAnteAsimmetricheInputs()">
-                <label style="display:inline; margin-left:5px; color:#007bff;">Configura ante asimmetriche manualmente</label>
-            </div>
-
-            <div id="blocco-ante-manuali" class="input-grid" style="margin-top:15px; display:none;">
-                <div><label>Misura Anta 1 (mm)</label><input type="number" id="telAnta1" value="600" oninput="aggiorna()"></div>
-                <div><label>Misura Anta 2 (mm)</label><input type="number" id="telAnta2" value="150" oninput="aggiorna()"></div>
-            </div>
-            <div id="errore-ante-somma" class="alert-errore">⚠️ Errore: La somma delle ante non corrisponde a L!</div>
         </div>
-
     </div>
 
-    <!-- COLONNA OUTPUT GRAFICA E PREVENTIVI (DESTRA) -->
     <div class="output-col">
         <div class="section">
-            <h1 id="labelCli" style="text-align: center; color: #007bff; letter-spacing: 1px;">PREVENTIVO ARTIGIANALE</h1>
+            <h1 id="labelCli" style="text-align: center; color: #007bff;">PREVENTIVO FALEGNAMERIA</h1>
             <div id="svgContainer"></div>
         </div>
-        
         <div class="section" id="sezione-tagli">
-            <h3>DISTINTA TECNICA SQUADRATURA ELEMENTI</h3>
-            <table id="tabellaTagli">
-                <thead><tr><th>Pezzo / Struttura</th><th>Q.tà</th><th>Altezza / H</th><th>Larghezza / L</th><th>Specifiche di Finitura</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <h3>DISTINTA TECNICA E DETTAGLIO ELEMENTI</h3>
+            <table id="tabellaTagli"><thead><tr><th>Pezzo</th><th>Q.tà</th><th>H</th><th>L</th><th>Note</th></tr></thead><tbody></tbody></table>
         </div>
-        
         <div class="result-box">
             <div id="totale-big">€ 0,00</div>
-            <p style="text-align:center; font-size:11px; color:#bdc3c7; font-weight: bold; margin-top: 5px;">PREZZO CHIAVI IN MANO AL CLIENTE (IVA 22% COMPRESA)</p>
+            <p style="text-align:center; font-size:10px; color:#bdc3c7;">TOTALE COMPLESSIVO CLIENTE (IVA 22% INCLUSA)</p>
             <table id="tabellaCosti" style="width:100%; color:white; font-size: 14px;"></table>
         </div>
     </div>
 </div>
 
+<!-- MODALE LISTINO -->
+<div id="modalListino">
+    <div class="modal-content">
+        <h3>⚙️ GESTIONE LISTINO PREZZI</h3>
+        <div class="list-box">
+            <label>AGGIUNGI SCOCCA O ANTA</label>
+            <div class="input-grid">
+                <input type="text" id="newN" placeholder="Nome">
+                <input type="number" id="newP" placeholder="€/mq">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn" style="background:#007bff; flex:1" onclick="aggiungi('S')">+ SCOCCA</button>
+                <button class="btn" style="background:#27ae60; flex:1" onclick="aggiungi('A')">+ ANTA</button>
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div>
+                <h4>Scocche / Materiali base</h4>
+                <div id="listS"></div>
+            </div>
+            <div>
+                <h4>Ante / Finiture superiori</h4>
+                <div id="listA"></div>
+            </div>
+        </div>
+        <hr>
+        <div class="input-grid">
+            <div><label>Costo Cassetto (€)</label><input type="number" id="pCass" value="50"></div>
+            <div><label>Costo Asta (€)</label><input type="number" id="pAsta" value="15"></div>
+        </div>
+        <button class="btn btn-client" style="width:100%; margin-top:20px;" onclick="chiudiModal()">SALVA E CHIUDI</button>
+    </div>
+</div>
+
 <div class="controlli-stampa no-print">
-    <button class="btn btn-tech" onclick="stampa('tech')">STAMPA SCHEDA OFFICINA</button>
-    <button class="btn btn-client" onclick="stampa('client')">ESPORTA COPIA CLIENTE</button>
+    <button class="btn btn-tech" onclick="stampa('tech')">STAMPA TECNICA</button>
+    <button class="btn btn-client" onclick="stampa('client')">EXPORT CLIENTE</button>
 </div>
 
 <script>
+    let dbS = JSON.parse(localStorage.getItem('dbS')) || [{n:"Laminato", p:55}, {n:"Listellare Rovere 25mm", p:75}, {n:"Supporto MDF Laccatura", p:40}];
+    let dbA = JSON.parse(localStorage.getItem('dbA')) || [{n:"Anta Liscia", p:80}, {n:"Verniciatura Professionale", p:45}, {n:"Laccatura Poliuretanica", p:55}];
+
     window.onload = function() {
-        generaCampiVani();
-        switchSchede();
+        document.getElementById('pCass').value = localStorage.getItem('pCass') || 50;
+        document.getElementById('pAsta').value = localStorage.getItem('pAsta') || 15;
+        inizializzaSelect();
+        cambiaTipoCommessa();
     };
 
-    function switchSchede() {
+    function apriModal() { document.getElementById('modalListino').style.display = 'flex'; renderListe(); }
+    
+    function chiudiModal() { 
+        localStorage.setItem('pCass', document.getElementById('pCass').value);
+        localStorage.setItem('pAsta', document.getElementById('pAsta').value);
+        document.getElementById('modalListino').style.display = 'none';
+        inizializzaSelect();
+        aggiorna();
+    }
+
+    function inizializzaSelect() {
+        let s1 = document.getElementById('mat');
+        let s2 = document.getElementById('matAnta');
+        if(s1 && s2) {
+            s1.innerHTML = ""; s2.innerHTML = "";
+            dbS.forEach((x,i) => s1.innerHTML += `<option value="${i}">${x.n} (${x.p}€/mq)</option>`);
+            dbA.forEach((x,i) => s2.innerHTML += `<option value="${i}">${x.n} (${x.p}€/mq)</option>`);
+        }
+    }
+
+    function renderListe() {
+        document.getElementById('listS').innerHTML = ""; 
+        document.getElementById('listA').innerHTML = "";
+        dbS.forEach((x,i) => document.getElementById('listS').innerHTML += `<div class="list-item"><span>${x.n} - ${x.p}€</span><button onclick="rimuovi('S',${i})">❌</button></div>`);
+        dbA.forEach((x,i) => document.getElementById('listA').innerHTML += `<div class="list-item"><span>${x.n} - ${x.p}€</span><button onclick="rimuovi('A',${i})">❌</button></div>`);
+    }
+
+    function aggiungi(tipo) {
+        let n = document.getElementById('newN').value;
+        let p = parseFloat(document.getElementById('newP').value);
+        if(!n || isNaN(p)) return;
+        if(tipo === 'S') dbS.push({n:n, p:p}); else dbA.push({n:n, p:p});
+        localStorage.setItem('dbS', JSON.stringify(dbS));
+        localStorage.setItem('dbA', JSON.stringify(dbA));
+        document.getElementById('newN').value = ""; document.getElementById('newP').value = "";
+        renderListe();
+    }
+
+    function rimuovi(tipo, idx) {
+        if(tipo === 'S') dbS.splice(idx,1); else dbA.splice(idx,1);
+        localStorage.setItem('dbS', JSON.stringify(dbS));
+        localStorage.setItem('dbA', JSON.stringify(dbA));
+        renderListe();
+    }
+
+    function cambiaTipoCommessa() {
         let tipo = document.getElementById('tipoCommessa').value;
         
-        // Nascondi tutte le schede fisicamente
-        document.querySelectorAll('.scheda-tecnica').forEach(x => x.style.display = 'none');
-        
-        // Attiva solo quella selezionata
-        if(tipo === 'cabinet') document.getElementById('panel-cabinet').style.display = 'block';
-        if(tipo === 'paretina') document.getElementById('panel-paretina').style.display = 'block';
-        if(tipo === 'facciata') document.getElementById('panel-facciata').style.display = 'block';
-        if(tipo === 'telaio') {
-            document.getElementById('panel-telaio').style.display = 'block';
-            gestisciLogicaAnteAutomator();
+        document.getElementById('blocco-inputs-mobile').style.display = "none";
+        document.getElementById('blocco-inputs-telaio').style.display = "none";
+        document.getElementById('blocco-inputs-paretina').style.display = "none";
+        document.getElementById('blocco-inputs-facciata').style.display = "none";
+        document.getElementById('materiali-standard-inputs').style.display = "none";
+        document.getElementById('contVani').style.display = "none";
+
+        if (tipo === 'mobile') {
+            document.getElementById('blocco-inputs-mobile').style.display = "block";
+            document.getElementById('materiali-standard-inputs').style.display = "block";
+            document.getElementById('contVani').style.display = "block";
+            initVani();
+        } else if (tipo === 'telaio') {
+            document.getElementById('blocco-inputs-telaio').style.display = "block";
+            regolaAnteDefault();
+        } else if (tipo === 'paretina') {
+            document.getElementById('blocco-inputs-paretina').style.display = "block";
+        } else if (tipo === 'facciata') {
+            document.getElementById('blocco-inputs-facciata').style.display = "block";
         }
         aggiorna();
     }
 
-    function generaCampiVani() {
-        let nD = parseInt(document.getElementById('cabND').value) || 0;
-        let container = document.getElementById('container-vani-dinamici');
-        container.innerHTML = "";
-        
+    function initVani() {
+        let nD = parseInt(document.getElementById('nD').value) || 0;
+        let cont = document.getElementById('contVani');
+        cont.innerHTML = "";
         if(nD > 0) {
-            let html = `<div style="background:#f8f9fa; padding:10px; border-radius:8px; border-left:4px solid #007bff;"><strong>Configurazione Ripiani Interni:</strong>`;
+            let divhtml = `<div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #007bff;"><h4>Configurazione Ripiani per Vano</h4>`;
             for(let i = 0; i <= nD; i++) {
-                html += `<div style="margin-top:5px;"><label>N. Ripiani nel Vano ${i+1}</label><input type="number" id="ripVano_${i}" value="2" min="0" oninput="aggiorna()"></div>`;
+                divhtml += `<div style="margin-bottom:8px;"><label>N. Ripiani Vano ${i+1}</label><input type="number" id="ripVano_${i}" value="2" min="0" oninput="aggiorna()"></div>`;
             }
-            html += `</div>`;
-            container.innerHTML = html;
+            divhtml += `</div>`;
+            cont.innerHTML = divhtml;
         }
         aggiorna();
     }
 
-    function gestisciLogicaAnteAutomator() {
-        let L = parseFloat(document.getElementById('telL').value) || 0;
-        let check = document.getElementById('telCheckAsimmetrica').checked;
+    function regolaAnteDefault() {
+        let tL = parseFloat(document.getElementById('tL').value) || 0;
+        let asimmetrico = document.getElementById('tAsimmetrico').checked;
         
-        if(!check) {
-            if(L <= 500) {
-                document.getElementById('telNAnte').value = 1;
+        if (!asimmetrico) {
+            if (tL <= 500) {
+                document.getElementById('tAnta1').value = tL;
+                document.getElementById('tAnta2').value = 0;
             } else {
-                document.getElementById('telNAnte').value = 2;
-                document.getElementById('telAnta1').value = L / 2;
-                document.getElementById('telAnta2').value = L / 2;
+                document.getElementById('tAnta1').value = tL / 2;
+                document.getElementById('tAnta2').value = tL / 2;
             }
         }
         aggiorna();
     }
 
-    function toggleAnteAsimmetricheInputs() {
-        let check = document.getElementById('telCheckAsimmetrica').checked;
-        document.getElementById('blocco-ante-manuali').style.display = check ? 'grid' : 'none';
-        gestisciLogicaAnteAutomator();
+    function toggleAsimmetrico() {
+        let spunta = document.getElementById('tAsimmetrico').checked;
+        let a1 = document.getElementById('tAnta1');
+        let a2 = document.getElementById('tAnta2');
+        let d1 = document.getElementById('div-anta1');
+        let d2 = document.getElementById('div-anta2');
+
+        if(spunta) {
+            a1.disabled = false; a2.disabled = false;
+            d1.style.opacity = "1"; d2.style.opacity = "1";
+        } else {
+            a1.disabled = true; a2.disabled = true;
+            d1.style.opacity = "0.5"; d2.style.opacity = "0.5";
+            regolaAnteDefault();
+        }
     }
 
     function aggiorna() {
@@ -218,20 +319,19 @@
         document.getElementById('labelCli').innerText = "PREVENTIVO RIGIDO - " + cli.toUpperCase();
         
         let tipo = document.getElementById('tipoCommessa').value;
-        if(tipo === 'cabinet') elaboraCabinet();
-        if(tipo === 'paretina') elaboraParetina();
-        if(tipo === 'facciata') elaboraFacciata();
-        if(tipo === 'telaio') elaboraTelaioLaccato();
+        if(tipo === 'mobile') calcolaMobile();
+        else if(tipo === 'telaio') calcolaTelaio();
+        else if(tipo === 'paretina') calcolaParetina();
+        else if(tipo === 'facciata') calcolaFacciata();
     }
 
-    // ================= LOOP FUNZIONE 1: CABINET =================
-    function elaboraCabinet() {
-        let L = parseFloat(document.getElementById('cabL').value) || 0;
-        let A = parseFloat(document.getElementById('cabA').value) || 0;
-        let P = parseFloat(document.getElementById('cabP').value) || 0;
-        let Z = parseFloat(document.getElementById('cabZ').value) || 0;
-        let SP = parseFloat(document.getElementById('cabSP').value) || 0;
-        let nD = parseInt(document.getElementById('cabND').value) || 0;
+    function calcolaMobile() {
+        let L = parseFloat(document.getElementById('L').value) || 0;
+        let A = parseFloat(document.getElementById('A').value) || 0;
+        let P = parseFloat(document.getElementById('P').value) || 0;
+        let Z = parseFloat(document.getElementById('Z').value) || 0;
+        let SP = parseFloat(document.getElementById('SP').value) || 0;
+        let nD = parseInt(document.getElementById('nD').value) || 0;
         let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
         let cBordo = parseFloat(document.getElementById('costoBordo').value) || 0;
         let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
@@ -243,188 +343,108 @@
         }
 
         let H_utile = A - Z;
-        let mqLegno = ((H_utile * P * 2) + (L * P * 2) + (L * H_utile) + (H_utile * P * nD) + (L * P * totRipiani)) / 1000000;
+        let mqScocca = ((H_utile * P * 2) + (L * P * 2) + (L * H_utile) + (H_utile * P * nD) + (L * P * totRipiani)) / 1000000;
         let mlBordo = ((H_utile * 4) + (L * 4) + (H_utile * 2 * nD) + (L * 2 * totRipiani)) / 1000;
 
-        let costoMat = (mqLegno * 75) + (mlBordo * cBordo); // Listellare Rovere 25 base
-        let oreLavoro = 4 + (nD * 1.5) + (totRipiani * 0.3);
+        let idxS = document.getElementById('mat').value;
+        let scoccaPrezzo = dbS[idxS] ? dbS[idxS].p : 0;
+
+        let costoMat = (mqScocca * scoccaPrezzo) + (mlBordo * cBordo);
+        let oreLavoro = 4 + (nD * 1.5) + (totRipiani * 0.3); 
         let costoManodopera = oreLavoro * tariffa;
+        
+        let imponibile = costoMat + costoManodopera + cTrasporto;
+        let markupUtile = imponibile * 0.45; 
+        let totaleNetto = imponibile + markupUtile;
+        let iva = totaleNetto * 0.22;
+        let lordoCliente = totaleNetto + iva;
 
-        let baseImponibile = costoMat + costoManodopera + cTrasporto;
-        let guadagnoAzienda = baseImponibile * 0.45;
-        let nettoFattura = baseImponibile + guadagnoAzienda;
-        let impostaIVA = nettoFattura * 0.22;
-        let lordoTotale = nettoFattura + impostaIVA;
-
-        // Render Distinta Specifica
         document.querySelector("#tabellaTagli tbody").innerHTML = `
-            <tr><td>Fianchi Esterni Scocca</td><td>2</td><td>${H_utile} mm</td><td>${P} mm</td><td>Bordatura 2 lati lunghi</td></tr>
-            <tr><td>Base e Cappello Orizzontali</td><td>2</td><td>${P} mm</td><td>${L - (SP*2)} mm</td><td>Bordatura bordo a vista</td></tr>
-            <tr><td>Schienale Posteriore di Chiusura</td><td>1</td><td>${H_utile} mm</td><td>${L} mm</td><td>Incastrato in fresata</td></tr>
-            <tr><td>Spalle Divisorie Verticali</td><td>${nD}</td><td>${H_utile - (SP*2)} mm</td><td>${P - 10} mm</td><td>Taglio di riquadratura</td></tr>
-            <tr><td>Ripiani Interni Spostabili</td><td>${totRipiani}</td><td>${P - 15} mm</td><td>Assegnato a vano</td><td>Bordatura frontale</td></tr>
+            <tr><td>Fianchi Esterni Mobile</td><td>2</td><td>${H_utile}</td><td>${P}</td><td>Bordati 2L</td></tr>
+            <tr><td>Base e Cappello Orizzontali</td><td>2</td><td>${P}</td><td>${L - (SP*2)}</td><td>Bordati 1L</td></tr>
+            <tr><td>Schienale Strutturale</td><td>1</td><td>${H_utile}</td><td>${L}</td><td>Fissaggio Posteriore</td></tr>
+            <tr><td>Divisori Verticali (Spalle)</td><td>${nD}</td><td>${H_utile - (SP*2)}</td><td>${P - 10}</td><td>Bordati Frontale</td></tr>
+            <tr><td>Ripiani Interni Orizzontali</td><td>${totRipiani}</td><td>${P - 15}</td><td>In base ai vani</td><td>Bordati Frontale</td></tr>
         `;
 
-        // Disegno Cabinet SVG
-        let divisoriLinee = "";
-        let larghezzaSpazioVano = 300 / (nD + 1);
+        let lineeDivisori = "";
+        let widthVanoSVG = 300 / (nD + 1);
         for(let i = 1; i <= nD; i++) {
-            let x = 50 + (larghezzaSpazioVano * i);
-            divisoriLinee += `<line x1="${x}" y1="20" x2="${x}" y2="420" stroke="#8b5a2b" stroke-width="4" stroke-dasharray="3,3"/>`;
+            let xP = 50 + (widthVanoSVG * i);
+            lineeDivisori += `<line x1="${xP}" y1="20" x2="${xP}" y2="420" stroke="#8b5a2b" stroke-width="4" stroke-dasharray="3,3"/>`;
         }
+
         document.getElementById('svgContainer').innerHTML = `
-            <svg width="300" height="400" viewBox="0 0 400 500">
+            <svg width="300" height="400" viewBox="0 0 400 500" style="border:1px solid #ddd; background:#fff;">
                 <rect x="50" y="20" width="300" height="400" fill="#f3e5ab" stroke="#8b5a2b" stroke-width="6"/>
                 <rect x="50" y="420" width="300" height="30" fill="#5c3a21"/>
-                ${divisoriLinee}
+                ${lineeDivisori}
             </svg>
         `;
 
-        scriviCostiTabella(costoMat, costoManodopera, cTrasporto, guadagnoAzienda, nettoFattura, impostaIVA, lordoTotale);
+        stampaTabellaCosti(costoMat, costoManodopera, cTrasporto, markupUtile, totaleNetto, iva, lordoCliente);
     }
 
-    // ================= LOOP FUNZIONE 2: PARETINA =================
-    function elaboraParetina() {
-        let pLargh = parseFloat(document.getElementById('parLargh').value) || 0;
-        let pAlt = parseFloat(document.getElementById('parAlt').value) || 0;
-        let pListLargh = parseFloat(document.getElementById('parListLargh').value) || 0;
-        let pSpessore = parseFloat(document.getElementById('parSpessore').value) || 0;
-        let pAria = parseFloat(document.getElementById('parAria').value) || 0;
+    function calcolaTelaio() {
+        let tL = parseFloat(document.getElementById('tL').value) || 0;
+        let tA = parseFloat(document.getElementById('tA').value) || 0;
+        let tAnta1 = parseFloat(document.getElementById('tAnta1').value) || 0;
+        let tAnta2 = parseFloat(document.getElementById('tAnta2').value) || 0;
         let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
         let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
 
-        let nListelli = Math.floor(pLargh / (pListLargh + pAria)) || 1;
-        let mqSingolo = ((pAlt * pListLargh * 2) + (pAlt * (pSpessore/10) * 2)) / 10000;
-        let mqTotale = mqSingolo * (nListelli + 2);
+        let errBox = document.getElementById('errore-ante');
+        if (Math.abs((tAnta1 + tAnta2) - tL) > 2) {
+            errBox.style.display = "block";
+        } else {
+            errBox.style.display = "none";
+        }
 
-        let costoMaterialeFisico = (mqTotale * 75) + (mqTotale * 45); // Rovere + Laccatura/Verniciatura Pro
-        let oreLaboratorio = 6;
+        let mqAnte = (tA * tL) / 1000000;
+        let costoPannelli = mqAnte * 40; 
+        let costoLegnoTelaio = 35;
+        let costoLaccaturaChimica = mqAnte * 55;
+        let ferramentaCerniere = 25;
+
+        let costoMaterialiTotale = costoPannelli + costoLegnoTelaio + costoLaccaturaChimica + ferramentaCerniere;
+        let oreLaboratorio = 7;
         let costoManodopera = oreLaboratorio * tariffa;
 
-        let baseImponibile = costoMaterialeFisico + costoManodopera + cTrasporto;
-        let guadagnoAzienda = baseImponibile * 0.45;
-        let nettoFattura = baseImponibile + guadagnoAzienda;
-        let impostaIVA = nettoFattura * 0.22;
-        let lordoTotale = nettoFattura + impostaIVA;
+        let imponibile = costoMaterialiTotale + costoManodopera + cTrasporto;
+        let markupUtile = imponibile * 0.45;
+        let totaleNetto = imponibile + markupUtile;
+        let iva = totaleNetto * 0.22;
+        let lordoCliente = totaleNetto + iva;
+
+        let stringaDistintaAnte = tAnta2 > 0 
+            ? `<tr><td>Ante Laccate Asimmetriche</td><td>2</td><td>${tA}</td><td>An.1: ${tAnta1} | An.2: ${tAnta2}</td><td>Laccatura Poliuretanica 2 Facce</td></tr>`
+            : `<tr><td>Anta Laccata Singola</td><td>1</td><td>${tA}</td><td>${tAnta1}</td><td>Laccatura Poliuretanica 2 Facce</td></tr>`;
 
         document.querySelector("#tabellaTagli tbody").innerHTML = `
-            <tr><td>Listelli Verticali Frangisole</td><td>${nListelli}</td><td>${pAlt * 10} mm</td><td>${pListLargh * 10} mm</td><td>Spessore ${pSpessore}mm - Finitura 4 lati</td></tr>
-            <tr><td>Traversi Orizzontali di Base/Cielo</td><td>2</td><td>${pLargh * 10} mm</td><td>${pListLargh * 10} mm</td><td>Binario di fissaggio a scomparsa</td></tr>
+            <tr><td>Telaio Strutturale di Battuta</td><td>1 Blocco</td><td>${tA}</td><td>${tL}</td><td>Legno massello pronto laccatura</td></tr>
+            ${stringaDistintaAnte}
+            <tr><td>Set Ferramenta Cerniere</td><td>1 Set</td><td>-</td><td>-</td><td>Ammortizzate ad incasso</td></tr>
         `;
 
-        let verticaliSVG = "";
-        for(let i=0; i<nListelli; i++) {
-            verticaliSVG += `<rect x="${60 + (i * (260/nListelli))}" y="50" width="${110/nListelli}" height="300" fill="#cd853f" stroke="#8b5a2b"/>`;
-        }
-        document.getElementById('svgContainer').innerHTML = `
-            <svg width="300" height="400" viewBox="0 0 400 500">
-                <rect x="40" y="30" width="320" height="20" fill="#5c3a21"/>
-                <rect x="40" y="350" width="320" height="20" fill="#5c3a21"/>
-                ${verticaliSVG}
-            </svg>
-        `;
-
-        scriviCostiTabella(costoMaterialeFisico, costoManodopera, cTrasporto, guadagnoAzienda, nettoFattura, impostaIVA, lordoTotale);
-    }
-
-    // ================= LOOP FUNZIONE 3: FACCIATA =================
-    function elaboraFacciata() {
-        let fMq = parseFloat(document.getElementById('facMq').value) || 0;
-        let fGiorni = parseFloat(document.getElementById('facGiorni').value) || 0;
-        let fTrabattello = parseFloat(document.getElementById('facTrabattello').value) || 0;
-        let fMateriali = parseFloat(document.getElementById('facMateriali').value) || 0;
-        let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
-        let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
-
-        let oreTotaliSpettanti = fGiorni * 8 * 2 * tariffa; // 2 addetti fissi sul posto
-        let costoTrasferteLogistica = cTrasporto * fGiorni;
-        
-        let costoBase = fMateriali + fTrabattello + oreTotaliSpettanti + costoTrasferteLogistica;
-        let guadagnoAzienda = costoBase * 0.45; // 45% Rischio quota e ponteggio
-        let nettoFattura = costoBase + guadagnoAzienda;
-        let impostaIVA = nettoFattura * 0.22;
-        let lordoTotale = nettoFattura + impostaIVA;
-
-        document.querySelector("#tabellaTagli tbody").innerHTML = `
-            <tr><td>Ripristino Superficiale Facciata</td><td>1</td><td>Intera quota</td><td>${fMq} mq</td><td>Sverniciatura strutturale, antimuffa, doppia mano protettiva</td></tr>
-            <tr><td>Strutture Sicurezza Cantiere</td><td>1</td><td>Certificato</td><td>Secondo piano</td><td>Posizionamento e allestimento trabattello omologato</td></tr>
-        `;
-
-        document.getElementById('svgContainer').innerHTML = `
-            <svg width="300" height="400" viewBox="0 0 400 500">
-                <polygon points="50,150 200,30 350,150" fill="#8b5a2b"/>
-                <rect x="70" y="150" width="260" height="250" fill="#d7ccc8" stroke="#5d4037"/>
-                <rect x="255" y="110" width="65" height="240" fill="none" stroke="#2c3e50" stroke-width="3"/>
-                <line x1="255" y1="160" x2="320" y2="160" stroke="#2c3e50"/>
-                <line x1="255" y1="210" x2="320" y2="210" stroke="#2c3e50"/>
-                <line x1="255" y1="260" x2="320" y2="260" stroke="#2c3e50"/>
-                <circle cx="287" cy="90" r="10" fill="#ff5722"/>
-            </svg>
-        `;
-
-        scriviCostiTabella(fMateriali, oreTotaliSpettanti + fTrabattello, costoTrasferteLogistica, guadagnoAzienda, nettoFattura, impostaIVA, lordoTotale);
-    }
-
-    // ================= LOOP FUNZIONE 4: TELAIO E ANTE LACCATE =================
-    function elaboraTelaioLaccato() {
-        let L = parseFloat(document.getElementById('telL').value) || 0;
-        let A = parseFloat(document.getElementById('telA').value) || 0;
-        let P = parseFloat(document.getElementById('telP').value) || 0;
-        let nAnte = parseInt(document.getElementById('telNAnte').value) || 1;
-        let tariffa = parseFloat(document.getElementById('tariffaOraria').value) || 0;
-        let cTrasporto = parseFloat(document.getElementById('costoTrasporto').value) || 0;
-        let checkAsimmetrica = document.getElementById('telCheckAsimmetrica').checked;
-
-        let a1 = parseFloat(document.getElementById('telAnta1').value) || 0;
-        let a2 = parseFloat(document.getElementById('telAnta2').value) || 0;
-
-        // Validatore matematico bloccante per errori di battitura
-        if(checkAsimmetrica) {
-            if(Math.abs((a1 + a2) - L) > 2) {
-                document.getElementById('errore-ante-somma').style.display = 'block';
-            } else {
-                document.getElementById('errore-ante-somma').style.display = 'none';
-            }
-        } else {
-            document.getElementById('errore-ante-somma').style.display = 'none';
-            a1 = L / nAnte;
-            a2 = nAnte === 2 ? L / 2 : 0;
-        }
-
-        let mqAnte = (L * A) / 1000000;
-        let costoMaterialiImballati = 40 + 35 + 55 + 25; // Ante grezze, legno telaio, vernici e cerniere stimate
-        let oreLavoroLaboratorio = 7;
-        let costoManodopera = oreLavoroLaboratorio * tariffa;
-
-        let baseImponibile = costoMaterialiImballati + costoManodopera + cTrasporto;
-        let guadagnoAzienda = baseImponibile * 0.45;
-        let nettoFattura = baseImponibile + guadagnoAzienda;
-        let impostaIVA = nettoFattura * 0.22;
-        let lordoTotale = nettoFattura + impostaIVA;
-
-        // Distinta Tagli
-        if(checkAsimmetrica) {
-            document.querySelector("#tabellaTagli tbody").innerHTML = `
-                <tr><td>Montanti Telaio di Battuta</td><td>2</td><td>${A} mm</td><td>${P} mm</td><td>Legno massello da laccatura</td></tr>
-                <tr><td>Traverso Superiore Telaio</td><td>1</td><td>${L} mm</td><td>${P} mm</td><td>Incastro di squadratura</td></tr>
-                <tr><td>Sportello Maggiore (Anta 1)</td><td>1</td><td>${A - 10} mm</td><td>${a1} mm</td><td>MDF Idrofugo - Laccatura 4 Lati</td></tr>
-                <tr><td>Sportello Minore (Anta 2)</td><td>1</td><td>${A - 10} mm</td><td>${a2} mm</td><td>MDF Idrofugo - Laccatura 4 Lati</td></tr>
-            `;
-        } else {
-            document.querySelector("#tabellaTagli tbody").innerHTML = `
-                <tr><td>Montanti Telaio di Battuta</td><td>2</td><td>${A} mm</td><td>${P} mm</td><td>Legno massello da laccatura</td></tr>
-                <tr><td>Traverso Superiore Telaio</td><td>1</td><td>${L} mm</td><td>${P} mm</td><td>Incastro di squadratura</td></tr>
-                <tr><td>Sportelli Standard Simmetrici</td><td>${nAnte}</td><td>${A - 10} mm</td><td>${a1.toFixed(0)} mm</td><td>MDF Idrofugo - Laccatura Pro</td></tr>
-            `;
-        }
-
-        // SVG Telaio Dinamico
         let lineaDivisioneAnta = "";
-        if(nAnte === 2) {
-            let xSeparazione = 50 + (300 * (a1 / L));
-            lineaDivisioneAnta = `<line x1="${xSeparazione}" y1="30" x2="${xSeparazione}" y2="450" stroke="#2c3e50" stroke-width="3"/>`;
+        if (tAnta2 > 0 && tL > 0) {
+            let xDivisione = 50 + (300 * (tAnta1 / tL));
+            lineaDivisioneAnta = `<line x1="${xDivisione}" y1="30" x2="${xDivisione}" y2="430" stroke="#333" stroke-width="3"/>`;
         }
+
         document.getElementById('svgContainer').innerHTML = `
-            <svg width="300" height="400" viewBox="0 0 400 500">
-                <!-- Finto Muro/Controtelaio -->
-                <rect x="40" y
+            <svg width="300" height="400" viewBox="0 0 400 500" style="background:#fff; border:1px solid #ddd;">
+                <rect x="40" y="20" width="320" height="420" fill="#none" stroke="#2c3e50" stroke-width="10"/>
+                <rect x="50" y="30" width="300" height="400" fill="#e0f7fa" stroke="#b2ebf2" stroke-width="2"/>
+                ${lineaDivisioneAnta}
+            </svg>
+        `;
+
+        stampaTabellaCosti(costoMaterialiTotale, costoManodopera, cTrasporto, markupUtile, totaleNetto, iva, lordoCliente);
+    }
+
+    function calcolaParetina() {
+        let pLargh = parseFloat(document.getElementById('pLargh').value) || 0;
+        let pAlt = parseFloat(document.getElementById('pAlt').value) || 0;
+        let pListLargh = parseFloat(document.getElementById('pListLargh').value) || 0;
+        let
