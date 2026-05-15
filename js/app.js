@@ -1,10 +1,10 @@
 /**
- * APP.JS - Coordinatore centrale con aggiunta dinamica di materiali e ante nel listino
+ * APP.JS - Coordinatore centrale con aggiunta dinamica e persistente di materiali e ante
  */
 
 import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
 
-// Stato dinamico del listino (Iniziale)
+// Stato dinamico del listino (Struttura dati fissa manipolabile)
 let LISTINO = {
     materialiScocca: [
         { id: "nobilitato", nome: "Nobilitato Bianco 19mm", prezzo: 25 },
@@ -29,36 +29,34 @@ document.addEventListener("DOMContentLoaded", () => {
     cambiaTipoCommessa();
 });
 
-// Popola i menu a tendina preservando la selezione utente corrente se possibile
+// Sincronizza i menu a tendina principali della pagina con la lista dei materiali presenti
 function popolaSelezioniIniziali() {
     const selectMat = document.getElementById("mat");
     const selectMatAnta = document.getElementById("matAnta");
     
-    const valoreSelezionatoMat = selectMat ? selectMat.value : "";
-    const valoreSelezionatoAnta = selectMatAnta ? selectMatAnta.value : "";
+    // Salva il valore correntemente selezionato per non azzerarlo durante il rinfresco
+    const vecchioMat = selectMat ? selectMat.value : "";
+    const vecchiaAnta = selectMatAnta ? selectMatAnta.value : "";
 
     if (selectMat) {
         selectMat.innerHTML = LISTINO.materialiScocca
             .map(m => `<option value="${m.id}">${m.nome} (€${m.prezzo}/mq)</option>`)
             .join("");
-        if (valoreSelezionatoMat && selectMat.querySelector(`option[value="${valoreSelezionatoMat}"]`)) {
-            selectMat.value = valoreSelezionatoMat;
-        }
+        if (vecchioMat) selectMat.value = vecchioMat;
     }
 
     if (selectMatAnta) {
         selectMatAnta.innerHTML = LISTINO.modelliAnta
             .map(a => `<option value="${a.id}">${a.nome} (€${a.prezzo}/mq)</option>`)
             .join("");
-        if (valoreSelezionatoAnta && selectMatAnta.querySelector(`option[value="${valoreSelezionatoAnta}"]`)) {
-            selectMatAnta.value = valoreSelezionatoAnta;
-        }
+        if (vecchiaAnta) selectMatAnta.value = vecchiaAnta;
     }
 }
 
 function agganciaEventi() {
     document.getElementById("tipoCommessa").addEventListener("change", cambiaTipoCommessa);
 
+    // Listener per ricalcoli immediati
     ["nomeCliente", "mat", "matAnta", "tariffaOraria", "costoBordo", "costoTrasporto"].forEach(id => {
         document.getElementById(id)?.addEventListener("input", eseguiRicalcoloGlobal);
     });
@@ -88,7 +86,7 @@ function stampaConfiguratore(tipo) {
     window.print();
 }
 
-// COSTRUZIONE INTERFACCIA MODALE CON AGGIUNTA NUOVI ELEMENTI
+// COSTRUZIONE E APERTURA MODALE LISTINO
 function gestisciModalListino(apri) {
     const modal = document.getElementById("modalListino");
     if (!apri) {
@@ -96,104 +94,115 @@ function gestisciModalListino(apri) {
         return;
     }
 
-    const contenitore = document.getElementById("contenutoListino");
-    if (contenitore) {
-        contenitore.innerHTML = `
-            <!-- SEZIONE MATERIALI SCOCCA -->
-            <h4 style="margin-bottom:10px; color:#007bff;">Materiali Scocca (€/mq)</h4>
-            <div id="lista-materiali-edit">
-                ${LISTINO.materialiScocca.map((m, index) => `
-                    <div class="list-item" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>${m.nome}</span>
-                        <input type="number" data-type="materiale" data-index="${index}" value="${m.prezzo}" style="width:100px; padding:4px;">
-                    </div>
-                `).join("")}
-            </div>
-            <!-- Form rapido per inserire un nuovo materiale -->
-            <div style="background:#f1f2f6; padding:10px; border-radius:6px; margin-bottom:20px; display:flex; gap:5px;">
-                <input type="text" id="nuovo-mat-nome" placeholder="Es. Rovere Impiallacciato" style="flex:1; padding:4px; font-size:12px;">
-                <input type="number" id="nuovo-mat-prezzo" placeholder="€/mq" style="width:70px; padding:4px; font-size:12px;">
-                <button id="btn-add-materiale" style="background:#007bff; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px;">+ Aggiungi</button>
-            </div>
-            
-            <!-- SEZIONE MODELLI ANTA -->
-            <h4 style="margin-bottom:10px; color:#007bff;">Modelli Anta (€/mq)</h4>
-            <div id="lista-ante-edit">
-                ${LISTINO.modelliAnta.map((a, index) => `
-                    <div class="list-item" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>${a.nome}</span>
-                        <input type="number" data-type="anta" data-index="${index}" value="${a.prezzo}" style="width:100px; padding:4px;">
-                    </div>
-                `).join("")}
-            </div>
-            <!-- Form rapido per inserire una nuova anta -->
-            <div style="background:#f1f2f6; padding:10px; border-radius:6px; margin-bottom:20px; display:flex; gap:5px;">
-                <input type="text" id="nuova-anta-nome" placeholder="Es. Anta Fresata Gola" style="flex:1; padding:4px; font-size:12px;">
-                <input type="number" id="nuova-anta-prezzo" placeholder="€/mq" style="width:70px; padding:4px; font-size:12px;">
-                <button id="btn-add-anta" style="background:#007bff; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px;">+ Aggiungi</button>
-            </div>
-
-            <!-- SEZIONE FERRAMENTA -->
-            <h4 style="margin-bottom:10px; color:#007bff;">Ferramenta & Componenti (€/Cad)</h4>
-            <div class="list-item" style="margin-bottom:8px;"><span>Lavorazione + Perni Ripiano</span><input type="number" id="edit-ferr-ripiano" value="${LISTINO.ferramentaEAccessori.ripiano}" style="width:100px; padding:4px;"></div>
-            <div class="list-item" style="margin-bottom:8px;"><span>Kit Asta Appendiabito metallo</span><input type="number" id="edit-ferr-asta" value="${LISTINO.ferramentaEAccessori.asta}" style="width:100px; padding:4px;"></div>
-            <div class="list-item" style="margin-bottom:8px;"><span>Cassetto Assemblato + Guide Blum</span><input type="number" id="edit-ferr-cassetto" value="${LISTINO.ferramentaEAccessori.cassetto}" style="width:100px; padding:4px;"></div>
-            <div class="list-item" style="margin-bottom:8px;"><span>Coppia Cerniere Ammortizzate</span><input type="number" id="edit-ferr-cerniere" value="${LISTINO.ferramentaEAccessori.cerniereAnat}" style="width:100px; padding:4px;"></div>
-            
-            <button id="btnSalvaListino" class="btn" style="background:#2ecc71; margin-top:15px; width:100%">💾 Salva Modifiche Prezzi</button>
-        `;
-
-        // Associazione eventi ai bottoni di aggiunta immediata
-        document.getElementById("btn-add-materiale").addEventListener("click", aggiungiMaterialeAStato);
-        document.getElementById("btn-add-anta").addEventListener("click", aggiungiAntaAStato);
-        document.getElementById("btnSalvaListino").addEventListener("click", salvaNuovoListino);
-    }
+    renderizzaContenutoModale();
     modal.style.display = "flex";
 }
 
-// Funzione per inserire al volo un nuovo materiale nello stato
-function aggiungiMaterialeAStato() {
-    const nome = document.getElementById("nuovo-mat-nome").value.trim();
-    const prezzo = parseFloat(document.getElementById("nuovo-mat-prezzo").value) || 0;
-    
-    if (nome === "") { alert("Inserisci un nome valido per il materiale"); return; }
-    
-    // Genera un ID basato sul nome, rimuovendo spazi
-    const id = nome.toLowerCase().replace(/[^a-z0-9]/g, "");
-    
+// Disegna dinamicamente le righe della modale leggendo lo stato di LISTINO corrente
+function renderizzaContenutoModale() {
+    const contenitore = document.getElementById("contenutoListino");
+    if (!contenitore) return;
+
+    contenitore.innerHTML = `
+        <h4 style="margin: 0 0 10px 0; color:#007bff; font-size:14px;">MATERIALI SCOCCA (€/mq)</h4>
+        <div id="lista-materiali-edit" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border:1px solid #eee; padding:5px; border-radius:6px;">
+            ${LISTINO.materialiScocca.map((m, index) => `
+                <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-size:12px;">${m.nome}</span>
+                    <input type="number" data-type="materiale" data-index="${index}" value="${m.prezzo}" style="width:80px; padding:3px; font-size:12px;">
+                </div>
+            `).join("")}
+        </div>
+        <!-- Inserimento rapido scocca -->
+        <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin-bottom:15px; display:flex; gap:5px;">
+            <input type="text" id="add-mat-nome" placeholder="Nome nuovo materiale scocca" style="flex:1; padding:4px; font-size:12px;">
+            <input type="number" id="add-mat-prezzo" placeholder="€/mq" style="width:60px; padding:4px; font-size:12px;">
+            <button id="btn-add-scocca" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">+ Inserisci</button>
+        </div>
+        
+        <h4 style="margin: 15px 0 10px 0; color:#007bff; font-size:14px;">MODELLI ANTA (€/mq)</h4>
+        <div id="lista-ante-edit" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border:1px solid #eee; padding:5px; border-radius:6px;">
+            ${LISTINO.modelliAnta.map((a, index) => `
+                <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-size:12px;">${a.nome}</span>
+                    <input type="number" data-type="anta" data-index="${index}" value="${a.prezzo}" style="width:80px; padding:3px; font-size:12px;">
+                </div>
+            `).join("")}
+        </div>
+        <!-- Inserimento rapido anta -->
+        <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin-bottom:15px; display:flex; gap:5px;">
+            <input type="text" id="add-anta-nome" placeholder="Nome nuovo modello anta" style="flex:1; padding:4px; font-size:12px;">
+            <input type="number" id="add-anta-prezzo" placeholder="€/mq" style="width:60px; padding:4px; font-size:12px;">
+            <button id="btn-add-sportello" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">+ Inserisci</button>
+        </div>
+
+        <h4 style="margin: 15px 0 10px 0; color:#007bff; font-size:14px;">FERRAMENTA (€/Cad)</h4>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Perni + Lavorazione Ripiano</span><input type="number" id="edit-ferr-ripiano" value="${LISTINO.ferramentaEAccessori.ripiano}" style="width:80px; padding:3px;"></div>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Kit Asta Appendiabito metallo</span><input type="number" id="edit-ferr-asta" value="${LISTINO.ferramentaEAccessori.asta}" style="width:80px; padding:3px;"></div>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Cassetto Completo + Guide</span><input type="number" id="edit-ferr-cassetto" value="${LISTINO.ferramentaEAccessori.cassetto}" style="width:80px; padding:3px;"></div>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Coppia Cerniere Rallentate</span><input type="number" id="edit-ferr-cerniere" value="${LISTINO.ferramentaEAccessori.cerniereAnat}" style="width:80px; padding:3px;"></div>
+        
+        <button id="btnSalvaListino" class="btn" style="background:#2ecc71; margin-top:15px; width:100%; font-size:13px; padding:8px;">💾 Salva e Applica Modifiche</button>
+    `;
+
+    // Riapplica i listener per le funzioni di inserimento
+    document.getElementById("btn-add-scocca").addEventListener("click", aggiungiNuovoMaterialeScocca);
+    document.getElementById("btn-add-sportello").addEventListener("click", aggiungiNuovoModelloAnta);
+    document.getElementById("btnSalvaListino").addEventListener("click", salvaModifichePrezziGenerali);
+}
+
+function aggiungiNuovoMaterialeScocca() {
+    const nome = document.getElementById("add-mat-nome").value.trim();
+    const prezzo = parseFloat(document.getElementById("add-mat-prezzo").value) || 0;
+
+    if (!nome) { alert("Specifica il nome del materiale scocca"); return; }
+    const id = "mat_" + Date.now(); // Genera un ID univoco sicuro temporaneo
+
+    // Sincronizza prima i valori numerici modificati a schermo per non perderli
+    salvaValoriInputTemporanei();
+
+    // Aggiungi il nuovo elemento in coda all'array
     LISTINO.materialiScocca.push({ id, nome, prezzo });
+    
+    // Rigenera sia l'interfaccia di sfondo che il corpo della modale aperta
     popolaSelezioniIniziali();
-    gestisciModalListino(true); // Ridibuja la modale per mostrare la nuova riga inserita
+    renderizzaContenutoModale();
     eseguiRicalcoloGlobal();
 }
 
-// Funzione per inserire al volo una nuova anta nello stato
-function aggiungiAntaAStato() {
-    const nome = document.getElementById("nuova-anta-nome").value.trim();
-    const prezzo = parseFloat(document.getElementById("nuova-anta-prezzo").value) || 0;
-    
-    if (nome === "") { alert("Inserisci un nome valido per il modello anta"); return; }
-    
-    const id = nome.toLowerCase().replace(/[^a-z0-9]/g, "");
-    
+function aggiungiNuovoModelloAnta() {
+    const nome = document.getElementById("add-anta-nome").value.trim();
+    const prezzo = parseFloat(document.getElementById("add-anta-prezzo").value) || 0;
+
+    if (!nome) { alert("Specifica il nome del modello anta"); return; }
+    const id = "anta_" + Date.now();
+
+    salvaValoriInputTemporanei();
+
     LISTINO.modelliAnta.push({ id, nome, prezzo });
+    
     popolaSelezioniIniziali();
-    gestisciModalListino(true); 
+    renderizzaContenutoModale();
     eseguiRicalcoloGlobal();
 }
 
-function salvaNuovoListino() {
+// Legge i campi numerici inseriti a schermo nella modale per non perderli quando aggiungi righe
+function salvaValoriInputTemporanei() {
     const inputsMateriali = document.querySelectorAll('#contenutoListino input[data-type="materiale"]');
     inputsMateriali.forEach(input => {
         const idx = parseInt(input.getAttribute('data-index'));
-        if(LISTINO.materialiScocca[idx]) LISTINO.materialiScocca[idx].prezzo = parseFloat(input.value) || 0;
+        if (LISTINO.materialiScocca[idx]) LISTINO.materialiScocca[idx].prezzo = parseFloat(input.value) || 0;
     });
 
     const inputsAnte = document.querySelectorAll('#contenutoListino input[data-type="anta"]');
     inputsAnte.forEach(input => {
         const idx = parseInt(input.getAttribute('data-index'));
-        if(LISTINO.modelliAnta[idx]) LISTINO.modelliAnta[idx].prezzo = parseFloat(input.value) || 0;
+        if (LISTINO.modelliAnta[idx]) LISTINO.modelliAnta[idx].prezzo = parseFloat(input.value) || 0;
     });
+}
+
+function salvaModifichePrezziGenerali() {
+    salvaValoriInputTemporanei();
 
     LISTINO.ferramentaEAccessori.ripiano = parseFloat(document.getElementById("edit-ferr-ripiano").value) || 0;
     LISTINO.ferramentaEAccessori.asta = parseFloat(document.getElementById("edit-ferr-asta").value) || 0;
@@ -220,7 +229,6 @@ function eseguiRicalcoloGlobal() {
     const matTrovato = LISTINO.materialiScocca.find(m => m.id === idMatScocca);
     const prezzoMateriale = matTrovato ? matTrovato.prezzo : 0;
 
-    // Recupero il prezzo al mq del modello anta selezionato
     const idMatAnta = document.getElementById("matAnta").value;
     const antaTrovata = LISTINO.modelliAnta.find(a => a.id === idMatAnta);
     const prezzoAnta = antaTrovata ? antaTrovata.prezzo : 0;
@@ -240,7 +248,7 @@ function eseguiRicalcoloGlobal() {
             tariffaOraria,
             costoBordo,
             prezzoMateriale,
-            prezzoAnta, // Passato correttamente per il calcolo differenziato
+            prezzoAnta,
             prezziFerramenta: LISTINO.ferramentaEAccessori
         };
 
