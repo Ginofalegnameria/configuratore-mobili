@@ -1,5 +1,5 @@
 /**
- * APP.JS - Coordinatore centrale con Ripiani, Cassetti e Quote Dinamiche per singolo Vano
+ * APP.JS - Coordinatore centrale definitivo per Cabinet
  */
 
 import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
@@ -54,7 +54,6 @@ function agganciaEventi() {
     document.getElementById("btnPrintClient").addEventListener("click", () => stampaConfiguratore("client"));
 }
 
-// CREAZIONE DINAMICA DEI CONTROLLI PER OGNI VANO (LATO)
 function gestisciCambioDivisori() {
     const nD = parseInt(document.getElementById("nD").value) || 0;
     const contVani = document.getElementById("contVani");
@@ -78,7 +77,6 @@ function gestisciCambioDivisori() {
                         <input type="number" id="cassetti-vano-${i}" class="input-conteggio-elementi" data-vano="${i}" data-tipo="cas" value="0" min="0" style="padding:4px;">
                     </div>
                 </div>
-                <!-- Contenitori per le quote specifiche -->
                 <div id="quote-rip-vano-${i}" style="margin-top:8px; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
                 <div id="quote-cas-vano-${i}" style="margin-top:8px; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
             </div>
@@ -87,7 +85,6 @@ function gestisciCambioDivisori() {
 
     contVani.innerHTML = htmlVani;
 
-    // Aggancio eventi per i cambi quantità elementi interni
     document.querySelectorAll(".input-conteggio-elementi").forEach(input => {
         input.addEventListener("input", (e) => {
             const vanoId = e.target.getAttribute("data-vano");
@@ -101,7 +98,6 @@ function gestisciCambioDivisori() {
     eseguiRicalcoloGlobal();
 }
 
-// Genera i campi delle altezze (quote) per ripiani o cassetti
 function generaInputQuoteDinamiche(vanoId, tipo, quantita) {
     const contenitore = document.getElementById(`quote-${tipo}-vano-${vanoId}`);
     if (!contenitore) return;
@@ -113,8 +109,7 @@ function generaInputQuoteDinamiche(vanoId, tipo, quantita) {
     for (let r = 1; r <= quantita; r++) {
         const altezzaTotale = parseFloat(document.getElementById("A").value) || 2000;
         const zoccolo = parseFloat(document.getElementById("Z").value) || 100;
-        // Calcolo di posizionamento iniziale indicativo per aiutare l'utente
-        const quotaProposta = Math.round(zoccolo + 50 + (((altezzaTotale - zoccolo) / (quantita + 1)) * r));
+        const quotaProposta = Math.round(zoccolo + 40 + (((altezzaTotale - zoccolo - 150) / (quantita + 1 || 1)) * r));
 
         htmlQuote += `
             <div>
@@ -218,7 +213,6 @@ function salvaModifichePrezziGenerali() {
     eseguiRicalcoloGlobal();
 }
 
-// MOTORE CENTRALE DI RICALCOLO
 function eseguiRicalcoloGlobal() {
     const tipo = document.getElementById("tipoCommessa").value;
     const totaleBig = document.getElementById("totale-big");
@@ -236,69 +230,16 @@ function eseguiRicalcoloGlobal() {
     if (tipo === "mobile") {
         const nD = parseInt(document.getElementById("nD").value) || 0;
         const nVani = nD + 1;
-        
-        // Mappatura completa e distinta di ripiani e cassetti per vano
         const mappaConfigurazioneVani = [];
         
         for (let v = 1; v <= nVani; v++) {
-            // Estrazione dati Ripiani del vano
             const qRip = parseInt(document.getElementById(`ripiani-vano-${v}`)?.value) || 0;
             const quoteRipiani = [];
             for (let r = 1; r <= qRip; r++) {
                 quoteRipiani.push(parseFloat(document.getElementById(`quota-vano-${v}-rip-${r}`)?.value) || 0);
             }
 
-            // Estrazione dati Cassetti del vano
             const qCas = parseInt(document.getElementById(`cassetti-vano-${v}`)?.value) || 0;
             const quoteCassetti = [];
-            for (let c = 1; c <= qCas; r++, c++) {
-                quoteCassetti.push(parseFloat(document.getElementById(`quota-vano-${v}-cas-${c}`)?.value) || 0);
-            }
-
-            mappaConfigurazioneVani.push({
-                vanoIndex: v,
-                ripiani: { quantita: qRip, quote: quoteRipiani },
-                cassetti: { quantita: qCas, quote: quoteCassetti }
-            });
-        }
-
-        const paramsMobile = {
-            L: parseFloat(document.getElementById("L").value) || 0,
-            A: parseFloat(document.getElementById("A").value) || 0,
-            P: parseFloat(document.getElementById("P").value) || 0,
-            Z: parseFloat(document.getElementById("Z").value) || 0,
-            SP: parseFloat(document.getElementById("SP").value) || 0,
-            nD,
-            mappaConfigurazioneVani,
-            tariffaOraria,
-            costoBordo,
-            prezzoMateriale,
-            prezziFerramenta: LISTINO.ferramentaEAccessori
-        };
-
-        const risultato = calcolaMobile(paramsMobile);
-        const totaleFinale = risultato.totale + costoTrasporto;
-
-        if (totaleBig) totaleBig.innerText = `€ ${totaleFinale.toFixed(2)}`;
-
-        if (tabellaDettagli) {
-            tabellaDettagli.innerHTML = `
-                <thead>
-                    <tr><th>Voce di Costo</th><th style="text-align:right">Quantità</th><th style="text-align:right">Importo</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Materiali Struttura ed Elementi</td><td style="text-align:right">${risultato.mqTotali} mq</td><td style="text-align:right">€ ${risultato.costoMateriale}</td></tr>
-                    <tr><td>Bordatura Frontale</td><td style="text-align:right">${risultato.metriBordo} m</td><td style="text-align:right">€ ${risultato.costoBordatura}</td></tr>
-                    <tr><td>Ferramenta & Guide Cassetto</td><td style="text-align:right">A corpo</td><td style="text-align:right">€ ${risultato.costoFerramenta}</td></tr>
-                    <tr><td>Manodopera Laboratorio</td><td style="text-align:right">${risultato.oreLavoro} ore</td><td style="text-align:right">€ ${risultato.costoManodopera}</td></tr>
-                    <tr><td>Trasporto e Consegna</td><td style="text-align:right">Fisso</td><td style="text-align:right">€ ${costoTrasporto.toFixed(2)}</td></tr>
-                    <tr style="font-weight: bold; background: #2ecc71; color: #2c3e50;">
-                        <td style="padding: 10px;">TOTALE PREVENTIVO</td><td></td><td style="text-align:right;">€ ${totaleFinale.toFixed(2)}</td>
-                    </tr>
-                </tbody>
-            `;
-        }
-
-        if (svgElement) disegnaMobileSvg(svgElement, paramsMobile);
-    }
-}
+            for (let c = 1; c <= qCas; c++) {
+                quoteCassetti.push(parseFloat(document.getElementById
