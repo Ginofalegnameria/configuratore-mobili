@@ -1,5 +1,5 @@
 /**
- * MOBILE.JS - Calcolo e disegno millimetrico di Ripiani e Cassetti per singolo lato/vano
+ * MOBILE.JS - Modulo calcolo e disegno Cabinet per singolo vano/lato
  */
 
 export function calcolaMobile(params) {
@@ -12,7 +12,7 @@ export function calcolaMobile(params) {
     const profM = P / 1000;
     const larghInternaM = (L - (2 * SP)) / 1000;
 
-    // 1. CALCOLO STRUTTURA ESTERNA BASE
+    // 1. STRUTTURA ESTERNA
     const mqFianchi = 2 * (altTotaleM * profM);
     const mqCappello = (L / 1000) * profM;
     const mqFondo = larghInternaM * profM;
@@ -20,40 +20,38 @@ export function calcolaMobile(params) {
     const mqDivisori = nD * (altDivisoreM * profM);
     const mqSchienale = (L / 1000) * altTotaleM;
 
-    // 2. CONTEGGIO METRICO AGGREGATO DEGLI ACCESSORI INTERNI DAI VANI
+    // 2. ELEMENTI INTERNI DAI VANI
     const larghVanoM = (larghInternaM - (nD * (SP / 1000))) / (nD + 1);
-    
     let totaliRipiani = 0;
     let totaliCassetti = 0;
 
-    if (mappaConfigurazioneVani) {
+    if (mappaConfigurazioneVani && Array.isArray(mappaConfigurazioneVani)) {
         mappaConfigurazioneVani.forEach(vano => {
             totaliRipiani += vano.ripiani.quantita;
             totaliCassetti += vano.cassetti.quantita;
         });
     }
 
-    // Sviluppo legno: Ripiani + frontali/sponde dei cassetti (stimati a 0.25 mq a cassetto di materiale lavorato)
     const mqRipiani = totaliRipiani * (larghVanoM * profM);
-    const mqCassettiLegno = totaliCassetti * 0.25;
+    const mqCassettiLegno = totaliCassetti * 0.22; // stima materiale sponde cassetto
 
     const mqTotali = mqFianchi + mqCappello + mqFondo + mqDivisori + mqSchienale + mqRipiani + mqCassettiLegno;
     const costoMateriale = mqTotali * prezzoMateriale;
 
-    // 3. CALCOLO SVILUPPO BORDI
+    // 3. SVILUPPO BORDI
     const metriBordoScocca = (2 * altTotaleM) + (L / 1000) + (nD * altDivisoreM) + larghInternaM;
     const metriBordoRipiani = totaliRipiani * larghVanoM;
-    const metriBordoCassetti = totaliCassetti * (larghVanoM * 2); // Bordatura frontale cassetto sopra/sotto
+    const metriBordoCassetti = totaliCassetti * (larghVanoM * 2);
     const metriBordo = metriBordoScocca + metriBordoRipiani + metriBordoCassetti;
     const costoBordatura = metriBordo * costoBordo;
 
-    // 4. COSTO ECONOMICO FERRAMENTA DA LISTINO
+    // 4. FERRAMENTA
     const costoFerrRipiani = totaliRipiani * prezziFerramenta.ripiano;
     const costoFerrCassetti = totaliCassetti * prezziFerramenta.cassetto;
     const costoFerramentaTotale = costoFerrRipiani + costoFerrCassetti;
 
-    // 5. STIMA ORE MANODOPERA
-    const oreLavoro = 4 + (mqTotali * 1.5) + (nD * 0.5) + (totaliRipiani * 0.25) + (totaliCassetti * 1.2);
+    // 5. MANODOPERA
+    const oreLavoro = 4 + (mqTotali * 1.5) + (nD * 0.5) + (totaliRipiani * 0.2) + (totaliCassetti * 1.0);
     const costoManodopera = oreLavoro * tariffaOraria;
 
     const totaleParziale = costoMateriale + costoBordatura + costoFerramentaTotale + costoManodopera;
@@ -85,7 +83,6 @@ export function disegnaMobileSvg(svgElement, params) {
     let nodiSvg = `
         <rect x="0" y="0" width="800" height="400" fill="#fafafa" stroke="#eee" />
         <g transform="translate(${offsetX}, ${offsetY})">
-            <!-- Scocca Esterna Base -->
             <rect x="0" y="0" width="${svgL}" height="${svgA}" fill="none" stroke="#ccc" stroke-dasharray="4" />
             <rect x="0" y="0" width="${svgSP}" height="${svgA}" fill="#e0cda9" stroke="#8a6d3b" stroke-width="1.5" />
             <rect x="${svgL - svgSP}" y="0" width="${svgSP}" height="${svgA}" fill="#e0cda9" stroke="#8a6d3b" stroke-width="1.5" />
@@ -98,50 +95,43 @@ export function disegnaMobileSvg(svgElement, params) {
     const spazioInternoDisponibile = svgL - (2 * svgSP) - (nD * svgSP);
     const larghezzaSingoloVano = spazioInternoDisponibile / nVani;
 
-    // Disegno dei divisori verticali stabili
     for (let i = 1; i <= nD; i++) {
         const divisoreX = svgSP + (i * larghezzaSingoloVano) + ((i - 1) * svgSP);
         nodiSvg += `<rect x="${divisoreX}" y="${svgSP}" width="${svgSP}" height="${svgA - svgZ - (2 * svgSP)}" fill="#e6c294" stroke="#8a6d3b" stroke-width="1" />`;
     }
 
-    // DISEGNO TRACCIATO AD ALTEZZA MILLIMETRICA REALE DAI CAMPI UTENTE
-    if (maffaConfigurazioneVani) {
+    // DISEGNO RIPRESO DA MAPPA ALLINEATA
+    if (mappaConfigurazioneVani && Array.isArray(mappaConfigurazioneVani)) {
         mappaConfigurazioneVani.forEach((vano, idx) => {
-            // Calcolo la posizione X iniziale di questo specifico vano/lato
             const vanoX = svgSP + (idx * (larghezzaSingoloVano + svgSP));
 
-            // 1. Tracciamento Ripiani del vano alla quota millimetrica esatta
-            vano.ripiani.quote.forEach(quotaMm => {
-                // Ribaltiamo la quota (in falegnameria si misura da terra, in SVG la y parte dall'alto)
-                const quotaScalataDaTerra = quotaMm * scala;
-                const ripianoY = svgA - quotaScalataDaTerra;
+            // Ripiani
+            if (vano.ripiani && vano.ripiani.quote) {
+                vano.ripiani.quote.forEach(quotaMm => {
+                    const ripianoY = svgA - (quotaMm * scala);
+                    if (ripianoY > svgSP && ripianoY < (svgA - svgZ - svgSP)) {
+                        nodiSvg += `
+                            <rect x="${vanoX}" y="${ripianoY}" width="${larghezzaSingoloVano}" height="${svgSP * 0.8}" fill="#f3dbb3" stroke="#b19263" stroke-width="0.8" />
+                            <text x="${vanoX + 4}" y="${ripianoY - 3}" font-family="sans-serif" font-size="7" fill="#b19263">${quotaMm}</text>
+                        `;
+                    }
+                });
+            }
 
-                // Controllo grafico di sicurezza per non disegnare il ripiano fuori dal mobile
-                if (ripianoY > svgSP && ripianoY < (svgA - svgZ - svgSP)) {
-                    nodiSvg += `
-                        <!-- Ripiano Quota ${quotaMm}mm -->
-                        <rect x="${vanoX}" y="${ripianoY}" width="${larghezzaSingoloVano}" height="${svgSP * 0.8}" fill="#f3dbb3" stroke="#b19263" stroke-width="0.8" />
-                        <text x="${vanoX + 4}" y="${ripianoY - 3}" font-family="sans-serif" font-size="7" fill="#b19263">${quotaMm}</text>
-                    `;
-                }
-            });
-
-            // 2. Tracciamento Cassetti del vano alla quota millimetrica esatta
-            vano.cassetti.quote.forEach(quotaMm => {
-                const quotaScalataDaTerra = quotaMm * scala;
-                const altezzaCassettoGrafico = 35 * scala; // Altezza indicativa del frontale cassetto riscalata
-                const cassettoY = svgA - quotaScalataDaTerra - altezzaCassettoGrafico;
-
-                if (cassettoY > svgSP && (cassettoY + altezzaCassettoGrafico) < (svgA - svgZ)) {
-                    nodiSvg += `
-                        <!-- Cassetto Quota ${quotaMm}mm -->
-                        <rect x="${vanoX + 1}" y="${cassettoY}" width="${larghezzaSingoloVano - 2}" height="${altezzaCassettoGrafico}" fill="#d2b48c" stroke="#5d4037" stroke-width="1" rx="2" />
-                        <!-- Maniglia/Pomello -->
-                        <rect x="${vanoX + (larghezzaSingoloVano / 2) - 15}" y="${cassettoY + (altezzaCassettoGrafico / 2) - 2}" width="30" height="4" rx="1" fill="#333" />
-                        <text x="${vanoX + 4}" y="${cassettoY + altezzaCassettoGrafico - 4}" font-family="sans-serif" font-size="7" fill="#5d4037" font-weight="bold">${quotaMm}</text>
-                    `;
-                }
-            });
+            // Cassetti
+            if (vano.cassetti && vano.cassetti.quote) {
+                vano.cassetti.quote.forEach(quotaMm => {
+                    const altezzaCassettoGrafico = 30 * scala;
+                    const cassettoY = svgA - (quotaMm * scala) - altezzaCassettoGrafico;
+                    if (cassettoY > svgSP && (cassettoY + altezzaCassettoGrafico) < (svgA - svgZ)) {
+                        nodiSvg += `
+                            <rect x="${vanoX + 1}" y="${cassettoY}" width="${larghezzaSingoloVano - 2}" height="${altezzaCassettoGrafico}" fill="#d2b48c" stroke="#5d4037" stroke-width="1" rx="2" />
+                            <rect x="${vanoX + (larghezzaSingoloVano / 2) - 15}" y="${cassettoY + (altezzaCassettoGrafico / 2) - 2}" width="30" height="4" rx="1" fill="#333" />
+                            <text x="${vanoX + 4}" y="${cassettoY + altezzaCassettoGrafico - 4}" font-family="sans-serif" font-size="7" fill="#5d4037" font-weight="bold">${quotaMm}</text>
+                        `;
+                    }
+                });
+            }
         });
     }
 
