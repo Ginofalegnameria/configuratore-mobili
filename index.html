@@ -9,7 +9,7 @@
 <body>
 
 <div class="wrapper">
-    <!-- COLONNA DI SINISTRA: INPUT E PARAMETRI -->
+    <!-- COLONNA DI SINISTRA: INPUT -->
     <div class="input-col no-print">
         
         <!-- DATI GENERALI -->
@@ -23,7 +23,6 @@
                 <option value="mobile">Cabinet / Mobile Standard</option>
                 <option value="telaio">Telaio e Sportelli Laccati</option>
                 <option value="paretina">Paretina a Frame Verticale</option>
-                <option value="facciata">Ristrutturazione Facciata Esterna</option>
             </select>
 
             <label for="nomeCliente">CLIENTE</label>
@@ -53,7 +52,7 @@
             <input type="number" id="costoTrasporto" value="150">
         </div>
 
-        <!-- PARAMETRI CABINET -->
+        <!-- PARAMETRI STRUTTURA CABINET -->
         <div class="section" id="blocco-inputs-mobile" style="display:none;">
             <h3>PARAMETRI CABINET (mm)</h3>
             <div class="input-grid">
@@ -66,29 +65,21 @@
             </div>
         </div>
 
-        <!-- CONTENITORE DINAMICO LATI / VANI INTERNI -->
+        <!-- CONTENITORE DINAMICO INTERNO (VANI E QUOTE) -->
         <div id="contVani" style="display:none;"></div>
 
-        <!-- PARAMETRI TELAIO -->
+        <!-- SCHEDE IN COSTRUZIONE -->
         <div class="section" id="blocco-inputs-telaio" style="display:none;">
-            <h3>PARAMETRI TELAIO E SPORTELLI (mm)</h3>
-            <div class="input-grid">
-                <div><label>Larghezza Totale (mm)</label><input type="number" id="tL" value="750"></div>
-                <div><label>Altezza Totale (mm)</label><input type="number" id="tA" value="2100"></div>
-            </div>
+            <h3>PARAMETRI TELAIO</h3>
+            <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore telaio pronto per i calcoli.</p>
         </div>
-
-        <!-- PARAMETRI PARETINA -->
         <div class="section" id="blocco-inputs-paretina" style="display:none;">
-            <h3>PARAMETRI PARETINA A LISTELLI</h3>
-            <div class="input-grid">
-                <div><label>Larghezza Tot. (cm)</label><input type="number" id="pLargh" value="120"></div>
-                <div><label>Altezza Tot. (cm)</label><input type="number" id="pAlt" value="270"></div>
-            </div>
+            <h3>PARAMETRI PARETINA</h3>
+            <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore paretina pronto per i calcoli.</p>
         </div>
     </div>
     
-    <!-- COLONNA DI DESTRA: ANTEPRIMA E PREVENTIVO -->
+    <!-- COLONNA DI DESTRA: GRAFICA E PREVENTIVO -->
     <div class="output-col">
         <div class="section">
             <h3>ANTEPRIMA GRAFICA</h3>
@@ -97,20 +88,18 @@
             </div>
         </div>
         <div class="result-box">
-            <h3>PREVENTIVO</h3>
+            <h3>PREVENTIVO ANALITICO</h3>
             <div id="totale-big">€ 0.00</div>
-            <table id="tabella-dettagli" style="margin-top: 20px; color: white; border-color: #444;"></table>
+            <table id="tabella-dettagli" style="margin-top: 20px; color: white; width: 100%;"></table>
         </div>
     </div>
 </div>
 
-<!-- CONTROLLI DI STAMPA -->
 <div class="controlli-stampa no-print">
     <button id="btnPrintTech" class="btn btn-tech">🖨️ Stampa Tecnica</button>
     <button id="btnPrintClient" class="btn btn-client">📄 Stampa Cliente</button>
 </div>
 
-<!-- FINESTRA MODALE LISTINO -->
 <div id="modalListino">
     <div class="modal-content">
         <h3>GESTIONE LISTINO PREZZI</h3>
