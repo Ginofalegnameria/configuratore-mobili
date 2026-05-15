@@ -1,124 +1,153 @@
 /**
- * APP.JS - Inizializzatore centrale e coordinatore dei moduli
+ * APP.JS - Coordinatore centrale con Gestione Listini dinamici ed elementi interni
  */
 
-// IMPORTAZIONE DEI MODULI SPECIFICI
 import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
 
-// Stato globale dell'applicazione (Listino prezzi di riferimento)
-const LISTINO_DEFAULT = {
+// Stato dinamico del listino (Modificabile dall'utente nella modale)
+let LISTINO = {
     materialiScocca: [
         { id: "nobilitato", nome: "Nobilitato Bianco 19mm", prezzo: 25 },
         { id: "multistrato", nome: "Multistrato Pioppo 19mm", prezzo: 45 },
         { id: "mdf", nome: "MDF Grezzo 19mm", prezzo: 30 }
     ],
-    modelliAnta: [
-        { id: "liscia", nome: "Anta Liscia Nobilitato", prezzo: 40 },
-        { id: "telaio", nome: "Anta a Telaio Laccata", prezzo: 85 },
-        { id: "gola", nome: "Anta con Profilo Gola", prezzo: 60 }
-    ]
+    ferramentaEAccessori: {
+        ripiano: 12.00,       // Costo di supporti + lavorazione a ripiano
+        asta: 18.50,          // Costo tubo appendiabito in acciaio cromato flangiato
+        cassetto: 45.00,      // Costo guide ammortizzate + sponde cassetto
+        cerniereAnat: 15.00   // Costo coppia di cerniere rallentate ad anta
+    }
 };
 
-// Inizializzazione all'avvio della pagina
 document.addEventListener("DOMContentLoaded", () => {
     popolaSelezioniIniziali();
     agganciaEventi();
-    cambiaTipoCommessa(); // Attiva la configurazione di default
+    cambiaTipoCommessa();
 });
 
-// Popola i menu a tendina dei materiali con i dati del listino
 function popolaSelezioniIniziali() {
     const selectMat = document.getElementById("mat");
-    const selectMatAnta = document.getElementById("matAnta");
-
     if (selectMat) {
-        selectMat.innerHTML = LISTINO_DEFAULT.materialiScocca
+        selectMat.innerHTML = LISTINO.materialiScocca
             .map(m => `<option value="${m.id}">${m.nome} (€${m.prezzo}/mq)</option>`)
-            .join("");
-    }
-    if (selectMatAnta) {
-        selectMatAnta.innerHTML = LISTINO_DEFAULT.modelliAnta
-            .map(a => `<option value="${a.id}">${a.nome} (€${a.prezzo}/mq)</option>`)
             .join("");
     }
 }
 
-// Aggancia i listener di evento agli elementi dell'interfaccia
 function agganciaEventi() {
     document.getElementById("tipoCommessa").addEventListener("change", cambiaTipoCommessa);
 
-    // Eventi di aggiornamento immediato su tutti i campi di testo e numeri generali
-    ["nomeCliente", "mat", "matAnta", "tariffaOraria", "costoBordo", "costoTrasporto"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("input", eseguiRicalcoloGlobal);
+    // Eventi di ascolto globali (inclusi i nuovi elementi interni del cabinet)
+    ["nomeCliente", "mat", "tariffaOraria", "costoBordo", "costoTrasporto"].forEach(id => {
+        document.getElementById(id)?.addEventListener("input", eseguiRicalcoloGlobal);
     });
 
-    // Eventi di aggiornamento sui parametri dimensionali del Cabinet
-    ["L", "A", "P", "Z", "SP", "nD"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("input", eseguiRicalcoloGlobal);
+    ["L", "A", "P", "Z", "SP", "nD", "nRipiani", "nAste", "nCassetti", "nAnte"].forEach(id => {
+        document.getElementById(id)?.addEventListener("input", eseguiRicalcoloGlobal);
     });
 
-    // Pulsanti di servizio e finestre modali
     document.getElementById("btnListino").addEventListener("click", () => gestisciModalListino(true));
     document.getElementById("btnChiudiModal").addEventListener("click", () => gestisciModalListino(false));
     document.getElementById("btnPrintTech").addEventListener("click", () => stampaConfiguratore("tech"));
     document.getElementById("btnPrintClient").addEventListener("click", () => stampaConfiguratore("client"));
 }
 
-// Mostra o nasconde i blocchi di input in base alla commessa selezionata
 function cambiaTipoCommessa() {
     const tipo = document.getElementById("tipoCommessa").value;
-    
-    // Nascondi tutte le schede
-    document.getElementById("blocco-inputs-mobile").style.display = "none";
-    document.getElementById("contVani").style.display = "none";
-    document.getElementById("blocco-inputs-telaio").style.display = "none";
-    document.getElementById("blocco-inputs-paretina").style.display = "none";
-
-    // Mostra solo la scheda attiva
-    if (tipo === "mobile") {
-        document.getElementById("blocco-inputs-mobile").style.display = "block";
-        document.getElementById("contVani").style.display = "block";
-    } else if (tipo === "telaio") {
-        document.getElementById("blocco-inputs-telaio").style.display = "block";
-    } else if (tipo === "paretina") {
-        document.getElementById("blocco-inputs-paretina").style.display = "block";
-    }
+    document.getElementById("blocco-inputs-mobile").style.display = tipo === "mobile" ? "block" : "none";
+    document.getElementById("contVani").style.display = tipo === "mobile" ? "block" : "none";
+    document.getElementById("blocco-inputs-telaio").style.display = tipo === "telaio" ? "block" : "none";
+    document.getElementById("blocco-inputs-paretina").style.display = tipo === "paretina" ? "block" : "none";
     
     eseguiRicalcoloGlobal();
 }
 
-// Funzione di stampa con assegnazione classe al body
 function stampaConfiguratore(tipo) {
-    document.body.classList.remove("print-tech", "print-client");
-    document.body.classList.add(`print-${tipo}`);
+    document.body.className = `print-${tipo}`;
     window.print();
 }
 
-// Apertura/Chiusura modale listino
+// COSTRUZIONE E GESTIONE INTERATTIVA DELLA FINESTRA MODALE LISTINO
 function gestisciModalListino(apri) {
-    document.getElementById("modalListino").style.display = apri ? "flex" : "none";
+    const modal = document.getElementById("modalListino");
+    if (!apri) {
+        modal.style.display = "none";
+        return;
+    }
+
+    // Generiamo l'interfaccia degli input editabili dentro la modale
+    const contenitore = document.getElementById("contenutoListino");
+    if (contenitore) {
+        contenitore.innerHTML = `
+            <h4>Materiali Scocca (€/mq)</h4>
+            ${LISTINO.materialiScocca.map((m, index) => `
+                <div class="list-item" style="margin-bottom:8px;">
+                    <span>${m.nome}</span>
+                    <input type="number" data-type="materiale" data-index="${index}" value="${m.prezzo}" style="width:100px; padding:4px;">
+                </div>
+            `).join("")}
+            
+            <h4 style="margin-top:20px;">Ferramenta & Componenti (€/Cad)</h4>
+            <div class="list-item" style="margin-bottom:8px;">
+                <span>Lavorazione + Perni Ripiano</span>
+                <input type="number" id="edit-ferr-ripiano" value="${LISTINO.ferramentaEAccessori.ripiano}" style="width:100px; padding:4px;">
+            </div>
+            <div class="list-item" style="margin-bottom:8px;">
+                <span>Kit Asta Appendiabito metallo</span>
+                <input type="number" id="edit-ferr-asta" value="${LISTINO.ferramentaEAccessori.asta}" style="width:100px; padding:4px;">
+            </div>
+            <div class="list-item" style="margin-bottom:8px;">
+                <span>Cassetto Assemblato + Guide Blum</span>
+                <input type="number" id="edit-ferr-cassetto" value="${LISTINO.ferramentaEAccessori.cassetto}" style="width:100px; padding:4px;">
+            </div>
+            <div class="list-item" style="margin-bottom:8px;">
+                <span>Coppia Cerniere Ammortizzate</span>
+                <input type="number" id="edit-ferr-cerniere" value="${LISTINO.ferramentaEAccessori.cerniereAnat}" style="width:100px; padding:4px;">
+            </div>
+            <button id="btnSalvaListino" class="btn" style="background:#2ecc71; margin-top:15px; width:100%">💾 Salva Listino</button>
+        `;
+
+        // Agganciamo il pulsante di salvataggio interno alla modale
+        document.getElementById("btnSalvaListino").addEventListener("click", salvaNuovoListino);
+    }
+    modal.style.display = "flex";
 }
 
-// MOTORE CENTRALE DI RICALCOLO
+function salvaNuovoListino() {
+    // 1. Salva i prezzi aggiornati dei materiali scocca
+    const inputsMateriali = document.querySelectorAll('#contenutoListino input[data-type="materiale"]');
+    inputsMateriali.forEach(input => {
+        const idx = parseInt(input.getAttribute('data-index'));
+        LISTINO.materialiScocca[idx].prezzo = parseFloat(input.value) || 0;
+    });
+
+    // 2. Salva la ferramenta interna
+    LISTINO.ferramentaEAccessori.ripiano = parseFloat(document.getElementById("edit-ferr-ripiano").value) || 0;
+    LISTINO.ferramentaEAccessori.asta = parseFloat(document.getElementById("edit-ferr-asta").value) || 0;
+    LISTINO.ferramentaEAccessori.cassetto = parseFloat(document.getElementById("edit-ferr-cassetto").value) || 0;
+    LISTINO.ferramentaEAccessori.cerniereAnat = parseFloat(document.getElementById("edit-ferr-cerniere").value) || 0;
+
+    // Rinfresca i selettori grafici, chiudi e ricalcola
+    popolaSelezioniIniziali();
+    document.getElementById("modalListino").style.display = "none";
+    eseguiRicalcoloGlobal();
+}
+
+// MOTORE CENTRALE DI RICALCOLO COMPLESSIVO
 function eseguiRicalcoloGlobal() {
     const tipo = document.getElementById("tipoCommessa").value;
     const totaleBig = document.getElementById("totale-big");
     const svgElement = document.getElementById("configuratoreSvg");
     const tabellaDettagli = document.getElementById("tabella-dettagli");
 
-    // 1. Recupero parametri economici comuni
     const tariffaOraria = parseFloat(document.getElementById("tariffaOraria").value) || 0;
     const costoBordo = parseFloat(document.getElementById("costoBordo").value) || 0;
     const costoTrasporto = parseFloat(document.getElementById("costoTrasporto").value) || 0;
     
-    // Recupero il prezzo al mq del materiale scocca selezionato
     const idMatScocca = document.getElementById("mat").value;
-    const matTrovato = LISTINO_DEFAULT.materialiScocca.find(m => m.id === idMatScocca);
+    const matTrovato = LISTINO.materialiScocca.find(m => m.id === idMatScocca);
     const prezzoMateriale = matTrovato ? matTrovato.prezzo : 0;
 
-    // 2. Esecuzione dei calcoli in base al modulo selezionato
     if (tipo === "mobile") {
         const paramsMobile = {
             L: parseFloat(document.getElementById("L").value) || 0,
@@ -127,75 +156,42 @@ function eseguiRicalcoloGlobal() {
             Z: parseFloat(document.getElementById("Z").value) || 0,
             SP: parseFloat(document.getElementById("SP").value) || 0,
             nD: parseInt(document.getElementById("nD").value) || 0,
+            nRipiani: parseInt(document.getElementById("nRipiani").value) || 0,
+            nAste: parseInt(document.getElementById("nAste").value) || 0,
+            nCassetti: parseInt(document.getElementById("nCassetti").value) || 0,
+            nAnte: parseInt(document.getElementById("nAnte").value) || 0,
             tariffaOraria,
             costoBordo,
-            prezzoMateriale
+            prezzoMateriale,
+            prezziFerramenta: LISTINO.ferramentaEAccessori
         };
 
-        // Esegui calcoli metrici e finanziari dal modulo mobile.js
         const risultato = calcolaMobile(paramsMobile);
         const totaleFinale = risultato.totale + costoTrasporto;
 
-        // Aggiorna prezzo grande
-        if (totaleBig) {
-            totaleBig.innerText = `€ ${totaleFinale.toFixed(2)}`;
-        }
+        if (totaleBig) totaleBig.innerText = `€ ${totaleFinale.toFixed(2)}`;
 
-        // Genera e inietta la tabella con i dettagli dei costi
         if (tabellaDettagli) {
             tabellaDettagli.innerHTML = `
                 <thead>
-                    <tr>
-                        <th style="padding: 10px; text-align: left;">Voce di Costo</th>
-                        <th style="padding: 10px; text-align: right;">Quantità</th>
-                        <th style="padding: 10px; text-align: right;">Importo</th>
-                    </tr>
+                    <tr><th>Voce di Costo</th><th style="text-align:right">Quantità</th><th style="text-align:right">Importo</th></tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #444;">Materiale Scocca</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">${risultato.mqTotali} mq</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">€ ${risultato.costoMateriale}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #444;">Bordatura Frontale</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">${risultato.metriBordo} m</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">€ ${risultato.costoBordatura}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #444;">Manodopera Laboratorio</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">${risultato.oreLavoro} ore</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">€ ${risultato.costoManodopera}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #444;">Trasporto e Consegna</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">Fisso</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #444;">€ ${costoTrasporto.toFixed(2)}</td>
-                    </tr>
+                    <tr><td>Materiali Lavorati (Scocca+Interni)</td><td style="text-align:right">${risultato.mqTotali} mq</td><td style="text-align:right">€ ${risultato.costoMateriale}</td></tr>
+                    <tr><td>Bordatura Frontale</td><td style="text-align:right">${risultato.metriBordo} m</td><td style="text-align:right">€ ${risultato.costoBordatura}</td></tr>
+                    <tr><td>Ferramenta & Kit Accessori</td><td style="text-align:right">A corpo</td><td style="text-align:right">€ ${risultato.costoFerramenta}</td></tr>
+                    <tr><td>Manodopera Laboratorio</td><td style="text-align:right">${risultato.oreLavoro} ore</td><td style="text-align:right">€ ${risultato.costoManodopera}</td></tr>
+                    <tr><td>Trasporto e Consegna</td><td style="text-align:right">Fisso</td><td style="text-align:right">€ ${costoTrasporto.toFixed(2)}</td></tr>
                     <tr style="font-weight: bold; background: #2ecc71; color: #2c3e50;">
-                        <td style="padding: 10px; border-radius: 0 0 0 8px;">TOTALE SCONTRINO</td>
-                        <td></td>
-                        <td style="padding: 10px; text-align: right; border-radius: 0 0 8px 0;">€ ${totaleFinale.toFixed(2)}</td>
+                        <td style="padding: 10px;">TOTALE PREVENTIVO</td><td></td><td style="text-align:right;">€ ${totaleFinale.toFixed(2)}</td>
                     </tr>
                 </tbody>
             `;
         }
 
-        // Rigenera il disegno tecnico SVG
-        if (svgElement) {
-            disegnaMobileSvg(svgElement, paramsMobile);
-        }
+        if (svgElement) disegnaMobileSvg(svgElement, paramsMobile);
     } else {
-        // Avviso temporaneo per i moduli non ancora collegati
-        if (totaleBig) {
-            totaleBig.innerText = "Modulo in costruzione...";
-        }
-        if (tabellaDettagli) {
-            tabellaDettagli.innerHTML = "";
-        }
-        if (svgElement) {
-            svgElement.innerHTML = `<rect x="0" y="0" width="800" height="400" fill="#f9f9f9" stroke="#eee"/>
-            <text x="400" y="200" text-anchor="middle" font-family="sans-serif" fill="#999">Nessun disegno disponibile</text>`;
-        }
+        if (totaleBig) totaleBig.innerText = "Modulo in costruzione...";
+        if (tabellaDettagli) tabellaDettagli.innerHTML = "";
     }
 }
