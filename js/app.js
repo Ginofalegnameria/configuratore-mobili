@@ -1,8 +1,11 @@
 /**
- * APP.JS - Inizializzatore centrale del configuratore
+ * APP.JS - Inizializzatore centrale e coordinatore dei moduli
  */
 
-// Stato globale dell'applicazione (Listino prezzi temporaneo di esempio)
+// IMPORTAZIONE DEI MODULI SPECIFICI
+import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
+
+// Stato globale dell'applicazione (Listino prezzi di riferimento)
 const LISTINO_DEFAULT = {
     materialiScocca: [
         { id: "nobilitato", nome: "Nobilitato Bianco 19mm", prezzo: 25 },
@@ -16,11 +19,11 @@ const LISTINO_DEFAULT = {
     ]
 };
 
-// Funzione di inizializzazione all'avvio della pagina
+// Inizializzazione all'avvio della pagina
 document.addEventListener("DOMContentLoaded", () => {
     popolaSelezioniIniziali();
     agganciaEventi();
-    cambiaTipoCommessa(); // Mostra la scheda corretta all'avvio
+    cambiaTipoCommessa(); // Attiva la configurazione di default
 });
 
 // Popola i menu a tendina dei materiali con i dati del listino
@@ -40,27 +43,23 @@ function popolaSelezioniIniziali() {
     }
 }
 
-// Aggancia i listener di evento agli elementi dell'interfaccia senza usare JS in linea
+// Aggancia i listener di evento agli elementi dell'interfaccia
 function agganciaEventi() {
-    // Cambio tipologia commessa
     document.getElementById("tipoCommessa").addEventListener("change", cambiaTipoCommessa);
 
-    // Eventi di aggiornamento calcoli su input generali
+    // Eventi di aggiornamento immediato su tutti i campi di testo e numeri generali
     ["nomeCliente", "mat", "matAnta", "tariffaOraria", "costoBordo", "costoTrasporto"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener("input", eseguiRicalcoloGlebal);
+        if (el) el.addEventListener("input", eseguiRicalcoloGlobal);
     });
 
-    // Eventi di aggiornamento sui parametri del Cabinet
-    ["L", "A", "P", "Z", "SP"].forEach(id => {
+    // Eventi di aggiornamento sui parametri dimensionali del Cabinet
+    ["L", "A", "P", "Z", "SP", "nD"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener("input", eseguiRicalcoloGlebal);
+        if (el) el.addEventListener("input", eseguiRicalcoloGlobal);
     });
-    
-    const nD = document.getElementById("nD");
-    if (nD) nD.addEventListener("input", gestisciCambioDivisori);
 
-    // Gestione finestre modali e stampe
+    // Pulsanti di servizio e finestre modali
     document.getElementById("btnListino").addEventListener("click", () => gestisciModalListino(true));
     document.getElementById("btnChiudiModal").addEventListener("click", () => gestisciModalListino(false));
     document.getElementById("btnPrintTech").addEventListener("click", () => stampaConfiguratore("tech"));
@@ -71,13 +70,13 @@ function agganciaEventi() {
 function cambiaTipoCommessa() {
     const tipo = document.getElementById("tipoCommessa").value;
     
-    // Nascondi tutti i blocchi specifici
+    // Nascondi tutte le schede
     document.getElementById("blocco-inputs-mobile").style.display = "none";
     document.getElementById("contVani").style.display = "none";
     document.getElementById("blocco-inputs-telaio").style.display = "none";
     document.getElementById("blocco-inputs-paretina").style.display = "none";
 
-    // Mostra solo quello selezionato
+    // Mostra solo la scheda attiva
     if (tipo === "mobile") {
         document.getElementById("blocco-inputs-mobile").style.display = "block";
         document.getElementById("contVani").style.display = "block";
@@ -87,18 +86,7 @@ function cambiaTipoCommessa() {
         document.getElementById("blocco-inputs-paretina").style.display = "block";
     }
     
-    eseguiRicalcoloGlebal();
-}
-
-// Gestore temporaneo per il cambio dei divisori del Cabinet
-function gestisciCambioDivisori() {
-    console.log("Inizializzazione vani dinamici...");
-    eseguiRicalcoloGlebal();
-}
-
-// Gestore apertura/chiusura modale listino
-function gestisciModalListino(apri) {
-    document.getElementById("modalListino").style.display = apri ? "flex" : "none";
+    eseguiRicalcoloGlobal();
 }
 
 // Funzione di stampa con assegnazione classe al body
@@ -108,12 +96,63 @@ function stampaConfiguratore(tipo) {
     window.print();
 }
 
-// Funzione centrale di ricalcolo (verrà espansa con i moduli dedicati)
-function eseguiRicalcoloGlebal() {
+// Apertura/Chiusura modale listino
+function gestisciModalListino(apri) {
+    document.getElementById("modalListino").style.display = apri ? "flex" : "none";
+}
+
+// MOTORE CENTRALE DI RICALCOLO
+function eseguiRicalcoloGlobal() {
     const tipo = document.getElementById("tipoCommessa").value;
     const totaleBig = document.getElementById("totale-big");
+    const svgElement = document.getElementById("configuratoreSvg");
+
+    // 1. Recupero parametri economici comuni
+    const tariffaOraria = parseFloat(document.getElementById("tariffaOraria").value) || 0;
+    const costoBordo = parseFloat(document.getElementById("costoBordo").value) || 0;
+    const costoTrasporto = parseFloat(document.getElementById("costoTrasporto").value) || 0;
     
-    if (totaleBig) {
-        totaleBig.innerText = `Calcolo in corso per ${tipo}...`;
+    // Recupero il prezzo al mq del materiale scocca selezionato
+    const idMatScocca = document.getElementById("mat").value;
+    const matTrovato = LISTINO_DEFAULT.materialiScocca.find(m => m.id === idMatScocca);
+    const prezzoMateriale = matTrovato ? matTrovato.prezzo : 0;
+
+    // 2. Esecuzione dei calcoli in base al modulo selezionato
+    if (tipo === "mobile") {
+        const paramsMobile = {
+            L: parseFloat(document.getElementById("L").value) || 0,
+            A: parseFloat(document.getElementById("A").value) || 0,
+            P: parseFloat(document.getElementById("P").value) || 0,
+            Z: parseFloat(document.getElementById("Z").value) || 0,
+            SP: parseFloat(document.getElementById("SP").value) || 0,
+            tariffaOraria,
+            costoBordo,
+            prezzoMateriale
+        };
+
+        // Esegui calcoli metrici e finanziari dal modulo mobile.js
+        const risultato = calcolaMobile(paramsMobile);
+        
+        // Sommiamo il costo fisso di trasporto/trasferta al totale del mobile
+        const totaleFinale = risultato.totale + costoTrasporto;
+
+        // Aggiorna l'interfaccia visiva con il prezzo finale
+        if (totaleBig) {
+            totaleBig.innerText = `€ ${totaleFinale.toFixed(2)}`;
+        }
+
+        // Rigenera il disegno tecnico SVG
+        if (svgElement) {
+            disegnaMobileSvg(svgElement, paramsMobile);
+        }
+    } else {
+        // Avviso temporaneo per i moduli non ancora collegati
+        if (totaleBig) {
+            totaleBig.innerText = "Modulo in costruzione...";
+        }
+        if (svgElement) {
+            svgElement.innerHTML = `<rect x="0" y="0" width="800" height="400" fill="#f9f9f9" stroke="#eee"/>
+            <text x="400" y="200" text-anchor="middle" font-family="sans-serif" fill="#999">Nessun disegno disponibile</text>`;
+        }
     }
 }
