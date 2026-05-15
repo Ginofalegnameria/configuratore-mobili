@@ -67,7 +67,7 @@
                 <div><label select="P">Prof. P (mm)</label><input type="number" id="P" value="600"></div>
                 <div><label for="Z">Zoccolo Z (mm)</label><input type="number" id="Z" value="100"></div>
                 <div><label for="SP">Spessore SP (mm)</label><input type="number" id="SP" value="19"></div>
-                <div><label for="nD">N. Divisori</label><input type="number" id="nD" value="1" min="0"></div>
+                <div><label for="nD">N. Divisori</label><input type="number" id="nD" value="0" min="0"></div>
             </div>
         </div>
 
@@ -110,12 +110,15 @@
                 <svg id="configuratoreSvg" width="100%" height="400" viewBox="0 0 800 400"></svg>
             </div>
         </div>
-        <div class="result-box">
+                <div class="result-box">
             <h3>PREVENTIVO</h3>
             <div id="totale-big">€ 0.00</div>
+            <!-- Nuova tabella per i conteggi dettagliati -->
+            <table id="tabella-dettagli" style="margin-top: 20px; color: white; border-color: #444;">
+                <!-- I dati verranno inseriti dinamicamente da app.js -->
+            </table>
         </div>
-    </div>
-</div>
+
 
 <!-- CONTROLLI DI STAMPA FISSI IN BASSO -->
 <div class="controlli-stampa no-print">
