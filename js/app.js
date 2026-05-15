@@ -1,5 +1,5 @@
 /**
- * APP.JS - Coordinatore centrale definitivo per Cabinet
+ * APP.JS - Coordinatore centrale senza input orfani
  */
 
 import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
@@ -61,7 +61,7 @@ function gestisciCambioDivisori() {
 
     if (!contVani) return;
 
-    let htmlVani = `<h3 style="margin-top:15px; border-bottom: 2px solid #27ae60; color:#27ae60; font-size:1.1em;">CONFIGURAZIONE INTERNA LATI / VANI</h3>`;
+    let htmlVani = `<h3 style="margin-top:15px; border-bottom: 2px solid #27ae60; color:#27ae60; font-size:1.1em;">CONFIGURAZIONE INTERNA PER LATO</h3>`;
     
     for (let i = 1; i <= nVani; i++) {
         htmlVani += `
@@ -70,11 +70,11 @@ function gestisciCambioDivisori() {
                 <div class="input-grid">
                     <div>
                         <label>N. Ripiani Vano ${i}</label>
-                        <input type="number" id="ripiani-vano-${i}" class="input-conteggio-elementi" data-vano="${i}" data-tipo="rip" value="0" min="0" style="padding:4px;">
+                        <input type="number" id="ripiani-vano-${i}" class="input-conteggio-elementi" data-vano="${i}" data-tipo="rip" value="0" min="0">
                     </div>
                     <div>
                         <label>N. Cassetti Vano ${i}</label>
-                        <input type="number" id="cassetti-vano-${i}" class="input-conteggio-elementi" data-vano="${i}" data-tipo="cas" value="0" min="0" style="padding:4px;">
+                        <input type="number" id="cassetti-vano-${i}" class="input-conteggio-elementi" data-vano="${i}" data-tipo="cas" value="0" min="0">
                     </div>
                 </div>
                 <div id="quote-rip-vano-${i}" style="margin-top:8px; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
@@ -109,12 +109,12 @@ function generaInputQuoteDinamiche(vanoId, tipo, quantita) {
     for (let r = 1; r <= quantita; r++) {
         const altezzaTotale = parseFloat(document.getElementById("A").value) || 2000;
         const zoccolo = parseFloat(document.getElementById("Z").value) || 100;
-        const quotaProposta = Math.round(zoccolo + 40 + (((altezzaTotale - zoccolo - 150) / (quantita + 1 || 1)) * r));
+        const quotaProposta = Math.round(zoccolo + 50 + (((altezzaTotale - zoccolo) / (quantita + 1)) * r));
 
         htmlQuote += `
             <div>
                 <label style="font-size:10px; color:${coloreLabel}; font-weight:bold;">${etichetta} ${r} (mm)</label>
-                <input type="number" id="quota-vano-${vanoId}-${tipo}-${r}" class="input-quota-elemento" value="${quotaProposta}" min="0" style="padding:4px; font-size:12px;">
+                <input type="number" id="quota-vano-${vanoId}-${tipo}-${r}" class="input-quota-elemento" value="${quotaProposta}" min="0" style="padding:4px; font-size:11px;">
             </div>
         `;
     }
@@ -154,8 +154,8 @@ function renderizzaContenutoModale() {
     if (!contenitore) return;
 
     contenitore.innerHTML = `
-        <h4 style="margin: 0 0 10px 0; color:#007bff; font-size:14px;">MATERIALI SCOCCA (€/mq)</h4>
-        <div id="lista-materiali-edit" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border:1px solid #eee; padding:5px; border-radius:6px;">
+        <h4 style="margin:0 0 10px 0; color:#007bff; font-size:14px;">MATERIALI SCOCCA (€/mq)</h4>
+        <div id="lista-materiali-edit" style="max-height:120px; overflow-y:auto; margin-bottom:10px; border:1px solid #eee; padding:5px; border-radius:6px;">
             ${LISTINO.materialiScocca.map((m, index) => `
                 <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                     <span style="font-size:12px;">${m.nome}</span>
@@ -170,10 +170,10 @@ function renderizzaContenutoModale() {
         </div>
         
         <h4 style="margin: 15px 0 10px 0; color:#007bff; font-size:14px;">FERRAMENTA (€/Cad)</h4>
-        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Perni + Lavorazione Ripiano</span><input type="number" id="edit-ferr-ripiano" value="${LISTINO.ferramentaEAccessori.ripiano}" style="width:80px; padding:3px;"></div>
-        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Kit Asta Appendiabito metallo</span><input type="number" id="edit-ferr-asta" value="${LISTINO.ferramentaEAccessori.asta}" style="width:80px; padding:3px;"></div>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Lavorazione Ripiano</span><input type="number" id="edit-ferr-ripiano" value="${LISTINO.ferramentaEAccessori.ripiano}" style="width:80px; padding:3px;"></div>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Kit Asta Appendiabito</span><input type="number" id="edit-ferr-asta" value="${LISTINO.ferramentaEAccessori.asta}" style="width:80px; padding:3px;"></div>
         <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Cassetto Completo + Guide</span><input type="number" id="edit-ferr-cassetto" value="${LISTINO.ferramentaEAccessori.cassetto}" style="width:80px; padding:3px;"></div>
-        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Coppia Cerniere Rallentate</span><input type="number" id="edit-ferr-cerniere" value="${LISTINO.ferramentaEAccessori.cerniereAnat}" style="width:80px; padding:3px;"></div>
+        <div class="list-item" style="margin-bottom:4px; font-size:12px;"><span>Coppia Cerniere</span><input type="number" id="edit-ferr-cerniere" value="${LISTINO.ferramentaEAccessori.cerniereAnat}" style="width:80px; padding:3px;"></div>
         
         <button id="btnSalvaListino" class="btn" style="background:#2ecc71; margin-top:15px; width:100%; font-size:13px; padding:8px;">💾 Salva e Applica Modifiche</button>
     `;
@@ -242,4 +242,53 @@ function eseguiRicalcoloGlobal() {
             const qCas = parseInt(document.getElementById(`cassetti-vano-${v}`)?.value) || 0;
             const quoteCassetti = [];
             for (let c = 1; c <= qCas; c++) {
-                quoteCassetti.push(parseFloat(document.getElementById
+                quoteCassetti.push(parseFloat(document.getElementById(`quota-vano-${v}-cas-${c}`)?.value) || 0);
+            }
+
+            mappaConfigurazioneVani.push({
+                vanoIndex: v,
+                ripiani: { quantita: qRip, quote: quoteRipiani },
+                cassetti: { quantita: qCas, quote: quoteCassetti }
+            });
+        }
+
+        const paramsMobile = {
+            L: parseFloat(document.getElementById("L").value) || 0,
+            A: parseFloat(document.getElementById("A").value) || 0,
+            P: parseFloat(document.getElementById("P").value) || 0,
+            Z: parseFloat(document.getElementById("Z").value) || 0,
+            SP: parseFloat(document.getElementById("SP").value) || 0,
+            nD,
+            mappaConfigurazioneVani,
+            tariffaOraria,
+            costoBordo,
+            prezzoMateriale,
+            prezziFerramenta: LISTINO.ferramentaEAccessori
+        };
+
+        const risultato = calcolaMobile(paramsMobile);
+        const totaleFinale = risultato.totale + costoTrasporto;
+
+        if (totaleBig) totaleBig.innerText = `€ ${totaleFinale.toFixed(2)}`;
+
+        if (tabellaDettagli) {
+            tabellaDettagli.innerHTML = `
+                <thead>
+                    <tr><th>Voce di Costo</th><th style="text-align:right">Quantità</th><th style="text-align:right">Importo</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Materiali Struttura ed Elementi</td><td style="text-align:right">${risultato.mqTotali} mq</td><td style="text-align:right">€ ${risultato.costoMateriale}</td></tr>
+                    <tr><td>Bordatura Frontale</td><td style="text-align:right">${risultato.metriBordo} m</td><td style="text-align:right">€ ${risultato.costoBordatura}</td></tr>
+                    <tr><td>Ferramenta & Guide Cassetto</td><td style="text-align:right">A corpo</td><td style="text-align:right">€ ${risultato.costoFerramenta}</td></tr>
+                    <tr><td>Manodopera Laboratorio</td><td style="text-align:right">${risultato.oreLavoro} ore</td><td style="text-align:right">€ ${risultato.costoManodopera}</td></tr>
+                    <tr><td>Trasporto e Consegna</td><td style="text-align:right">Fisso</td><td style="text-align:right">€ ${costoTrasporto.toFixed(2)}</td></tr>
+                    <tr style="font-weight: bold; background: #2ecc71; color: #2c3e50;">
+                        <td style="padding: 10px;">TOTALE PREVENTIVO</td><td></td><td style="text-align:right;">€ ${totaleFinale.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            `;
+        }
+
+        if (svgElement) disegnaMobileSvg(svgElement, paramsMobile);
+    }
+}
