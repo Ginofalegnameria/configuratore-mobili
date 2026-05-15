@@ -2,19 +2,21 @@
  * MOBILE.JS - Modulo per il calcolo e disegno del Cabinet / Mobile Standard
  */
 
+/**
+ * Calcola i costi, i metri quadri di scocca, i metri di bordo e i dettagli dei tagli
+ * @param {Object} params - I parametri inseriti dall'utente
+ */
 export function calcolaMobile(params) {
     const { L, A, P, Z, SP, nD, tariffaOraria, costoBordo, prezzoMateriale } = params;
 
     // Convertiamo le dimensioni da mm a metri per il calcolo commerciale
     const altTotaleM = A / 1000;
-    const altFianchiM = A / 1000; // I fianchi ora arrivano a terra (altezza totale)
     const profM = P / 1000;
     const larghInternaM = (L - (2 * SP)) / 1000;
-    const spessoreM = SP / 1000;
 
     // 1. CALCOLO SVILUPPO TAGLI (in metri quadri)
-    // Fianchi (Destro e Sinistro): Arrivano a terra
-    const mqFianchi = 2 * (altFianchiM * profM);
+    // Fianchi (Destro e Sinistro): Arrivano fino a terra (altezza totale A)
+    const mqFianchi = 2 * (altTotaleM * profM);
 
     // Cappello: Sta sopra, occupa l'intera larghezza L
     const mqCappello = (L / 1000) * profM;
@@ -26,7 +28,7 @@ export function calcolaMobile(params) {
     const altDivisoreM = (A - Z - (2 * SP)) / 1000;
     const mqDivisori = nD * (altDivisoreM * profM);
 
-    // Schienale (calcolato sull'ingombro totale posteriore)
+    // Schienale: Calcolato sull'ingombro totale posteriore
     const mqSchienale = (L / 1000) * altTotaleM;
 
     // Totale metri quadri di materiale scocca
@@ -34,17 +36,16 @@ export function calcolaMobile(params) {
     const costoMateriale = mqTotali * prezzoMateriale;
 
     // 2. CALCOLO SVILUPPO BORDI (in metri lineari)
-    // Bordiamo i frontali visibili: 2 fianchi, cappello, fondo e i divisori inseriti
-    const metriBordo = (2 * altFianchiM) + (L / 1000) + communitiesBordoDivisori(larghInternaM, nD, altDivisoreM);
-    function communitiesBordoDivisori(l, n, h) {
-        return (n * h) + l; 
-    }
+    // Bordiamo i frontali visibili: 2 fianchi, cappello, fondo e i divisori verticali interni
+    const metriBordo = (2 * altTotaleM) + (L / 1000) + (nD * altDivisoreM) + larghInternaM;
     const costoBordatura = metriBordo * costoBordo;
 
     // 3. CALCOLO MANODOPERA
-    const oreLavoro = 4 + (mqTotali * 1.5) + (nD * 0.5); // 4 ore base + 1.5 ore per mq + 30 min per ogni divisore
+    // 4 ore base di settaggio + 1.5 ore per ogni mq di materiale + 30 minuti per ogni divisore inserito
+    const oreLavoro = 4 + (mqTotali * 1.5) + (nD * 0.5);
     const costoManodopera = oreLavoro * tariffaOraria;
 
+    // Totale parziale della struttura (il trasporto verrà aggiunto in app.js)
     const totaleParziale = costoMateriale + costoBordatura + costoManodopera;
 
     return {
@@ -58,15 +59,22 @@ export function calcolaMobile(params) {
     };
 }
 
+/**
+ * Genera il codice visivo del disegno SVG per il Cabinet con divisori simmetrici
+ * @param {SVGElement} svgElement - L'elemento SVG della pagina da popolare
+ * @param {Object} params - I parametri dimensionali
+ */
 export function disegnaMobileSvg(svgElement, params) {
     const { L, A, Z, SP, nD } = params;
 
+    // Proporzioni per scalare il disegno dentro il box SVG (max 350px di altezza)
     const scala = 350 / A;
     const svgL = L * scala;
     const svgA = A * scala;
     const svgZ = Z * scala;
     const svgSP = SP * scala;
 
+    // Centriamo il disegno nell'area disponibile
     const offsetX = (800 - svgL) / 2;
     const offsetY = (400 - svgA) / 2;
 
@@ -78,7 +86,7 @@ export function disegnaMobileSvg(svgElement, params) {
             <!-- Ingombro Totale Esterno -->
             <rect x="0" y="0" width="${svgL}" height="${svgA}" fill="none" stroke="#ccc" stroke-dasharray="4" />
             
-            <!-- Fianco Sinistro (Arriva a terra, quota y=0 fino a h=svgA) -->
+            <!-- Fianco Sinistro (Arriva a terra) -->
             <rect x="0" y="0" width="${svgSP}" height="${svgA}" fill="#e0cda9" stroke="#8a6d3b" stroke-width="1.5" />
             
             <!-- Fianco Destro (Arriva a terra) -->
@@ -90,20 +98,20 @@ export function disegnaMobileSvg(svgElement, params) {
             <!-- Fondo (Inserito tra i fianchi sopra lo zoccolo) -->
             <rect x="${svgSP}" y="${svgA - svgZ - svgSP}" width="${svgL - (2 * svgSP)}" height="${svgSP}" fill="#d2b48c" stroke="#8a6d3b" stroke-width="1.5" />
             
-            <!-- Zoccolo (Arretrato tra i fianchi a terra) -->
+            <!-- Zoccolo (Arretro tra i fianchi a terra) -->
             <rect x="${svgSP}" y="${svgA - svgZ}" width="${svgL - (2 * svgSP)}" height="${svgZ}" fill="#7f8c8d" stroke="#34495e" stroke-width="1.5" />
     `;
 
-    // DISEGNO DINAMICO DEI DIVISORI VERTICALI
+    // DISEGNO DINAMICO DEI DIVISORI VERTICALI INTERNI
     if (nD > 0) {
         const spazioInternoDisponibile = svgL - (2 * svgSP) - (nD * svgSP);
         const larghezzaSingoloVano = spazioInternoDisponibile / (nD + 1);
         const coordinataYFondo = svgA - svgZ - svgSP;
+        const altezzaDivisore = coordinataYFondo - svgSP;
 
         for (let i = 1; i <= nD; i++) {
-            // Calcolo della posizione X esatta per ogni divisore intermedio
+            // Calcolo preciso della posizione X per ogni divisore intermedio
             const divisoreX = svgSP + (i * larghezzaSingoloVano) + ((i - 1) * svgSP);
-            const altezzaDivisore = coordinataYFondo - svgSP;
 
             nodiSvg += `
                 <!-- Divisore Interno ${i} -->
