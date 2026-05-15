@@ -1,5 +1,5 @@
 /**
- * MOBILE.JS - Modulo calcolo e disegno Cabinet per singolo vano/lato
+ * MOBILE.JS - Calcolo e disegno senza errori di battitura
  */
 
 export function calcolaMobile(params) {
@@ -12,7 +12,7 @@ export function calcolaMobile(params) {
     const profM = P / 1000;
     const larghInternaM = (L - (2 * SP)) / 1000;
 
-    // 1. STRUTTURA ESTERNA
+    // Struttura esterna
     const mqFianchi = 2 * (altTotaleM * profM);
     const mqCappello = (L / 1000) * profM;
     const mqFondo = larghInternaM * profM;
@@ -20,12 +20,12 @@ export function calcolaMobile(params) {
     const mqDivisori = nD * (altDivisoreM * profM);
     const mqSchienale = (L / 1000) * altTotaleM;
 
-    // 2. ELEMENTI INTERNI DAI VANI
+    // Conteggio interni dai singoli vani
     const larghVanoM = (larghInternaM - (nD * (SP / 1000))) / (nD + 1);
     let totaliRipiani = 0;
     let totaliCassetti = 0;
 
-    if (mappaConfigurazioneVani && Array.isArray(mappaConfigurazioneVani)) {
+    if (mappaConfigurazioneVani) {
         mappaConfigurazioneVani.forEach(vano => {
             totaliRipiani += vano.ripiani.quantita;
             totaliCassetti += vano.cassetti.quantita;
@@ -33,28 +33,26 @@ export function calcolaMobile(params) {
     }
 
     const mqRipiani = totaliRipiani * (larghVanoM * profM);
-    const mqCassettiLegno = totaliCassetti * 0.22; // stima materiale sponde cassetto
+    const mqCassettiLegno = totaliCassetti * 0.25;
 
     const mqTotali = mqFianchi + mqCappello + mqFondo + mqDivisori + mqSchienale + mqRipiani + mqCassettiLegno;
     const costoMateriale = mqTotali * prezzoMateriale;
 
-    // 3. SVILUPPO BORDI
+    // Bordi
     const metriBordoScocca = (2 * altTotaleM) + (L / 1000) + (nD * altDivisoreM) + larghInternaM;
     const metriBordoRipiani = totaliRipiani * larghVanoM;
     const metriBordoCassetti = totaliCassetti * (larghVanoM * 2);
     const metriBordo = metriBordoScocca + metriBordoRipiani + metriBordoCassetti;
     const costoBordatura = metriBordo * costoBordo;
 
-    // 4. FERRAMENTA
+    // Ferramenta
     const costoFerrRipiani = totaliRipiani * prezziFerramenta.ripiano;
     const costoFerrCassetti = totaliCassetti * prezziFerramenta.cassetto;
     const costoFerramentaTotale = costoFerrRipiani + costoFerrCassetti;
 
-    // 5. MANODOPERA
-    const oreLavoro = 4 + (mqTotali * 1.5) + (nD * 0.5) + (totaliRipiani * 0.2) + (totaliCassetti * 1.0);
+    // Ore
+    const oreLavoro = 4 + (mqTotali * 1.5) + (nD * 0.5) + (totaliRipiani * 0.25) + (totaliCassetti * 1.2);
     const costoManodopera = oreLavoro * tariffaOraria;
-
-    const totaleParziale = costoMateriale + costoBordatura + costoFerramentaTotale + costoManodopera;
 
     return {
         mqTotali: mqTotali.toFixed(2),
@@ -64,8 +62,12 @@ export function calcolaMobile(params) {
         costoFerramenta: costoFerramentaTotale.toFixed(2),
         costoManodopera: costoManodopera.toFixed(2),
         oreLavoro: oreLavoro.toFixed(1),
-        totale: totaleParziale
+        totale: totaleParziale()
     };
+    
+    function totaleParziale() {
+        return costoMateriale + costoBordatura + costoFerramentaTotale + costoManodopera;
+    }
 }
 
 export function disegnaMobileSvg(svgElement, params) {
@@ -95,51 +97,24 @@ export function disegnaMobileSvg(svgElement, params) {
     const spazioInternoDisponibile = svgL - (2 * svgSP) - (nD * svgSP);
     const larghezzaSingoloVano = spazioInternoDisponibile / nVani;
 
+    // Divisori verticali
     for (let i = 1; i <= nD; i++) {
         const divisoreX = svgSP + (i * larghezzaSingoloVano) + ((i - 1) * svgSP);
         nodiSvg += `<rect x="${divisoreX}" y="${svgSP}" width="${svgSP}" height="${svgA - svgZ - (2 * svgSP)}" fill="#e6c294" stroke="#8a6d3b" stroke-width="1" />`;
     }
 
-    // DISEGNO RIPRESO DA MAPPA ALLINEATA
-    if (mappaConfigurazioneVani && Array.isArray(mappaConfigurazioneVani)) {
+    // Disegno elementi dai singoli vani
+    if (mappaConfigurazioneVani) {
         mappaConfigurazioneVani.forEach((vano, idx) => {
             const vanoX = svgSP + (idx * (larghezzaSingoloVano + svgSP));
 
-            // Ripiani
-            if (vano.ripiani && vano.ripiani.quote) {
-                vano.ripiani.quote.forEach(quotaMm => {
-                    const ripianoY = svgA - (quotaMm * scala);
-                    if (ripianoY > svgSP && ripianoY < (svgA - svgZ - svgSP)) {
-                        nodiSvg += `
-                            <rect x="${vanoX}" y="${ripianoY}" width="${larghezzaSingoloVano}" height="${svgSP * 0.8}" fill="#f3dbb3" stroke="#b19263" stroke-width="0.8" />
-                            <text x="${vanoX + 4}" y="${ripianoY - 3}" font-family="sans-serif" font-size="7" fill="#b19263">${quotaMm}</text>
-                        `;
-                    }
-                });
-            }
-
-            // Cassetti
-            if (vano.cassetti && vano.cassetti.quote) {
-                vano.cassetti.quote.forEach(quotaMm => {
-                    const altezzaCassettoGrafico = 30 * scala;
-                    const cassettoY = svgA - (quotaMm * scala) - altezzaCassettoGrafico;
-                    if (cassettoY > svgSP && (cassettoY + altezzaCassettoGrafico) < (svgA - svgZ)) {
-                        nodiSvg += `
-                            <rect x="${vanoX + 1}" y="${cassettoY}" width="${larghezzaSingoloVano - 2}" height="${altezzaCassettoGrafico}" fill="#d2b48c" stroke="#5d4037" stroke-width="1" rx="2" />
-                            <rect x="${vanoX + (larghezzaSingoloVano / 2) - 15}" y="${cassettoY + (altezzaCassettoGrafico / 2) - 2}" width="30" height="4" rx="1" fill="#333" />
-                            <text x="${vanoX + 4}" y="${cassettoY + altezzaCassettoGrafico - 4}" font-family="sans-serif" font-size="7" fill="#5d4037" font-weight="bold">${quotaMm}</text>
-                        `;
-                    }
-                });
-            }
-        });
-    }
-
-    nodiSvg += `
-            <text x="${svgL / 2}" y="-10" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#007bff">L: ${L} mm</text>
-            <text x="${svgL + 15}" y="${svgA / 2}" text-anchor="start" font-family="sans-serif" font-size="12" font-weight="bold" fill="#007bff">A: ${A} mm</text>
-        </g>
-    `;
-
-    svgElement.innerHTML = nodiSvg;
-}
+            // Disegno ripiani
+            vano.ripiani.quote.forEach(quotaMm => {
+                const quotaScalata = quotaMm * scala;
+                const ripianoY = svgA - quotaScalata;
+                if (ripianoY > svgSP && ripianoY < (svgA - svgZ - svgSP)) {
+                    nodiSvg += `
+                        <rect x="${vanoX}" y="${ripianoY}" width="${larghezzaSingoloVano}" height="${svgSP * 0.8}" fill="#f3dbb3" stroke="#b19263" stroke-width="0.8" />
+                        <text x="${vanoX + 4}" y="${ripianoY - 3}" font-family="sans-serif" font-size="8" fill="#b19263">${quotaMm}</text>
+                    `;
+                
