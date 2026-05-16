@@ -1,32 +1,7 @@
 body {
   font-family: 'Segoe UI', sans-serif; 
   background: #f0f2f5; 
-  margin: 0; 
-  padding: 20px; 
-  color: #333; 
-}
-
-.wrapper { 
-  max-width: 1600px; 
-  margin: 0 auto; 
-  display: grid; 
-  grid-template-columns: 450px 1fr; 
-  gap: 20px; 
-  align-items: start; 
-}
-
-.section { 
-  background: white; 
-  padding: 20px; 
-  border-radius: 12px; 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-  margin-bottom: 20px; 
-}
-
-h3 { 
-  margin-top: 0; 
-  border-bottom: 2px solid #007bff; 
-  padding-bottom: 8px; 
+  margin: 0   margin: 0; 
   color: #007bff; 
   font-size: 1.1em; 
 }
@@ -149,9 +124,11 @@ th {
 .list-item { 
   display: flex; 
   justify-content: space-between; 
-  padding: 5px; 
+  align-items: center;
+  gap: 10px;
+  padding: 6px; 
   background: #f9f9f9; 
-  margin-bottom: 4px; 
+  margin-bottom: 6px; 
   font-size: 13px; 
 }
 
@@ -176,3 +153,27 @@ th {
   body.print-client #boxDistintaProduzione { display: none !important; }
   body.print-client .result-box { background: white !important; color: black !important; border: 1px solid #333; }
 }
+  padding: 20px; 
+  color: #333; 
+}
+
+.wrapper { 
+  max-width: 1600px; 
+  margin: 0 auto; 
+  display: grid; 
+  grid-template-columns: 450px 1fr; 
+  gap: 20px; 
+  align-items: start; 
+}
+
+.section { 
+  background: white; 
+  padding: 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+  margin-bottom: 20px; 
+}
+
+h3 { 
+  margin-top: 0; 
+  border-bottom: 2px solid #007bff; 
