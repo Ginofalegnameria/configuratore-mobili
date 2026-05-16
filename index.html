@@ -1,111 +1,134 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuratore Falegnameria Pro</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuratore Falegnameria Pro</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="wrapper">
-    <!-- COLONNA DI SINISTRA: INPUT -->
-    <div class="input-col no-print">
-        
-        <!-- DATI GENERALI -->
-        <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>DATI GENERALI</h3>
-                <button id="btnListino" class="btn btn-listino">⚙️ LISTINO</button>
-            </div>
-            <label for="tipoCommessa">TIPOLOGIA COMMESSA</label>
-            <select id="tipoCommessa" style="margin-bottom: 10px; font-weight: bold; background: #eef5ff;">
-                <option value="mobile">Cabinet / Mobile Standard</option>
-                <option value="telaio">Telaio e Sportelli Laccati</option>
-                <option value="paretina">Paretina a Frame Verticale</option>
-            </select>
+  <!-- COLONNA DI SINISTRA: INPUT -->
+  <div class="input-col no-print">
 
-            <label for="nomeCliente">CLIENTE</label>
-            <input type="text" id="nomeCliente">
-            
-            <div id="materiali-standard-inputs">
-                <div class="input-grid" style="margin-top:10px;">
-                    <div>
-                        <label for="mat">MATERIALE SCOCCA</label>
-                        <select id="mat"></select>
-                    </div>
-                </div>
-            </div>
+    <!-- DATI GENERALI -->
+    <div class="section">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <h3 style="margin:0;">DATI GENERALI</h3>
 
-            <div class="input-grid" style="margin-top:10px;">
-                <div>
-                    <label for="tariffaOraria">TARIFFA ORA (€)</label>
-                    <input type="number" id="tariffaOraria" value="45">
-                </div>
-                <div>
-                    <label for="costoBordo">BORDO (€/m)</label>
-                    <input type="number" id="costoBordo" value="1.50">
-                </div>
-            </div>
-            
-            <label for="costoTrasporto" style="margin-top:10px;">TRASPORTO / TRASFERTA (€)</label>
-            <input type="number" id="costoTrasporto" value="150">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <!-- Toggle vista (nuovi) -->
+          <button id="btnViewClient" class="btn btn-client" title="Vista Cliente">👤 Cliente</button>
+          <button id="btnViewTech" class="btn btn-tech" title="Vista Produzione">🪚 Produzione</button>
+
+          <!-- Listino -->
+          <button id="btnListino" class="btn btn-listino">⚙️ LISTINO</button>
         </div>
+      </div>
 
-        <!-- PARAMETRI STRUTTURA CABINET -->
-        <div class="section" id="blocco-inputs-mobile" style="display:none;">
-            <h3>PARAMETRI CABINET (mm)</h3>
-            <div class="input-grid">
-                <div><label for="L">Largh. L (mm)</label><input type="number" id="L" value="1200"></div>
-                <div><label for="A">Alt. A (mm)</label><input type="number" id="A" value="2000"></div>
-                <div><label for="P">Prof. P (mm)</label><input type="number" id="P" value="600"></div>
-                <div><label for="Z">Zoccolo Z (mm)</label><input type="number" id="Z" value="100"></div>
-                <div><label for="SP">Spessore SP (mm)</label><input type="number" id="SP" value="19"></div>
-                <div><label for="nD">N. Divisori</label><input type="number" id="nD" value="0" min="0"></div>
-            </div>
-        </div>
+      <label for="tipoCommessa">TIPOLOGIA COMMESSA</label>
+      <select id="tipoCommessa" style="margin-bottom: 10px; font-weight: bold; background: #eef5ff;">
+        <option value="mobile">Cabinet / Mobile Standard</option>
+        <option value="telaio">Telaio e Sportelli Laccati</option>
+        <option value="paretina">Paretina a Frame Verticale</option>
+      </select>
 
-        <!-- CONTENITORE DINAMICO INTERNO (VANI E QUOTE) -->
-        <div id="contVani" style="display:none;"></div>
+      <label for="nomeCliente">CLIENTE</label>
+      <input type="text" id="nomeCliente" placeholder="Nome cliente / riferimento">
 
-        <!-- SCHEDE IN COSTRUZIONE -->
-        <div class="section" id="blocco-inputs-telaio" style="display:none;">
-            <h3>PARAMETRI TELAIO</h3>
-            <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore telaio pronto per i calcoli.</p>
+      <div id="materiali-standard-inputs">
+        <div class="input-grid" style="margin-top:10px;">
+          <div>
+            <label for="mat">MATERIALE SCOCCA</label>
+            <select id="mat"></select>
+          </div>
         </div>
-        <div class="section" id="blocco-inputs-paretina" style="display:none;">
-            <h3>PARAMETRI PARETINA</h3>
-            <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore paretina pronto per i calcoli.</p>
+      </div>
+
+      <div class="input-grid" style="margin-top:10px;">
+        <div>
+          <label for="tariffaOraria">TARIFFA ORA (€)</label>
+          <input type="number" id="tariffaOraria" value="45">
         </div>
+        <div>
+          <label for="costoBordo">BORDO (€/m)</label>
+          <input type="number" id="costoBordo" value="1.50">
+        </div>
+      </div>
+
+      <label for="costoTrasporto" style="margin-top:10px;">TRASPORTO / TRASFERTA (€)</label>
+      <input type="number" id="costoTrasporto" value="150">
     </div>
-    
-    <!-- COLONNA DI DESTRA: GRAFICA E PREVENTIVO -->
-    <div class="output-col">
-        <div class="section">
-            <h3>ANTEPRIMA GRAFICA</h3>
-            <div id="svgContainer">
-                <svg id="configuratoreSvg" width="100%" height="400" viewBox="0 0 800 400"></svg>
-            </div>
-        </div>
-        <div class="result-box">
-            <h3>PREVENTIVO ANALITICO</h3>
-            <div id="totale-big">€ 0.00</div>
-            <table id="tabella-dettagli" style="margin-top: 20px; color: white; width: 100%;"></table>
-        </div>
+
+    <!-- PARAMETRI STRUTTURA CABINET -->
+    <div class="section" id="blocco-inputs-mobile" style="display:none;">
+      <h3>PARAMETRI CABINET (mm)</h3>
+      <div class="input-grid">
+        <div><label for="L">Largh. L (mm)</label><input type="number" id="L" value="1200"></div>
+        <div><label for="A">Alt. A (mm)</label><input type="number" id="A" value="2000"></div>
+        <div><label for="P">Prof. P (mm)</label><input type="number" id="P" value="600"></div>
+        <div><label for="Z">Zoccolo Z (mm)</label><input type="number" id="Z" value="100"></div>
+        <div><label for="SP">Spessore SP (mm)</label><input type="number" id="SP" value="19"></div>
+        <div><label for="nD">N. Divisori</label><input type="number" id="nD" value="0" min="0"></div>
+      </div>
     </div>
+
+    <!-- CONTENITORE DINAMICO INTERNO (VANI E QUOTE) -->
+    <div id="contVani" style="display:none;"></div>
+
+    <!-- SCHEDE IN COSTRUZIONE -->
+    <div class="section" id="blocco-inputs-telaio" style="display:none;">
+      <h3>PARAMETRI TELAIO</h3>
+      <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore telaio pronto per i calcoli.</p>
+    </div>
+
+    <div class="section" id="blocco-inputs-paretina" style="display:none;">
+      <h3>PARAMETRI PARETINA</h3>
+      <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore paretina pronto per i calcoli.</p>
+    </div>
+
+  </div>
+
+  <!-- COLONNA DI DESTRA: GRAFICA E PREVENTIVO -->
+  <div class="output-col">
+
+    <div class="section">
+      <h3>ANTEPRIMA GRAFICA</h3>
+      <div id="svgContainer">
+        <svg id="configuratoreSvg" width="100%" height="400" viewBox="0 0 800 400"></svg>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <h3>PREVENTIVO</h3>
+      <div id="totale-big">€ 0.00</div>
+      <table id="tabella-dettagli" style="margin-top: 20px; color: white; width: 100%;"></table>
+    </div>
+
+    <!-- DISTINTA PRODUZIONE: visibile solo in modalità TECH -->
+    <div class="section solo-tech" id="boxDistintaProduzione" style="margin-top:15px;">
+      <h3>DISTINTA PRODUZIONE (LISTA PEZZI)</h3>
+      <table id="tabella-pezzi" style="width:100%; margin-top:10px;"></table>
+      <p style="font-size:11px; color:#7f8c8d; margin-top:8px;">
+        Nota: le misure sono in mm. La schiena può avere spessore variabile.
+      </p>
+    </div>
+
+  </div>
 </div>
 
 <div class="controlli-stampa no-print">
-    <button id="btnPrintTech" class="btn btn-tech">🖨️ Stampa Tecnica</button>
-    <button id="btnPrintClient" class="btn btn-client">📄 Stampa Cliente</button>
+  <button id="btnPrintTech" class="btn btn-tech">🖨️ Stampa Tecnica</button>
+  <button id="btnPrintClient" class="btn btn-client">📄 Stampa Cliente</button>
 </div>
 
 <div id="modalListino">
-    <div class="modal-content">
-        <h3>GESTIONE LISTINO PREZZI</h3>
-        <div id="contenutoListino"></div>
-        <button id="btnChiudiModal" class="btn btn-tech" style="float:right; margin-top:10px;">Chiudi</button>
-    </div>
+  <div class="modal-content">
+    <h3>GESTIONE LISTINO PREZZI</h3>
+    <div id="contenutoListino"></div>
+    <button id="btnChiudiModal" class="btn btn-tech" style="float:right; margin-top:10px;">Chiudi</button>
+  </div>
 </div>
 
 <script type="module" src="./js/app.js"></script>
