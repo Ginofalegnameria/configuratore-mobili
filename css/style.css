@@ -1,7 +1,22 @@
 body {
   font-family: 'Segoe UI', sans-serif; 
-  background: #f0f2f5; 
-  margin: 0   margin: 0; 
+  background-columns: 450px 1fr;   background: #f0f2f5; 
+  gap: 20px; 
+  align-items: start; 
+}
+
+.section { 
+  background: white; 
+  padding: 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+  margin-bottom: 20px; 
+}
+
+h3 { 
+  margin-top: 0; 
+  border-bottom: 2px solid #007bff; 
+  padding-bottom: 8px; 
   color: #007bff; 
   font-size: 1.1em; 
 }
@@ -153,6 +168,7 @@ th {
   body.print-client #boxDistintaProduzione { display: none !important; }
   body.print-client .result-box { background: white !important; color: black !important; border: 1px solid #333; }
 }
+  margin: 0; 
   padding: 20px; 
   color: #333; 
 }
@@ -161,19 +177,3 @@ th {
   max-width: 1600px; 
   margin: 0 auto; 
   display: grid; 
-  grid-template-columns: 450px 1fr; 
-  gap: 20px; 
-  align-items: start; 
-}
-
-.section { 
-  background: white; 
-  padding: 20px; 
-  border-radius: 12px; 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-  margin-bottom: 20px; 
-}
-
-h3 { 
-  margin-top: 0; 
-  border-bottom: 2px solid #007bff; 
