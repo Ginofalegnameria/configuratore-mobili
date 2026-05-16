@@ -1,245 +1,136 @@
-body {
-    font-family: 'Segoe UI', sans-serif; 
-    background: #f0f2f5; 
-    margin: 0; 
-    padding: 20px; 
-    color: #333; 
-}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuratore Falegnameria Pro</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
 
-.wrapper { 
-    max-width: 1600px; 
-    margin: 0 auto; 
-    display: grid; 
-    grid-template-columns: 450px 1fr; 
-    gap: 20px; 
-    align-items: start; 
-}
+  <div class="wrapper">
+    <!-- COLONNA SINISTRA: INPUT -->
+    <div class="input-col no-print">
 
-.section { 
-    background: white; 
-    padding: 20px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-    margin-bottom: 20px; 
-}
+      <div class="section">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <h3 style="margin:0;">DATI GENERALI</h3>
 
-h3 { 
-    margin-top: 0; 
-    border-bottom: 2px solid #007bff; 
-    padding-bottom: 8px; 
-    color: #007bff; 
-    font-size: 1.1em; 
-}
+          <div style="display:flex; gap:8px; align-items:center;">
+            <!-- BOTTONI MODALITÀ (DEVONO ESISTERE PER FUNZIONARE) -->
+            <button id="btnViewClient" class="btn btn-client" type="button">👤 Cliente</button>
+            <button id="btnViewTech" class="btn btn-tech" type="button">🪚 Produzione</button>
 
-.input-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 10px; 
-}
+            <button id="btnListino" class="btn btn-listino" type="button">⚙️ LISTINO</button>
+          </div>
+        </div>
 
-label { 
-    font-size: 0.8em; 
-    font-weight: bold; 
-    display: block; 
-    margin-bottom: 4px; 
-    color: #555; 
-}
+        <label for="tipoCommessa">TIPOLOGIA COMMESSA</label>
+        <select id="tipoCommessa" style="margin-bottom: 10px; font-weight: bold; background: #eef5ff;">
+          <option value="mobile">Cabinet / Mobile Standard</option>
+          <option value="telaio">Telaio e Sportelli Laccati</option>
+          <option value="paretina">Paretina a Frame Verticale</option>
+        </select>
 
-input, select { 
-    width: 100%; 
-    padding: 8px; 
-    border: 1px solid #ccc; 
-    border-radius: 6px; 
-    font-size: 14px; 
-    box-sizing: border-box; 
-}
+        <label for="nomeCliente">CLIENTE</label>
+        <input type="text" id="nomeCliente" placeholder="Nome cliente / riferimento" />
 
-/* SVG */
-#svgContainer { 
-    background: white; 
-    padding: 20px; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
-    display: flex; 
-    justify-content: center; 
-    min-height: 400px; 
-    align-items: center; 
-}
+        <div id="materiali-standard-inputs">
+          <div class="input-grid" style="margin-top:10px;">
+            <div>
+              <label for="mat">MATERIALE SCOCCA</label>
+              <select id="mat"></select>
+            </div>
+          </div>
+        </div>
 
-/* Tabelle */
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 10px; 
-}
+        <div class="input-grid" style="margin-top:10px;">
+          <div>
+            <label for="tariffaOraria">TARIFFA ORA (€)</label>
+            <input type="number" id="tariffaOraria" value="45" />
+          </div>
+          <div>
+            <label for="costoBordo">BORDO (€/m)</label>
+            <input type="number" id="costoBordo" value="1.50" />
+          </div>
+        </div>
 
-th, td { 
-    border: 1px solid #eee; 
-    padding: 10px; 
-    text-align: left; 
-    font-size: 0.85em; 
-}
+        <label for="costoTrasporto" style="margin-top:10px;">TRASPORTO / TRASFERTA (€)</label>
+        <input type="number" id="costoTrasporto" value="150" />
+      </div>
 
-th { 
-    background: #007bff; 
-    color: white; 
-}
+      <!-- PARAMETRI CABINET -->
+      <div class="section" id="blocco-inputs-mobile" style="display:none;">
+        <h3>PARAMETRI CABINET (mm)</h3>
+        <div class="input-grid">
+          <div><label for="L">Largh. L (mm)</label><input type="number" id="L" value="1200" /></div>
+          <div><label for="A">Alt. A (mm)</label><input type="number" id="A" value="2000" /></div>
+          <div><label for="P">Prof. P (mm)</label><input type="number" id="P" value="600" /></div>
+          <div><label for="Z">Zoccolo Z (mm)</label><input type="number" id="Z" value="100" /></div>
+          <div><label for="SP">Spessore SP (mm)</label><input type="number" id="SP" value="19" /></div>
+          <div><label for="nD">N. Divisori</label><input type="number" id="nD" value="0" min="0" /></div>
+        </div>
+      </div>
 
-/* BOX RISULTATI */
-.result-box { 
-    background: #2c3e50; 
-    color: white; 
-    padding: 25px; 
-    border-radius: 12px; 
-}
+      <!-- VANI DINAMICI -->
+      <div id="contVani" style="display:none;"></div>
 
-#totale-big { 
-    font-size: 42px; 
-    font-weight: bold; 
-    color: #2ecc71; 
-    text-align: center; 
-    border-bottom: 1px solid #444; 
-    padding-bottom: 10px; 
-}
+      <!-- ALTRE COMMESSE (placeholder) -->
+      <div class="section" id="blocco-inputs-telaio" style="display:none;">
+        <h3>PARAMETRI TELAIO</h3>
+        <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore telaio pronto per i calcoli.</p>
+      </div>
 
-/* BOTTONI */
-.controlli-stampa { 
-    position: fixed; 
-    bottom: 20px; 
-    left: 20px; 
-    display: flex; 
-    gap: 10px; 
-    z-index: 1000; 
-}
+      <div class="section" id="blocco-inputs-paretina" style="display:none;">
+        <h3>PARAMETRI PARETINA</h3>
+        <p style="font-size:12px; color:#7f8c8d;">Modulo configuratore paretina pronto per i calcoli.</p>
+      </div>
 
-.btn { 
-    padding: 10px 15px; 
-    border: none; 
-    border-radius: 50px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    color: white; 
-}
+    </div>
 
-.btn-tech { background: #7f8c8d; }
-.btn-client { background: #27ae60; }
-.btn-listino { background: #007bff; font-size: 10px; }
+    <!-- COLONNA DESTRA: OUTPUT -->
+    <div class="output-col">
 
-.valore-r { text-align: right; }
+      <div class="section">
+        <h3>ANTEPRIMA GRAFICA</h3>
+        <div id="svgContainer">
+          <svg id="configuratoreSvg" width="100%" height="400" viewBox="0 0 800 400"></svg>
+        </div>
+      </div>
 
-.alert-errore { 
-    color: #e74c3c; 
-    font-size: 0.8em; 
-    font-weight: bold; 
-    grid-column: span 2; 
-    margin-top: 5px; 
-    display: none; 
-}
+      <div class="result-box">
+        <h3>PREVENTIVO</h3>
+        <div id="totale-big">€ 0.00</div>
+        <table id="tabella-dettagli" style="margin-top: 20px; color: white; width: 100%;"></table>
+      </div>
 
-/* ===========================
-   DISTINTA PRODUZIONE
-   =========================== */
+      <!-- SOLO PRODUZIONE -->
+      <div class="section solo-tech" id="boxDistintaProduzione">
+        <h3>DISTINTA PRODUZIONE (LISTA PEZZI)</h3>
+        <table id="tabella-pezzi"></table>
+        <p style="font-size:11px; color:#7f8c8d; margin-top:8px;">
+          Nota: misure in mm. Schienale con spessore variabile.
+        </p>
+      </div>
 
-#tabella-pezzi {
-    margin-top: 10px;
-}
+    </div>
+  </div>
 
-#tabella-pezzi th {
-    background: #2c3e50;
-    color: white;
-}
+  <!-- STAMPA -->
+  <div class="controlli-stampa no-print">
+    <button id="btnPrintTech" class="btn btn-tech" type="button">🖨️ Stampa Tecnica</button>
+    <button id="btnPrintClient" class="btn btn-client" type="button">📄 Stampa Cliente</button>
+  </div>
 
-#tabella-pezzi td {
-    background: #f9f9f9;
-}
+  <!-- MODALE LISTINO -->
+  <div id="modalListino">
+    <div class="modal-content">
+      <h3>GESTIONE LISTINO PREZZI</h3>
+      <div id="contenutoListino"></div>
+      <button id="btnChiudiModal" class="btn btn-tech" style="float:right; margin-top:10px;" type="button">Chiudi</button>
+    </div>
+  </div>
 
-/* ===========================
-   MODALITA' CLIENTE / TECH
-   =========================== */
-
-/* Cliente → nasconde tutto ciò che è tecnico */
-.mode-client .solo-tech {
-    display: none !important;
-}
-
-/* Produzione → mostra tutto */
-.mode-tech .solo-client {
-    display: none !important;
-}
-
-/* ===========================
-   MODALE LISTINO
-   =========================== */
-
-#modalListino { 
-    display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(0,0,0,0.8); 
-    z-index: 9999; 
-    justify-content: center; 
-    align-items: center; 
-}
-
-.modal-content { 
-    background: white; 
-    padding: 30px; 
-    border-radius: 15px; 
-    width: 650px; 
-    max-height: 90vh; 
-    overflow-y: auto; 
-}
-
-.list-box { 
-    border: 1px solid #eee; 
-    padding: 10px; 
-    margin-bottom: 15px; 
-    border-radius: 8px; 
-}
-
-.list-item { 
-    display: flex; 
-    justify-content: space-between; 
-    padding: 5px; 
-    background: #f9f9f9; 
-    margin-bottom: 4px; 
-    font-size: 13px; 
-}
-
-/* ===========================
-   STAMPA
-   =========================== */
-
-@media print {
-    .no-print, .controlli-stampa { 
-        display: none !important; 
-    }
-
-    .wrapper { 
-        display: block; 
-    }
-
-    .section { 
-        box-shadow: none; 
-        border: none; 
-        padding: 0; 
-    }
-
-    /* Modalità stampa */
-    body.print-tech .result-box { 
-        display: none !important; 
-    }
-
-    body.print-client #boxDistintaProduzione { 
-        display: none !important; 
-    }
-
-    body.print-client .result-box { 
-        background: white !important; 
-        color: black !important; 
-        border: 1px solid #333; 
-    }
-}
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
