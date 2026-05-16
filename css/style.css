@@ -1,124 +1,120 @@
 body {
-    font-family: 'Segoe UI', sans-serif; 
-    background: #f0f2f5; 
-    margin: 0; 
-    padding: 20px; 
-    color: #333; 
+  font-family: 'Segoe UI', sans-serif; 
+  background: #f0f2f5; 
+  margin: 0; 
+  padding: 20px; 
+  color: #333; 
 }
 
 .wrapper { 
-    max-width: 1600px; 
-    margin: 0 auto; 
-    display: grid; 
-    grid-template-columns: 450px 1fr; 
-    gap: 20px; 
-    align-items: start; 
+  max-width: 1600px; 
+  margin: 0 auto; 
+  display: grid; 
+  grid-template-columns: 450px 1fr; 
+  gap: 20px; 
+  align-items: start; 
 }
 
 .section { 
-    background: white; 
-    padding: 20px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-    margin-bottom: 20px; 
+  background: white; 
+  padding: 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+  margin-bottom: 20px; 
 }
 
 h3 { 
-    margin-top: 0; 
-    border-bottom: 2px solid #007bff; 
-    padding-bottom: 8px; 
-    color: #007bff; 
-    font-size: 1.1em; 
+  margin-top: 0; 
+  border-bottom: 2px solid #007bff; 
+  padding-bottom: 8px; 
+  color: #007bff; 
+  font-size: 1.1em; 
 }
 
 .input-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 10px; 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 10px; 
 }
 
 label { 
-    font-size: 0.8em; 
-    font-weight: bold; 
-    display: block; 
-    margin-bottom: 4px; 
-    color: #555; 
+  font-size: 0.8em; 
+  font-weight: bold; 
+  display: block; 
+  margin-bottom: 4px; 
+  color: #555; 
 }
 
 input, select { 
-    width: 100%; 
-    padding: 8px; 
-    border: 1px solid #ccc; 
-    border-radius: 6px; 
-    font-size: 14px; 
-    box-sizing: border-box; 
+  width: 100%; 
+  padding: 8px; 
+  border: 1px solid #ccc; 
+  border-radius: 6px; 
+  font-size: 14px; 
+  box-sizing: border-box; 
 }
 
-/* SVG */
 #svgContainer { 
-    background: white; 
-    padding: 20px; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
-    display: flex; 
-    justify-content: center; 
-    min-height: 400px; 
-    align-items: center; 
+  background: white; 
+  padding: 20px; 
+  border: 1px solid #ddd; 
+  border-radius: 8px; 
+  display: flex; 
+  justify-content: center; 
+  min-height: 400px; 
+  align-items: center; 
 }
 
-/* Tabelle */
 table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 10px; 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 10px; 
 }
 
 th, td { 
-    border: 1px solid #eee; 
-    padding: 10px; 
-    text-align: left; 
-    font-size: 0.85em; 
+  border: 1px solid #eee; 
+  padding: 10px; 
+  text-align: left; 
+  font-size: 0.85em; 
 }
 
 th { 
-    background: #007bff; 
-    color: white; 
+  background: #007bff; 
+  color: white; 
 }
 
-/* BOX RISULTATI */
 .result-box { 
-    background: #2c3e50; 
-    color: white; 
-    padding: 25px; 
-    border-radius: 12px; 
+  background: #2c3e50; 
+  color: white; 
+  padding: 25px; 
+  border-radius: 12px; 
 }
 
 #totale-big { 
-    font-size: 42px; 
-    font-weight: bold; 
-    color: #2ecc71; 
-    text-align: center; 
-    border-bottom: 1px solid #444; 
-    padding-bottom: 10px; 
+  font-size: 42px; 
+  font-weight: bold; 
+  color: #2ecc71; 
+  text-align: center; 
+  border-bottom: 1px solid #444; 
+  padding-bottom: 10px; 
 }
 
-/* BOTTONI */
 .controlli-stampa { 
-    position: fixed; 
-    bottom: 20px; 
-    left: 20px; 
-    display: flex; 
-    gap: 10px; 
-    z-index: 1000; 
+  position: fixed; 
+  bottom: 20px; 
+  left: 20px; 
+  display: flex; 
+  gap: 10px; 
+  z-index: 1000; 
 }
 
 .btn { 
-    padding: 10px 15px; 
-    border: none; 
-    border-radius: 50px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    color: white; 
+  padding: 10px 15px; 
+  border: none; 
+  border-radius: 50px; 
+  cursor: pointer; 
+  font-weight: bold; 
+  color: white; 
 }
 
 .btn-tech { background: #7f8c8d; }
@@ -127,119 +123,56 @@ th {
 
 .valore-r { text-align: right; }
 
-.alert-errore { 
-    color: #e74c3c; 
-    font-size: 0.8em; 
-    font-weight: bold; 
-    grid-column: span 2; 
-    margin-top: 5px; 
-    display: none; 
-}
-
-/* ===========================
-   DISTINTA PRODUZIONE
-   =========================== */
-
-#tabella-pezzi {
-    margin-top: 10px;
-}
-
-#tabella-pezzi th {
-    background: #2c3e50;
-    color: white;
-}
-
-#tabella-pezzi td {
-    background: #f9f9f9;
-}
-
-/* ===========================
-   MODALITA' CLIENTE / TECH
-   =========================== */
-
-/* Cliente → nasconde tutto ciò che è tecnico */
-.mode-client .solo-tech {
-    display: none !important;
-}
-
-/* Produzione → mostra tutto */
-.mode-tech .solo-client {
-    display: none !important;
-}
-
-/* ===========================
-   MODALE LISTINO
-   =========================== */
-
+/* MODALE LISTINO */
 #modalListino { 
-    display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(0,0,0,0.8); 
-    z-index: 9999; 
-    justify-content: center; 
-    align-items: center; 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.8); 
+  z-index: 9999; 
+  justify-content: center; 
+  align-items: center; 
 }
 
 .modal-content { 
-    background: white; 
-    padding: 30px; 
-    border-radius: 15px; 
-    width: 650px; 
-    max-height: 90vh; 
-    overflow-y: auto; 
-}
-
-.list-box { 
-    border: 1px solid #eee; 
-    padding: 10px; 
-    margin-bottom: 15px; 
-    border-radius: 8px; 
+  background: white; 
+  padding: 30px; 
+  border-radius: 15px; 
+  width: 650px; 
+  max-height: 90vh; 
+  overflow-y: auto; 
 }
 
 .list-item { 
-    display: flex; 
-    justify-content: space-between; 
-    padding: 5px; 
-    background: #f9f9f9; 
-    margin-bottom: 4px; 
-    font-size: 13px; 
+  display: flex; 
+  justify-content: space-between; 
+  padding: 5px; 
+  background: #f9f9f9; 
+  margin-bottom: 4px; 
+  font-size: 13px; 
 }
 
-/* ===========================
-   STAMPA
-   =========================== */
+/* DISTINTA PRODUZIONE */
+#tabella-pezzi th { background:#2c3e50; color:#fff; }
+#tabella-pezzi td { background:#f9f9f9; }
 
+/* MODALITÀ (SCHERMO) */
+.mode-client .solo-tech { display: none !important; }
+.mode-tech .solo-client { display: none !important; }
+
+/* MODALITÀ (STAMPA) */
+.print-client .solo-tech { display: none !important; }
+.print-tech .solo-client { display: none !important; }
+
+/* STAMPA */
 @media print {
-    .no-print, .controlli-stampa { 
-        display: none !important; 
-    }
-
-    .wrapper { 
-        display: block; 
-    }
-
-    .section { 
-        box-shadow: none; 
-        border: none; 
-        padding: 0; 
-    }
-
-    /* Modalità stampa */
-    body.print-tech .result-box { 
-        display: none !important; 
-    }
-
-    body.print-client #boxDistintaProduzione { 
-        display: none !important; 
-    }
-
-    body.print-client .result-box { 
-        background: white !important; 
-        color: black !important; 
-        border: 1px solid #333; 
-    }
+  .no-print, .controlli-stampa { display: none !important; }
+  .wrapper { display: block; }
+  .section { box-shadow: none; border: none; padding: 0; }
+  body.print-tech .result-box { display: none !important; }
+  body.print-client #boxDistintaProduzione { display: none !important; }
+  body.print-client .result-box { background: white !important; color: black !important; border: 1px solid #333; }
 }
