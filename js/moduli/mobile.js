@@ -1,6 +1,6 @@
 export function calcolaMobile(params) {
   const {
-    L, A, P, Z, SP, nD, mappaConfigurazioneD * svgSP);    L, A, P, Z, SP, nD, mappaConfigurazioneVani,
+    const spazio = svgL - (2 * svgSP) - (nD * svgSP);    L, A, P, Z, SP, nD, mappaConfigurazioneVani,
   const wVano = nVani > 0 ? (spazio / nVani) : spazio;
 
   for (let i = 1; i <= nD; i++) {
@@ -38,24 +38,24 @@ export function calcolaMobile(params) {
   svgElement.innerHTML = s;
 }
     tariffaOraria, costoBordo, prezzoMateriale, prezziFerramenta,
-    tipoAnta, materialeAnta, numeroAnte, giocoAnta
+    tipoAnta, materialeAnta, giocoAnta, manigliaGola, antePerVano
   } = params;
 
-  // ---- MM -> Metri ----
+  // --- MM -> Metri ---
   const altTotaleM = A / 1000;
   const profM = P / 1000;
   const spM = SP / 1000;
   const larghInternaM = (L / 1000) - (2 * spM);
   const altDivisoreM = Math.max(0, (A - Z - (2 * SP)) / 1000);
 
-  // ---- Superfici scocca ----
+  // --- Superfici scocca ---
   const mqFianchi = 2 * (altTotaleM * profM);
   const mqCappello = (L / 1000) * profM;
   const mqFondo = larghInternaM * profM;
   const mqDivisori = nD * (altDivisoreM * profM);
   const mqSchienale = (L / 1000) * altTotaleM;
 
-  // ---- Interni per vano ----
+  // --- Interni per vano ---
   const larghVanoM = (nD + 1) > 0 ? (larghInternaM - (nD * spM)) / (nD + 1) : larghInternaM;
 
   let totaliRipiani = 0;
@@ -69,38 +69,35 @@ export function calcolaMobile(params) {
   }
 
   const mqRipiani = totaliRipiani * (larghVanoM * profM);
+  const mqCassettiLegno = totaliCassetti * 0.25; // forfait
 
-  // Cassetti: forfait “mq equivalenti”
-  const mqCassettiLegno = totaliCassetti * 0.25;
+  const mqTotaliNum =
+    mqFianchi + mqCappello + mqFondo + mqDivisori + mqSchienale + mqRipiani + mqCassettiLegno;
 
-  const mqTotaliNum = mqFianchi + mqCappello + mqFondo + mqDivisori + mqSchienale + mqRipiani + mqCassettiLegno;
   const costoMaterialeNum = mqTotaliNum * (prezzoMateriale || 0);
 
-  // ---- Bordatura (stima) ----
-  const metriBordoScocca =
-    (2 * altTotaleM) + (L / 1000) + (nD * altDivisoreM) + larghInternaM;
-
+  // --- Bordatura (stima) ---
+  const metriBordoScocca = (2 * altTotaleM) + (L / 1000) + (nD * altDivisoreM) + larghInternaM;
   const metriBordoRipiani = totaliRipiani * larghVanoM;
   const metriBordoCassetti = totaliCassetti * (larghVanoM * 2);
-
   const metriBordoNum = metriBordoScocca + metriBordoRipiani + metriBordoCassetti;
   const costoBordaturaNum = metriBordoNum * (costoBordo || 0);
 
-  // ---- Ferramenta interni ----
+  // --- Ferramenta interni ---
   const ferrRip = (prezziFerramenta?.ripiano || 0);
   const ferrCas = (prezziFerramenta?.cassetto || 0);
   const costoFerramentaInterniNum = (totaliRipiani * ferrRip) + (totaliCassetti * ferrCas);
 
-  // ---- ANTE: materiale + ferramenta + ore extra ----
-  const ante = calcolaAnte({
-    L, A, Z, SP,
-    tipoAnta, materialeAnta, numeroAnte, giocoAnta,
+  // --- ANTE PER VANO + CERNIERE + GOLA ---
+  const ante = calcolaAntePerVano({
+    L, A, Z, SP, nD,
+    tipoAnta, materialeAnta, giocoAnta, manigliaGola,
+    antePerVano,
     prezzoMateriale,
-    prezziFerramenta,
-    tariffaOraria
+    prezziFerramenta
   });
 
-  // ---- Ore / manodopera ----
+  // --- Ore / manodopera ---
   const oreBaseNum =
     4 +
     (mqTotaliNum * 1.5) +
@@ -111,18 +108,21 @@ export function calcolaMobile(params) {
   const oreLavoroNum = oreBaseNum + ante.oreExtra;
   const costoManodoperaNum = oreLavoroNum * (tariffaOraria || 0);
 
+  // --- Totale ---
   const totaleNum =
     costoMaterialeNum +
     costoBordaturaNum +
     costoFerramentaInterniNum +
     costoManodoperaNum +
     ante.costoMaterialeAnteNum +
-    ante.costoFerramentaAnteNum;
+    ante.costoCerniereNum +
+    ante.costoGolaNum +
+    ante.costoScorrevoliNum;
 
-  // ---- Distinta pezzi (MM) ----
+  // --- Distinta pezzi (MM) ---
   const pezzi = buildDistintaPezziMm({
     L, A, P, Z, SP, nD, totaliRipiani,
-    tipoAnta, numeroAnte, giocoAnta
+    tipoAnta, giocoAnta, antePerVano
   });
 
   return {
@@ -138,86 +138,142 @@ export function calcolaMobile(params) {
     ante: {
       mqAnte: ante.mqAnte.toFixed(2),
       costoMaterialeAnte: ante.costoMaterialeAnteNum.toFixed(2),
-      costoFerramentaAnte: ante.costoFerramentaAnteNum.toFixed(2)
+      numCerniere: ante.numCerniere,
+      costoCerniere: ante.costoCerniereNum.toFixed(2),
+      metriGola: ante.metriGola.toFixed(2),
+      costoGola: ante.costoGolaNum.toFixed(2),
+      costoScorrevoli: ante.costoScorrevoliNum.toFixed(2)
     }
   };
 }
 
-function calcolaAnte({
-  L, A, Z, SP,
-  tipoAnta, materialeAnta, numeroAnte, giocoAnta,
+/**
+ * Regola cerniere richiesta dall'utente:
+ * - fino a 70 cm => 2 cerniere
+ * - oltre 70 cm => +1 cerniera ogni 60 cm
+ */
+function numeroCernierePerAnta(altezzaMm) {
+  if (altezzaMm <= 700) return 2;
+  const extra = Math.ceil((altezzaMm - 700) / 600);
+  return 2 + extra;
+}
+
+function calcolaAntePerVano({
+  L, A, Z, SP, nD,
+  tipoAnta, materialeAnta, giocoAnta, manigliaGola,
+  antePerVano,
   prezzoMateriale,
   prezziFerramenta
 }) {
-  // default
-  if (!tipoAnta || tipoAnta === "nessuna" || !numeroAnte || numeroAnte <= 0) {
+  // se nessuna
+  if (!tipoAnta || tipoAnta === "nessuna") {
     return {
       mqAnte: 0,
       costoMaterialeAnteNum: 0,
-      costoFerramentaAnteNum: 0,
-      oreExtra: 0,
-      antaH: 0,
-      antaW: 0
+      numCerniere: 0,
+      costoCerniereNum: 0,
+      metriGola: 0,
+      costoGolaNum: 0,
+      costoScorrevoliNum: 0,
+      oreExtra: 0
     };
   }
 
   const gioco = Math.max(0, giocoAnta || 0);
 
-  // Altezza anta: sopra zoccolo (scocca) con gioco
-  // (approccio semplice e pratico)
+  // Calcolo larghezza vano in mm (interna)
+  const Lint = Math.max(0, L - (2 * SP));
+  const nVani = nD + 1;
+  const vanoW = nVani > 0 ? Math.max(0, (Lint - (nD * SP)) / nVani) : Lint;
+
+  // Altezza anta “utile”
   const antaH = Math.max(0, A - Z - gioco);
 
-  // Larghezza anta: mobile diviso numero ante meno giochi laterali
-  const antaW = Math.max(0, Math.floor((L - (gioco * (numeroAnte + 1))) / numeroAnte));
-
-  const mqSingola = (antaH / 1000) * (antaW / 1000);
-  let mqTot = mqSingola * numeroAnte;
-
-  // prezzo al mq ante
+  // Prezzo mq anta
   let prezzoMqAnta = prezzoMateriale || 0;
   if (materialeAnta === "laccato") prezzoMqAnta += 40;
   if (materialeAnta === "legno") prezzoMqAnta += 60;
 
-  // scorrevole: di solito sovrapposizione / extra -> aumentiamo del 10% la superficie “effettiva”
-  if (tipoAnta === "scorrevole") {
-    mqTot = mqTot * 1.10;
-  }
-
-  const costoMaterialeAnteNum = mqTot * prezzoMqAnta;
-
-  // ferramenta ante
-  let costoFerramentaAnteNum = 0;
+  // Totali
+  let mqAnte = 0;
+  let costoMaterialeAnteNum = 0;
+  let numCerniere = 0;
+  let costoCerniereNum = 0;
+  let metriGola = 0;
+  let costoGolaNum = 0;
+  let costoScorrevoliNum = 0;
   let oreExtra = 0;
 
-  if (tipoAnta === "battente") {
-    // 2 coppie cerniere per anta (4 cerniere) - stima comune
-    const prezzoCoppia = prezziFerramenta?.cerniereCoppia || 0;
-    costoFerramentaAnteNum = numeroAnte * 2 * prezzoCoppia;
-    oreExtra = numeroAnte * 0.30; // montaggio/regolazione
+  const prezzoCerniera = prezziFerramenta?.cernieraPezzo || 0;
+  const prezzoGola = prezziFerramenta?.golaMetro || 0;
+  const scorrevoleBase = prezziFerramenta?.scorrevoleBase || 0;
+  const scorrevolePerAnta = prezziFerramenta?.scorrevolePerAnta || 0;
+
+  // Normalizza array antePerVano
+  const aV = Array.isArray(antePerVano) ? antePerVano : [];
+
+  // Per ogni vano: calcolo ante
+  for (let i = 1; i <= nVani; i++) {
+    const qAnte = (aV.find(x => x.vanoIndex === i)?.quantita || 0);
+    if (qAnte <= 0) continue;
+
+    // Larghezza anta nel vano (mm), con gioco tra ante
+    // (qAnte+1 giochi: sinistra + tra ante + destra)
+    const antaW = Math.max(0, Math.floor((vanoW - (gioco * (qAnte + 1))) / qAnte));
+
+    const mqSingola = (antaH / 1000) * (antaW / 1000);
+    let mqVano = mqSingola * qAnte;
+
+    // Scorrevole: +10% “effettivo” (sovrapposizioni/extra)
+    if (tipoAnta === "scorrevole") mqVano *= 1.10;
+
+    mqAnte += mqVano;
+    costoMaterialeAnteNum += mqVano * prezzoMqAnta;
+
+    if (tipoAnta === "battente") {
+      const cernierePerAnta = numeroCernierePerAnta(antaH);
+      const cerniereVano = cernierePerAnta * qAnte;
+      numCerniere += cerniereVano;
+      costoCerniereNum += cerniereVano * prezzoCerniera;
+
+      // Gola: assumo gola orizzontale per ogni anta = larghezza anta
+      // (metri gola = somma larghezze ante)
+      if (manigliaGola === "gola") {
+        metriGola += (antaW / 1000) * qAnte;
+      }
+
+      oreExtra += qAnte * 0.30;
+    }
+
+    if (tipoAnta === "scorrevole") {
+      // kit base per ogni vano che ha ante
+      costoScorrevoliNum += scorrevoleBase;
+      costoScorrevoliNum += qAnte * scorrevolePerAnta;
+      oreExtra += qAnte * 0.50;
+    }
   }
 
-  if (tipoAnta === "scorrevole") {
-    const base = prezziFerramenta?.scorrevoleBase || 0;
-    const perAnta = prezziFerramenta?.scorrevolePerAnta || 0;
-    costoFerramentaAnteNum = base + (numeroAnte * perAnta);
-    oreExtra = numeroAnte * 0.50; // binari/allineamento
-  }
+  costoGolaNum = metriGola * prezzoGola;
 
   return {
-    mqAnte: mqTot,
+    mqAnte,
     costoMaterialeAnteNum,
-    costoFerramentaAnteNum,
-    oreExtra,
-    antaH,
-    antaW
+    numCerniere,
+    costoCerniereNum,
+    metriGola,
+    costoGolaNum,
+    costoScorrevoliNum,
+    oreExtra
   };
 }
 
-function buildDistintaPezziMm({ L, A, P, Z, SP, nD, totaliRipiani, tipoAnta, numeroAnte, giocoAnta }) {
+function buildDistintaPezziMm({ L, A, P, Z, SP, nD, totaliRipiani, tipoAnta, giocoAnta, antePerVano }) {
   const Lint = Math.max(0, L - (2 * SP));
   const Hdiv = Math.max(0, A - Z - (2 * SP));
   const nVani = nD + 1;
   const vanoW = nVani > 0 ? Math.max(0, (Lint - (nD * SP)) / nVani) : Lint;
+  const gioco = Math.max(0, giocoAnta || 0);
+  const antaH = Math.max(0, A - Z - gioco);
 
   const list = [];
 
@@ -225,21 +281,23 @@ function buildDistintaPezziMm({ L, A, P, Z, SP, nD, totaliRipiani, tipoAnta, num
   list.push({ nome: "Fianco", qta: 2, x: A, y: P, sp: SP });
   list.push({ nome: "Cappello (Top)", qta: 1, x: L, y: P, sp: SP });
   list.push({ nome: "Fondo (Base)", qta: 1, x: Lint, y: P, sp: SP });
-
   if (nD > 0) list.push({ nome: "Divisore", qta: nD, x: Hdiv, y: P, sp: SP });
 
-  // Schiena (sp variabile)
+  // Schiena
   list.push({ nome: "Schienale", qta: 1, x: L, y: A, sp: "-" });
 
-  // Ripiani (stima uguali)
+  // Ripiani (stima)
   if (totaliRipiani > 0) list.push({ nome: "Ripiano", qta: totaliRipiani, x: Math.round(vanoW), y: P, sp: SP });
 
-  // Ante (pezzi)
-  if (tipoAnta && tipoAnta !== "nessuna" && numeroAnte > 0) {
-    const gioco = Math.max(0, giocoAnta || 0);
-    const antaH = Math.max(0, A - Z - gioco);
-    const antaW = Math.max(0, Math.floor((L - (gioco * (numeroAnte + 1))) / numeroAnte));
-    list.push({ nome: `Anta (${tipoAnta})`, qta: numeroAnte, x: antaH, y: antaW, sp: SP });
+  // Ante per vano
+  if (tipoAnta && tipoAnta !== "nessuna" && Array.isArray(antePerVano)) {
+    for (let i = 1; i <= nVani; i++) {
+      const qAnte = (antePerVano.find(x => x.vanoIndex === i)?.quantita || 0);
+      if (qAnte <= 0) continue;
+
+      const antaW = Math.max(0, Math.floor((vanoW - (gioco * (qAnte + 1))) / qAnte));
+      list.push({ nome: `Anta vano ${i} (${tipoAnta})`, qta: qAnte, x: antaH, y: antaW, sp: SP });
+    }
   }
 
   return list;
