@@ -1,9 +1,5 @@
 import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
-    scorrevolePerAnta: 10.00 // €/anta (extra)
-  }
-};
-
-const VIEW = { CLIENTE: "client", TECH: "tech" };
+ const VIEW = { CLIENTE: "client", TECH: "tech" };
 let viewMode = VIEW.CLIENTE;
 
 document.addEventListener("DOMContentLoaded", () => {
