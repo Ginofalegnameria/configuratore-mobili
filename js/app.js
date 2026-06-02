@@ -1,4 +1,4 @@
-import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';import { calcolaMobile, disegnaMobileSvg } from './modulikit base)
+import { calcolaMobile, disegnaMobileSvg } from './moduli/mobile.js';
     scorrevolePerAnta: 10.00 // €/anta (extra)
   }
 };
